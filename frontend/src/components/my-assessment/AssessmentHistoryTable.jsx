@@ -79,8 +79,8 @@ const AssessmentHistoryTable = ({ history, resolveCategory }) => {
         </thead>
         <tbody>
           {history.map((item) => {
-            const isApproved = item.status === 'approved' || (item.status === 'completed' && item.approval_status === 'approved');
-            const category = isApproved ? resolveCategory(item.percentage, item.alcoholic_status) : null;
+            const showScores = item.status === 'completed' || item.status === 'approved' || item.approval_status === 'approved';
+            const category = showScores ? resolveCategory(item.percentage, item.alcoholic_status) : null;
             
             return (
               <tr key={item.id}>
@@ -118,7 +118,7 @@ const AssessmentHistoryTable = ({ history, resolveCategory }) => {
                   )}
                 </td>
                 <td>
-                  {isApproved && item.evaluation_score !== null && item.evaluation_score !== undefined ? (
+                  {showScores && item.evaluation_score !== null && item.evaluation_score !== undefined ? (
                     <>
                       <span style={{ fontWeight: 700, fontSize: '16px', color: 'var(--primary-navy)' }}>
                         {item.evaluation_score}
@@ -132,7 +132,7 @@ const AssessmentHistoryTable = ({ history, resolveCategory }) => {
                   )}
                 </td>
                 <td>
-                  {isApproved ? (
+                  {showScores ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', alignItems: 'center' }}>
                       <div style={{ fontWeight: 800, fontSize: '16.5px', color: 'var(--primary-navy)', lineHeight: 1.2 }}>
                         {item.total_score ?? 0}
@@ -147,7 +147,7 @@ const AssessmentHistoryTable = ({ history, resolveCategory }) => {
                   )}
                 </td>
                 <td>
-                  {isApproved && category ? (
+                  {showScores && category ? (
                     <span className={`badge ${getCategoryBadgeClass(category)}`}>
                       {getCategoryName(category)}
                     </span>

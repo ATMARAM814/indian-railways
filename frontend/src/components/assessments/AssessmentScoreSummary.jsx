@@ -132,13 +132,12 @@ export const AssessmentScoreSummary = ({
       )}
 
       {!readOnly && (
-        <div className="form-action-buttons" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', gap: '12px' }}>
+        <div className="form-action-buttons">
+          <div className="form-action-left">
             <button
               type="button"
               onClick={onCancel}
               className="btn-secondary"
-              style={{ padding: '10px 24px' }}
               disabled={savingDraft || submitting}
             >
               Cancel
@@ -146,20 +145,18 @@ export const AssessmentScoreSummary = ({
             <button
               type="button"
               onClick={onReset}
-              className="btn-secondary"
-              style={{ padding: '10px 24px', backgroundColor: '#F1F5F9', border: '1px solid #CBD5E1' }}
+              className="btn-secondary btn-restart"
               disabled={savingDraft || submitting}
             >
               Restart Form
             </button>
           </div>
           
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <div className="form-action-right">
             <button
               type="button"
               onClick={onSaveDraft}
               className="btn-info"
-              style={{ padding: '10px 24px' }}
               disabled={savingDraft || submitting}
             >
               <Save size={16} />
@@ -170,7 +167,6 @@ export const AssessmentScoreSummary = ({
               type="button"
               onClick={onSubmitFinal}
               className="btn-primary"
-              style={{ padding: '10px 24px' }}
               disabled={savingDraft || submitting}
             >
               <CheckCircle size={16} />

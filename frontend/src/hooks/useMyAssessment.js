@@ -48,18 +48,18 @@ export const useMyAssessment = () => {
       setActiveAssessment(activeData);
       setHistory(historyData);
       
-      // Calculate Stats based only on approved assessments
-      const approvedHistory = historyData.filter(i => i.approval_status === 'approved');
-      const total = approvedHistory.length;
+      // Calculate Stats based on completed (evaluated) or approved assessments
+      const evaluatedHistory = historyData.filter(i => i.status === 'completed' || i.status === 'approved' || i.approval_status === 'approved');
+      const total = evaluatedHistory.length;
       let latestScore = 0;
       let averageScore = 0;
       let currentCategory = 'N/A';
       
       if (total > 0) {
-        latestScore = parseFloat(approvedHistory[0].percentage || 0);
-        const totalPct = approvedHistory.reduce((acc, curr) => acc + parseFloat(curr.percentage || 0), 0);
+        latestScore = parseFloat(evaluatedHistory[0].percentage || 0);
+        const totalPct = evaluatedHistory.reduce((acc, curr) => acc + parseFloat(curr.percentage || 0), 0);
         averageScore = parseFloat((totalPct / total).toFixed(1));
-        currentCategory = resolveCategory(latestScore, approvedHistory[0].alcoholic_status);
+        currentCategory = resolveCategory(latestScore, evaluatedHistory[0].alcoholic_status);
       }
       
       setStats({
