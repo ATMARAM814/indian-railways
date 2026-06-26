@@ -81,6 +81,7 @@ const AssessmentHistoryTable = ({ history, resolveCategory }) => {
           {history.map((item) => {
             const showScores = item.status === 'completed' || item.status === 'approved' || item.approval_status === 'approved';
             const category = showScores ? resolveCategory(item.percentage, item.alcoholic_status) : null;
+            const isApproved = item.approval_status === 'approved' || item.status === 'approved';
             
             return (
               <tr key={item.id}>
