@@ -1122,9 +1122,53 @@
 .form-action-buttons {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   margin-top: 1.75rem;
   border-top: 1px solid #EEF2F6;
   padding-top: 1.5rem;
+  gap: 16px;
+}
+
+.form-action-left, .form-action-right {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.form-action-buttons button {
+  padding: 10px 24px !important;
+}
+
+.btn-restart {
+  background-color: #F1F5F9 !important;
+  border: 1px solid #CBD5E1 !important;
+}
+
+@media (max-width: 768px) {
+  .form-action-buttons {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  
+  .form-action-left, .form-action-right {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+    gap: 12px;
+  }
+  
+  .form-action-buttons button {
+    width: 100%;
+    justify-content: center;
+    padding: 10px 16px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .form-action-left, .form-action-right {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Pulse indicator for active MCQ status */
