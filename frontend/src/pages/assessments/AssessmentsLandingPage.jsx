@@ -65,7 +65,7 @@ const AssessmentsLandingPage = () => {
 
   return (
     <DashboardLayout>
-      <div style={{ padding: '24px 32px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <div className="dashboard-page-container">
         
         {/* Page Header for PM */}
         {user.role === 'PM' && (

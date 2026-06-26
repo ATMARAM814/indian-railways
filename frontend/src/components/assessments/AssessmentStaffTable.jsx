@@ -387,14 +387,11 @@ export const AssessmentStaffTable = ({
               <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px', maxHeight: '70vh', overflowY: 'auto' }}>
                 
                 {/* Readonly Section */}
-                <div style={{
+                <div className="modal-info-grid" style={{
                   backgroundColor: '#F8FAFC',
                   border: '1px solid #E2E8F0',
                   borderRadius: '8px',
-                  padding: '16px',
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(2, 1fr)',
-                  gap: '12px 24px'
+                  padding: '16px'
                 }}>
                   <div>
                     <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#64748B', fontWeight: 600 }}>Employee Name</label>
@@ -434,7 +431,7 @@ export const AssessmentStaffTable = ({
 
                 {/* Editable Section */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+                  <div className="modal-inputs-grid">
                     <div>
                       <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>Assessment Cycle *</label>
                       <select
@@ -462,7 +459,7 @@ export const AssessmentStaffTable = ({
                     </div>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+                  <div className="modal-inputs-grid">
                     <div>
                       <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>Scheduled Date *</label>
                       <input
@@ -713,10 +710,7 @@ export const AssessmentStaffTable = ({
             <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
               
               {/* Metadata Info */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(4, 1fr)',
-                gap: '12px 16px',
+              <div className="modal-status-meta-grid" style={{
                 fontSize: '13px',
                 borderBottom: '1px solid #E2E8F0',
                 paddingBottom: '16px'
@@ -760,10 +754,7 @@ export const AssessmentStaffTable = ({
               </div>
 
               {/* Status Information Grid */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '16px',
+              <div className="modal-status-details-grid" style={{
                 backgroundColor: '#F8FAFC',
                 border: '1px solid #E2E8F0',
                 borderRadius: '8px',

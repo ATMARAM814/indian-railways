@@ -1459,4 +1459,18 @@
   background-color: rgba(59, 130, 246, 0.1);
 }
 
+.dashboard-page-container {
+  padding: 24px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+@media (max-width: 768px) {
+  .dashboard-page-container {
+    padding: 16px;
+    gap: 16px;
+  }
+}
+
 
