@@ -112,6 +112,40 @@ const DashboardRoot = () => {
 };
 
 function App() {
+  React.useEffect(() => {
+    // Only run version check in production environments
+    if (import.meta.env.DEV) return;
+
+    const checkVersion = async () => {
+      try {
+        const response = await fetch('/index.html?t=' + Date.now(), { cache: 'no-store' });
+        if (!response.ok) return;
+        const htmlText = await response.text();
+        
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(htmlText, 'text/html');
+        const scriptTags = Array.from(doc.querySelectorAll('script'));
+        const newScript = scriptTags.find(s => s.getAttribute('src')?.includes('/assets/index-'));
+        const newScriptSrc = newScript ? newScript.getAttribute('src') : null;
+        
+        const currentScripts = Array.from(document.querySelectorAll('script'));
+        const currentScript = currentScripts.find(s => s.getAttribute('src')?.includes('/assets/index-'));
+        const currentScriptSrc = currentScript ? currentScript.getAttribute('src') : null;
+        
+        if (newScriptSrc && currentScriptSrc && newScriptSrc !== currentScriptSrc) {
+          console.log('New deployment version detected. Auto-reloading the page...');
+          window.location.reload();
+        }
+      } catch (err) {
+        console.warn('Error checking deployment version:', err);
+      }
+    };
+
+    // Check for a new deployment every 30 seconds
+    const interval = setInterval(checkVersion, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <AuthProvider>
       <Router>

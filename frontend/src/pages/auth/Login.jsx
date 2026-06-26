@@ -163,18 +163,7 @@ const Login = () => {
       if (user.mustChangePassword) {
         navigate('/change-password', { replace: true });
       } else {
-        let from = location.state?.from?.pathname || getRoleRedirectPath(user.role);
-        if (from === '/change-password' || from === '/unauthorized' || from === '/login') {
-          from = getRoleRedirectPath(user.role);
-        }
-        // Prevent cross-dashboard redirection (e.g. TM logging in with PM dashboard in history)
-        if (from.startsWith('/dashboard/') && from !== getRoleRedirectPath(user.role)) {
-          from = getRoleRedirectPath(user.role);
-        }
-        // Check if user is allowed to access the destination route
-        if (!isPathAllowedForRole(from, user.role)) {
-          from = getRoleRedirectPath(user.role);
-        }
+        let from = getRoleRedirectPath(user.role);
         navigate(from, { replace: true });
       }
     }

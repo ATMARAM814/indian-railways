@@ -1,10 +1,6 @@
 require("dotenv").config();
 
-// Append startup-specific random bytes to JWT_SECRET to force logouts when backend restarts
-if (process.env.JWT_SECRET) {
-  const startupId = require("crypto").randomBytes(8).toString("hex");
-  process.env.JWT_SECRET = `${process.env.JWT_SECRET}_${startupId}`;
-}
+// JWT_SECRET is loaded from environment variables and remains stable across restarts
 
 const app = require("./app");
 
