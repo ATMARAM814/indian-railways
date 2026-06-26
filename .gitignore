@@ -1,0 +1,24 @@
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Dependencies
+node_modules/
+
+# Local configuration
+.env
+.env.local
+
+# Build folders
+dist/
+dist-ssr/
+
+# Vercel configs
+.vercel/
+
+# Backend temporary scratch files and tests
+backend/scratch/
+backend/tests/

@@ -1,0 +1,322 @@
+/* pme-ref.css - Nagpur Junction Command Navy Styling for PME & REF Status */
+
+.pme-ref-container {
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  max-width: 1600px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.pme-ref-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-bottom: 1px solid var(--border-light, #D7E3EF);
+  padding-bottom: 20px;
+}
+
+.pme-ref-title {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--primary-navy, #0B2341);
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.pme-ref-subtitle {
+  font-size: 14px;
+  color: var(--text-secondary, #475569);
+  margin: 0;
+}
+
+.pme-ref-section {
+  background-color: var(--card-bg, #FFFFFF);
+  border: 1px solid var(--border-light, #D7E3EF);
+  border-radius: var(--radius-lg, 16px);
+  padding: 24px;
+  box-shadow: var(--shadow-sm, 0 1px 2px rgba(11, 35, 65, 0.05));
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.pme-ref-section-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pme-ref-section-title {
+  font-size: 18px;
+  font-weight: 750;
+  color: var(--primary-navy, #0B2341);
+  margin: 0;
+}
+
+.pme-ref-section-subtitle {
+  font-size: 13px;
+  color: var(--text-muted, #64748B);
+  margin: 0;
+}
+
+/* KPI Grid */
+.pme-ref-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 1200px) {
+  .pme-ref-kpi-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .pme-ref-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .pme-ref-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* KPI Card */
+.pme-ref-kpi-card {
+  background-color: #F8FAFC;
+  border: 1px solid var(--border-light, #D7E3EF);
+  border-radius: var(--radius-md, 12px);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.pme-ref-kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--accent-blue, #2B5CE6);
+}
+
+.pme-ref-kpi-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pme-ref-kpi-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background-color: #EEF2F6;
+  color: var(--primary-navy, #0B2341);
+}
+
+.pme-ref-kpi-card.highlight .pme-ref-kpi-icon-wrapper {
+  background-color: rgba(43, 92, 230, 0.1);
+  color: var(--accent-blue, #2B5CE6);
+}
+
+.pme-ref-kpi-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pme-ref-kpi-value {
+  font-size: 16px;
+  font-weight: 750;
+  color: var(--text-primary, #0F172A);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.pme-ref-kpi-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted, #64748B);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Status Badges */
+.pme-ref-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 750;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badge-fit, .badge-cleared {
+  background-color: #DCFCE7;
+  color: #15803D;
+  border: 1px solid #A7F3D0;
+}
+
+.badge-unfit, .badge-cancelled, .badge-expired {
+  background-color: #FEE2E2;
+  color: #B91C1C;
+  border: 1px solid #FCA5A5;
+}
+
+.badge-pending {
+  background-color: #FEF3C7;
+  color: #B45309;
+  border: 1px solid #FCD34D;
+}
+
+.badge-scheduled {
+  background-color: #E0F2FE;
+  color: #0369A1;
+  border: 1px solid #BAE6FD;
+}
+
+.badge-none, .badge-na {
+  background-color: #F1F5F9;
+  color: #64748B;
+  border: 1px solid #E2E8F0;
+}
+
+/* Tables */
+.pme-ref-table-wrapper {
+  border: 1px solid var(--border-light, #D7E3EF);
+  border-radius: var(--radius-md, 12px);
+  overflow: hidden;
+  background-color: #FFFFFF;
+}
+
+.pme-ref-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 13.5px;
+}
+
+.pme-ref-table th {
+  background-color: #F8FAFC;
+  color: var(--primary-navy, #0B2341);
+  font-weight: 700;
+  padding: 14px 16px;
+  border-bottom: 2px solid var(--border-light, #D7E3EF);
+}
+
+.pme-ref-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #EEF2F6;
+  color: var(--text-primary, #0F172A);
+}
+
+.pme-ref-table tr:last-child td {
+  border-bottom: none;
+}
+
+.pme-ref-table tr:hover td {
+  background-color: #F8FAFC;
+}
+
+/* Empty State */
+.pme-ref-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  gap: 12px;
+  text-align: center;
+}
+
+.pme-ref-empty-icon {
+  color: var(--text-muted, #64748B);
+  opacity: 0.5;
+}
+
+.pme-ref-empty-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary, #475569);
+  margin: 0;
+}
+
+/* Skeleton Loading styles */
+.pme-ref-skeleton-container {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.pme-ref-skeleton-section {
+  background-color: var(--card-bg, #FFFFFF);
+  border: 1px solid var(--border-light, #D7E3EF);
+  border-radius: var(--radius-lg, 16px);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.pme-ref-skeleton-header {
+  height: 24px;
+  background: linear-gradient(90deg, #F1F5F9 25%, #E2E8F0 50%, #F1F5F9 75%);
+  background-size: 200% 100%;
+  animation: loading-shimmer 1.5s infinite;
+  width: 250px;
+  border-radius: 4px;
+}
+
+.pme-ref-skeleton-subheader {
+  height: 16px;
+  background: linear-gradient(90deg, #F1F5F9 25%, #E2E8F0 50%, #F1F5F9 75%);
+  background-size: 200% 100%;
+  animation: loading-shimmer 1.5s infinite;
+  width: 400px;
+  border-radius: 4px;
+}
+
+.pme-ref-skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 16px;
+}
+
+.pme-ref-skeleton-card {
+  height: 100px;
+  background: linear-gradient(90deg, #F8FAFC 25%, #F1F5F9 50%, #F8FAFC 75%);
+  background-size: 200% 100%;
+  animation: loading-shimmer 1.5s infinite;
+  border: 1px solid var(--border-light, #D7E3EF);
+  border-radius: 12px;
+}
+
+.pme-ref-skeleton-table {
+  height: 200px;
+  background: linear-gradient(90deg, #F8FAFC 25%, #F1F5F9 50%, #F8FAFC 75%);
+  background-size: 200% 100%;
+  animation: loading-shimmer 1.5s infinite;
+  border-radius: 12px;
+}
+
+@keyframes loading-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}

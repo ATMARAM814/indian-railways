@@ -1,0 +1,64 @@
+/* charts.css */
+
+.recharts-default-tooltip {
+  background-color: #0B2341 !important;
+  border: none !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(11, 35, 65, 0.15) !important;
+  padding: 10px 14px !important;
+}
+
+.recharts-tooltip-label {
+  color: #FFFFFF !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  margin-bottom: 4px !important;
+  font-family: 'Poppins', sans-serif !important;
+}
+
+.recharts-tooltip-item {
+  color: rgba(255, 255, 255, 0.8) !important;
+  font-size: 12px !important;
+  font-family: 'Poppins', sans-serif !important;
+  padding: 2px 0 !important;
+}
+
+.recharts-legend-item-text {
+  color: #475569 !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  font-family: 'Poppins', sans-serif !important;
+}
+
+.custom-chart-tooltip {
+  background-color: #0B2341;
+  color: #FFFFFF;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  box-shadow: 0 4px 12px rgba(11, 35, 65, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-family: 'Poppins', sans-serif;
+}
+
+.custom-chart-tooltip-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.custom-chart-tooltip-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.custom-chart-tooltip-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.custom-chart-tooltip-value {
+  font-weight: 600;
+  color: #60A5FA;
+}
