@@ -74,7 +74,7 @@ export const AssessmentScoreSummary = ({
 
   return (
     <div className="score-summary-card">
-      {isApproved && (
+      {(isApproved || !readOnly) && (
         <div className="score-summary-grid">
           <div className="score-tally-block">
             <div className="score-circle-wrapper">
