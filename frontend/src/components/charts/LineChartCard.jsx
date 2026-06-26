@@ -12,7 +12,6 @@ import {
 } from 'recharts';
 import ChartCard from '../dashboard/ChartCard';
 import EmptyState from '../dashboard/EmptyState';
-import { useMobile } from '../../hooks/useMobile';
 import '../../styles/charts.css';
 
 const LineChartCard = ({ 
@@ -25,7 +24,6 @@ const LineChartCard = ({
   lines = [], // Pass multiple lines if needed: [{ key, color, name }]
   headerAction
 }) => {
-  const isMobile = useMobile();
   const hasData = Array.isArray(data) && data.length > 0;
 
   return (
@@ -42,11 +40,7 @@ const LineChartCard = ({
               fontSize={11} 
               tickLine={false} 
               axisLine={false} 
-              dy={isMobile ? 5 : 10} 
-              interval={isMobile ? "preserveStartEnd" : 0}
-              angle={isMobile ? -35 : 0}
-              textAnchor={isMobile ? "end" : "middle"}
-              height={isMobile ? 50 : 30}
+              dy={10} 
             />
             <YAxis 
               stroke="#64748B" 

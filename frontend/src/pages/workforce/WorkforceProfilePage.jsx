@@ -13,12 +13,10 @@ import LoadingState from '../../components/dashboard/LoadingState';
 import ErrorState from '../../components/dashboard/ErrorState';
 import { getWorkforceDetails } from '../../services/workforce.service';
 import { cleanDesignationText } from '../../utils/dashboardMappers';
-import { useMobile } from '../../hooks/useMobile';
 
 const WorkforceProfilePage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const isMobile = useMobile();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -422,18 +420,7 @@ const WorkforceProfilePage = () => {
                   <ResponsiveContainer width="100%" height={220}>
                     <LineChart data={profile.trend.map((t, idx) => ({ ...t, formattedDate: formatDate(t.date), label: `Eval ${idx + 1}` }))} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
-                      <XAxis 
-                        dataKey="label" 
-                        stroke="#64748B" 
-                        fontSize={11}
-                        tickLine={false} 
-                        axisLine={false} 
-                        dy={isMobile ? 5 : 10} 
-                        interval={isMobile ? "preserveStartEnd" : 0}
-                        angle={isMobile ? -35 : 0}
-                        textAnchor={isMobile ? "end" : "middle"}
-                        height={isMobile ? 50 : 30}
-                      />
+                      <XAxis dataKey="label" stroke="#64748B" fontSize={11} />
                       <YAxis domain={[0, 100]} stroke="#64748B" fontSize={11} />
                       <Tooltip contentStyle={{ fontSize: '12px', borderRadius: '8px', border: '1px solid #D7E3EF' }} formatter={(value) => [`${value}%`, 'Score']} labelFormatter={(label, items) => items[0]?.payload?.formattedDate || label} />
                       <Line type="monotone" dataKey="score" stroke="#1B365D" strokeWidth={3} activeDot={{ r: 6 }} dot={{ strokeWidth: 2, r: 4 }} />

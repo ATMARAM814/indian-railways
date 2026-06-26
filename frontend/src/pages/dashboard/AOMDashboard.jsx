@@ -24,7 +24,6 @@ import LineChartCard from '../../components/charts/LineChartCard';
 import BarChartCard from '../../components/charts/BarChartCard';
 import DonutChartCard from '../../components/charts/DonutChartCard';
 import DrillDownChartModal from '../../components/dashboard/DrillDownChartModal';
-import { useMobile } from '../../hooks/useMobile';
 import { 
   ResponsiveContainer, 
   BarChart, 
@@ -51,7 +50,6 @@ import {
 const AOMDashboard = () => {
   const { user, logout } = useAuth();
   const [data, setData] = useState(null);
-  const isMobile = useMobile();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isDrillDownOpen, setIsDrillDownOpen] = useState(false);
@@ -621,25 +619,10 @@ const AOMDashboard = () => {
               </div>
 
               {/* Grouped Bar Chart */}
-              <ResponsiveContainer width="100%" height={isMobile ? 300 : 280}>
-                <BarChart 
-                  data={pipeline.monthly} 
-                  margin={{ top: 10, right: 10, left: -20, bottom: isMobile ? 55 : 0 }} 
-                  key={`${JSON.stringify(pipeline.monthly)}-${isMobile}`}
-                >
+              <ResponsiveContainer width="100%" height={280}>
+                <BarChart data={pipeline.monthly} margin={{ top: 10, right: 10, left: -20, bottom: 0 }} key={JSON.stringify(pipeline.monthly)}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
-                  <XAxis 
-                    dataKey="month" 
-                    stroke="#64748B" 
-                    fontSize={11} 
-                    tickLine={false} 
-                    axisLine={false} 
-                    dy={isMobile ? 5 : 10} 
-                    interval={isMobile ? "preserveStartEnd" : 0}
-                    angle={isMobile ? -35 : 0}
-                    textAnchor={isMobile ? "end" : "middle"}
-                    height={isMobile ? 50 : 30}
-                  />
+                  <XAxis dataKey="month" stroke="#64748B" fontSize={11} tickLine={false} axisLine={false} dy={10} interval={0} />
                   <YAxis domain={[0, 100]} stroke="#64748B" fontSize={11} tickLine={false} axisLine={false} dx={-5} allowDecimals={false} />
                   <Tooltip />
                   <Legend verticalAlign="bottom" height={36} iconType="circle" iconSize={8} />

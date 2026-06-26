@@ -1,9 +1,7 @@
 import React from 'react';
 import { ResponsiveContainer, BarChart, Bar, Rectangle, Cell, XAxis, YAxis, CartesianGrid, Tooltip, LabelList } from 'recharts';
-import { useMobile } from '../../hooks/useMobile';
 
 export const RoleDistributionChart = ({ data }) => {
-  const isMobile = useMobile();
   if (!data) return null;
 
   return (
@@ -19,11 +17,7 @@ export const RoleDistributionChart = ({ data }) => {
       <div style={{ width: '100%', height: '240px' }}>
         {data.length > 0 ? (
           <ResponsiveContainer width="100%" height={240}>
-            <BarChart 
-              data={data} 
-              margin={{ top: 20, right: 10, left: -20, bottom: isMobile ? 80 : 0 }} 
-              key={`${JSON.stringify(data)}-${isMobile}`}
-            >
+            <BarChart data={data} margin={{ top: 20, right: 10, left: -20, bottom: 0 }} key={JSON.stringify(data)}>
               <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
               <XAxis 
                 dataKey="role" 
@@ -31,11 +25,10 @@ export const RoleDistributionChart = ({ data }) => {
                 fontSize={11} 
                 tickLine={false} 
                 axisLine={false} 
-                dy={isMobile ? 5 : 10} 
-                interval={isMobile ? "preserveStartEnd" : 0}
-                angle={isMobile ? -45 : 0}
-                textAnchor={isMobile ? "end" : "middle"}
-                height={isMobile ? 80 : 30}
+                dy={10} 
+                interval={0}
+                textAnchor="middle"
+                height={30}
               />
               <YAxis 
                 stroke="#64748B" 

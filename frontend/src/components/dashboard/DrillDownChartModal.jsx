@@ -23,7 +23,6 @@ import {
   Tooltip,
   Legend
 } from 'recharts';
-import { useMobile } from '../../hooks/useMobile';
 import {
   UserPlus,
   ArrowLeftRight,
@@ -37,7 +36,6 @@ import {
 
 const DrillDownChartModal = ({ isOpen, onClose, graphType }) => {
   const { user } = useAuth();
-  const isMobile = useMobile();
   const role = user?.role || 'TI';
 
   const [data, setData] = useState([]);
@@ -636,11 +634,7 @@ const DrillDownChartModal = ({ isOpen, onClose, graphType }) => {
               ) : (
                 <ResponsiveContainer width="100%" height={320}>
                   {graphType === 'stationEvaluationProgress' && (
-                    <BarChart 
-                      data={data} 
-                      margin={{ top: 10, right: 10, left: -20, bottom: isMobile ? 80 : (data.length > 5 ? 25 : 0) }}
-                      key={`${JSON.stringify(data)}-${isMobile}`}
-                    >
+                    <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: data.length > 5 ? 25 : 0 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
                       <XAxis 
                         dataKey="stationCode" 
@@ -648,11 +642,11 @@ const DrillDownChartModal = ({ isOpen, onClose, graphType }) => {
                         fontSize={11} 
                         tickLine={false} 
                         axisLine={false} 
-                        dy={isMobile ? 5 : 10} 
-                        interval={isMobile ? "preserveStartEnd" : 0}
-                        angle={isMobile ? -45 : 0}
-                        textAnchor={isMobile ? "end" : "middle"}
-                        height={isMobile ? 80 : 30}
+                        dy={10} 
+                        interval={0}
+                        angle={0}
+                        textAnchor="middle"
+                        height={30}
                       />
                       <YAxis stroke="#64748B" fontSize={11} tickLine={false} axisLine={false} dx={-5} allowDecimals={false} />
                       <Tooltip />
@@ -663,11 +657,7 @@ const DrillDownChartModal = ({ isOpen, onClose, graphType }) => {
                   )}
 
                   {graphType === 'stationAverageScore' && (
-                    <BarChart 
-                      data={data} 
-                      margin={{ top: 10, right: 10, left: -20, bottom: isMobile ? 80 : (data.length > 5 ? 25 : 0) }}
-                      key={`${JSON.stringify(data)}-${isMobile}`}
-                    >
+                    <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: data.length > 5 ? 25 : 0 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
                       <XAxis 
                         dataKey="stationCode" 
@@ -675,11 +665,11 @@ const DrillDownChartModal = ({ isOpen, onClose, graphType }) => {
                         fontSize={11} 
                         tickLine={false} 
                         axisLine={false} 
-                        dy={isMobile ? 5 : 10} 
-                        interval={isMobile ? "preserveStartEnd" : 0}
-                        angle={isMobile ? -45 : 0}
-                        textAnchor={isMobile ? "end" : "middle"}
-                        height={isMobile ? 80 : 30}
+                        dy={10} 
+                        interval={0}
+                        angle={0}
+                        textAnchor="middle"
+                        height={30}
                       />
                       <YAxis stroke="#64748B" fontSize={11} tickLine={false} axisLine={false} dx={-5} allowDecimals={false} />
                       <Tooltip />
@@ -689,11 +679,7 @@ const DrillDownChartModal = ({ isOpen, onClose, graphType }) => {
                   )}
 
                   {graphType === 'categoryDistribution' && (
-                    <BarChart 
-                      data={data} 
-                      margin={{ top: 10, right: 10, left: -20, bottom: isMobile ? 80 : (data.length > 5 ? 25 : 0) }}
-                      key={`${JSON.stringify(data)}-${isMobile}`}
-                    >
+                    <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: data.length > 5 ? 25 : 0 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
                       <XAxis 
                         dataKey="stationCode" 
@@ -701,11 +687,11 @@ const DrillDownChartModal = ({ isOpen, onClose, graphType }) => {
                         fontSize={11} 
                         tickLine={false} 
                         axisLine={false} 
-                        dy={isMobile ? 5 : 10} 
-                        interval={isMobile ? "preserveStartEnd" : 0}
-                        angle={isMobile ? -45 : 0}
-                        textAnchor={isMobile ? "end" : "middle"}
-                        height={isMobile ? 80 : 30}
+                        dy={10} 
+                        interval={0}
+                        angle={0}
+                        textAnchor="middle"
+                        height={30}
                       />
                       <YAxis stroke="#64748B" fontSize={11} tickLine={false} axisLine={false} dx={-5} allowDecimals={false} />
                       <Tooltip />
@@ -718,24 +704,9 @@ const DrillDownChartModal = ({ isOpen, onClose, graphType }) => {
                   )}
 
                   {graphType === 'workforceActivity' && (
-                    <LineChart 
-                      data={extraChartData} 
-                      margin={{ top: 10, right: 10, left: -20, bottom: isMobile ? 80 : 0 }}
-                      key={`${JSON.stringify(extraChartData)}-${isMobile}`}
-                    >
+                    <LineChart data={extraChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
-                      <XAxis 
-                        dataKey="month" 
-                        stroke="#64748B" 
-                        fontSize={11} 
-                        tickLine={false} 
-                        axisLine={false} 
-                        dy={isMobile ? 5 : 10} 
-                        interval={isMobile ? "preserveStartEnd" : 0}
-                        angle={isMobile ? -45 : 0}
-                        textAnchor={isMobile ? "end" : "middle"}
-                        height={isMobile ? 80 : 30}
-                      />
+                      <XAxis dataKey="month" stroke="#64748B" fontSize={11} tickLine={false} axisLine={false} dy={10} interval={0} />
                       <YAxis stroke="#64748B" fontSize={11} tickLine={false} axisLine={false} dx={-5} allowDecimals={false} />
                       <Tooltip />
                       <Legend verticalAlign="bottom" height={36} iconType="circle" iconSize={8} />
@@ -747,11 +718,7 @@ const DrillDownChartModal = ({ isOpen, onClose, graphType }) => {
                   )}
 
                   {graphType === 'highRiskStaff' && (
-                    <BarChart 
-                      data={extraChartData.slice((highRiskChartPage - 1) * highRiskChartLimit, highRiskChartPage * highRiskChartLimit)} 
-                      margin={{ top: 10, right: 10, left: -20, bottom: isMobile ? 80 : 25 }}
-                      key={`${JSON.stringify(extraChartData)}-${highRiskChartPage}-${isMobile}`}
-                    >
+                    <BarChart data={extraChartData.slice((highRiskChartPage - 1) * highRiskChartLimit, highRiskChartPage * highRiskChartLimit)} margin={{ top: 10, right: 10, left: -20, bottom: 25 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
                       <XAxis 
                         dataKey="stationCode" 
@@ -759,11 +726,11 @@ const DrillDownChartModal = ({ isOpen, onClose, graphType }) => {
                         fontSize={11} 
                         tickLine={false} 
                         axisLine={false} 
-                        dy={isMobile ? 5 : 10} 
-                        interval={isMobile ? "preserveStartEnd" : 0}
-                        angle={isMobile ? -45 : 0}
-                        textAnchor={isMobile ? "end" : "middle"}
-                        height={isMobile ? 80 : 30}
+                        dy={10} 
+                        interval={0}
+                        angle={0}
+                        textAnchor="middle"
+                        height={30}
                       />
                       <YAxis stroke="#64748B" fontSize={11} tickLine={false} axisLine={false} dx={-5} allowDecimals={false} />
                       <Tooltip />
