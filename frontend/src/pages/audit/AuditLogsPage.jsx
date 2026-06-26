@@ -115,6 +115,9 @@ const AuditLogsPage = () => {
           borderBottom: '2px solid #CBD5E1',
           paddingBottom: '1px',
           marginBottom: '8px',
+          overflowX: 'auto',
+          whiteSpace: 'nowrap',
+          scrollbarWidth: 'none', // Firefox
         }}
       >
         <button
@@ -130,6 +133,7 @@ const AuditLogsPage = () => {
             cursor: 'pointer',
             transition: 'all 0.2s',
             marginBottom: '-2px',
+            flexShrink: 0,
           }}
         >
           All Activity Logs
@@ -147,6 +151,7 @@ const AuditLogsPage = () => {
             cursor: 'pointer',
             transition: 'all 0.2s',
             marginBottom: '-2px',
+            flexShrink: 0,
           }}
         >
           Grouped by Module
@@ -167,6 +172,7 @@ const AuditLogsPage = () => {
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
+            flexShrink: 0,
           }}
         >
           <ShieldAlert size={16} />

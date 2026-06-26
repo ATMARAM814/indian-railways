@@ -89,6 +89,34 @@
   gap: 8px;
 }
 
+@media (max-width: 768px) {
+  .reports-tabs-list {
+    width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+    margin-bottom: -2px;
+    scrollbar-width: none; /* Hide scrollbar Firefox */
+  }
+  .reports-tabs-list::-webkit-scrollbar {
+    display: none; /* Hide scrollbar Chrome/Safari/Webkit */
+  }
+  .reports-tab-btn {
+    flex-shrink: 0;
+    padding: 10px 14px;
+  }
+  .reports-actions-row {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .reports-export-btn {
+    flex: 1;
+    justify-content: center;
+  }
+}
+
 .reports-tab-btn {
   padding: 12px 20px;
   font-size: 13px;

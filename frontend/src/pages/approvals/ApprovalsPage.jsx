@@ -275,7 +275,10 @@ const ApprovalsPage = () => {
           display: 'flex',
           borderBottom: '1px solid #E2E8F0',
           gap: '24px',
-          marginTop: '8px'
+          marginTop: '8px',
+          overflowX: 'auto',
+          whiteSpace: 'nowrap',
+          scrollbarWidth: 'none', // Firefox
         }}>
           <button
             onClick={() => { setActiveTab('pending'); setPage(1); }}
@@ -293,7 +296,8 @@ const ApprovalsPage = () => {
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
-              transition: 'all 0.2s'
+              transition: 'all 0.2s',
+              flexShrink: 0,
             }}
           >
             <CheckSquare size={16} />
@@ -327,7 +331,8 @@ const ApprovalsPage = () => {
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
-              transition: 'all 0.2s'
+              transition: 'all 0.2s',
+              flexShrink: 0,
             }}
           >
             <History size={16} />
