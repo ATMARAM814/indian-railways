@@ -51,9 +51,8 @@ export const StationOverviewCards = ({ overview }) => {
   ];
 
   return (
-    <div style={{
+    <div className="station-overview-grid" style={{
       display: 'grid',
-      gridTemplateColumns: 'repeat(6, 1fr)',
       gap: '16px'
     }}>
       {cards.map((card, idx) => (

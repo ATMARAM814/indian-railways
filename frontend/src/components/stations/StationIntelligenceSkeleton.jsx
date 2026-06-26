@@ -11,14 +11,14 @@ export const StationIntelligenceSkeleton = () => {
       <div className="skeleton-card" style={{ height: '90px', borderRadius: '16px' }}></div>
 
       {/* KPI Grid Skeleton */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '16px' }}>
+      <div className="station-overview-grid" style={{ display: 'grid', gap: '16px' }}>
         {Array.from({ length: 6 }).map((_, idx) => (
           <div key={idx} className="skeleton-card" style={{ height: '80px', borderRadius: '12px' }}></div>
         ))}
       </div>
 
       {/* Two Column Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+      <div className="distribution-grid" style={{ display: 'grid', gap: '24px' }}>
         <div className="skeleton-card" style={{ height: '300px', borderRadius: '16px' }}></div>
         <div className="skeleton-card" style={{ height: '300px', borderRadius: '16px' }}></div>
       </div>

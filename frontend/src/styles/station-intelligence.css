@@ -470,3 +470,77 @@
 .compliance-text.high-compliance { color: #16A34A; }
 .compliance-text.medium-compliance { color: #D97706; }
 .compliance-text.low-compliance { color: #DC2626; }
+
+/* Responsive adjustments for Station Overview Cards and mobile viewports */
+.station-overview-grid {
+  grid-template-columns: repeat(6, 1fr);
+}
+
+@media (max-width: 1200px) {
+  .station-overview-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .station-intelligence-container {
+    padding: 16px;
+    gap: 20px;
+  }
+  .command-header-card {
+    padding: 18px 20px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+  .command-station-block {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .command-ti-profile {
+    max-width: 100%;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 16px;
+  }
+  .command-ti-meta {
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .station-overview-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .unified-filters-bar {
+    padding: 16px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .filter-input-block {
+    width: 100%;
+    min-width: unset !important;
+  }
+  .reset-filters-btn {
+    align-self: stretch;
+    width: 100%;
+  }
+  .pagination-controls {
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+    text-align: center;
+    padding: 16px 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .station-overview-grid {
+    grid-template-columns: 1fr;
+  }
+  .readiness-grid {
+    grid-template-columns: 1fr;
+  }
+}

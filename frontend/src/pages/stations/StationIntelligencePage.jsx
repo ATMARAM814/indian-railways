@@ -144,7 +144,7 @@ const StationIntelligencePage = () => {
               />
               {/* Pagination Controls */}
               {totalPages > 1 && (
-                <div style={{
+                <div className="pagination-controls" style={{
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
