@@ -186,10 +186,10 @@ const McqExamPage = () => {
   const stationCode = activeAssessment?.station_code || 'NGP';
 
   return (
-    <div style={{ backgroundColor: '#F8FAFC', height: '100vh', display: 'flex', flexDirection: 'column', fontFamily: "'Poppins', 'Inter', sans-serif", overflow: 'hidden' }}>
+    <div className="exam-fullscreen-container">
       
       {/* 1. Custom Dark Header Bar */}
-      <header className="exam-fullscreen-header" style={{ flexShrink: 0 }}>
+      <header className="exam-fullscreen-header">
         <div className="exam-fullscreen-title-container">
           <div className="exam-fullscreen-logo-badge">
             <ShieldCheck size={24} style={{ strokeWidth: 2.5 }} />
@@ -203,7 +203,7 @@ const McqExamPage = () => {
         <div className="exam-fullscreen-actions">
           <div className="exam-status-pill">
             <span className="exam-status-dot"></span>
-            <span>STATUS: <strong style={{ color: '#F97316', marginLeft: '4px' }}>Active Exam Session</strong></span>
+            <span>STATUS: <strong className="status-highlight">Active Exam Session</strong></span>
           </div>
           <button className="btn-exit-exam" onClick={() => setShowExitModal(true)}>
             Exit Exam
@@ -212,12 +212,12 @@ const McqExamPage = () => {
       </header>
 
       {/* 2. Secondary Full-width Gray Meta-bar */}
-      <div className="exam-meta-bar" style={{ flexShrink: 0 }}>
+      <div className="exam-meta-bar">
         <div className="exam-meta-left">
           <span>Candidate: <strong>{candidateName}</strong></span>
-          <span style={{ color: '#CBD5E1', margin: '0 8px' }}>|</span>
+          <span className="meta-divider">|</span>
           <span>HRMS: <strong>{hrmsId}</strong></span>
-          <span style={{ color: '#CBD5E1', margin: '0 8px' }}>|</span>
+          <span className="meta-divider">|</span>
           <span>Station: <strong>{stationName} ({stationCode})</strong></span>
         </div>
         
@@ -231,11 +231,11 @@ const McqExamPage = () => {
       </div>
 
       {/* 3. Main Body Content */}
-      <main style={{ flex: 1, padding: '24px 32px', overflow: 'hidden', boxSizing: 'border-box' }}>
-        <div className="exam-layout-container" style={{ maxWidth: '1400px', margin: '0 auto', height: '100%', display: 'grid', gridTemplateColumns: '1fr 320px', gap: '24px', alignItems: 'stretch' }}>
+      <main className="exam-fullscreen-body">
+        <div className="exam-layout-container" style={{ maxWidth: '1400px', margin: '0 auto' }}>
           
           {/* Left Side: Exam card and navigation */}
-          <div className="exam-main-panel" style={{ height: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '20px', paddingRight: '8px' }}>
+          <div className="exam-main-panel">
             <QuestionCard
               question={activeQuestion}
               index={currentIndex}
@@ -256,7 +256,7 @@ const McqExamPage = () => {
           </div>
 
           {/* Right Side: Sidebar card */}
-          <div className="exam-sidebar-panel" style={{ height: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '20px', paddingRight: '8px', position: 'relative', top: 0 }}>
+          <div className="exam-sidebar-panel">
             <QuestionPalette
               questions={questions}
               currentIndex={currentIndex}
