@@ -1,8 +1,10 @@
 // CategoryDistributionChart.jsx
 import React from 'react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell } from 'recharts';
+import { useMobile } from '../../hooks/useMobile';
 
 export const CategoryDistributionChart = ({ data }) => {
+  const isMobile = useMobile();
   if (!data) return null;
 
   const COLORS = {
@@ -36,7 +38,18 @@ export const CategoryDistributionChart = ({ data }) => {
         <ResponsiveContainer width="100%" height={200}>
           <BarChart data={chartData} layout="horizontal" margin={{ top: 10, right: 10, left: -20, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
-            <XAxis dataKey="name" stroke="#64748B" fontSize={11} />
+            <XAxis 
+              dataKey="name" 
+              stroke="#64748B" 
+              fontSize={11}
+              tickLine={false} 
+              axisLine={false} 
+              dy={isMobile ? 5 : 10} 
+              interval={isMobile ? "preserveStartEnd" : 0}
+              angle={isMobile ? -35 : 0}
+              textAnchor={isMobile ? "end" : "middle"}
+              height={isMobile ? 50 : 30}
+            />
             <YAxis type="number" stroke="#64748B" fontSize={11} allowDecimals={false} />
             <Tooltip
               contentStyle={{ fontSize: '12px', borderRadius: '8px', border: '1px solid #D7E3EF' }}

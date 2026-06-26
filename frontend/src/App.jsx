@@ -11,63 +11,64 @@ import ChangePassword from './pages/auth/ChangePassword';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import ResetPassword from './pages/auth/ResetPassword';
 
-import PMDashboard from './pages/dashboard/PMDashboard';
-import TMDashboard from './pages/dashboard/TMDashboard';
-import ShuntingMasterDashboard from './pages/dashboard/ShuntingMasterDashboard';
-import SMDashboard from './pages/dashboard/SMDashboard';
-import SMSupervisorDashboard from './pages/dashboard/SMSupervisorDashboard';
-import TIDashboard from './pages/dashboard/TIDashboard';
-import AOMDashboard from './pages/dashboard/AOMDashboard';
-import SuperAdminDashboard from './pages/dashboard/SuperAdminDashboard';
+// Lazy-loaded pages
+const PMDashboard = React.lazy(() => import('./pages/dashboard/PMDashboard'));
+const TMDashboard = React.lazy(() => import('./pages/dashboard/TMDashboard'));
+const ShuntingMasterDashboard = React.lazy(() => import('./pages/dashboard/ShuntingMasterDashboard'));
+const SMDashboard = React.lazy(() => import('./pages/dashboard/SMDashboard'));
+const SMSupervisorDashboard = React.lazy(() => import('./pages/dashboard/SMSupervisorDashboard'));
+const TIDashboard = React.lazy(() => import('./pages/dashboard/TIDashboard'));
+const AOMDashboard = React.lazy(() => import('./pages/dashboard/AOMDashboard'));
+const SuperAdminDashboard = React.lazy(() => import('./pages/dashboard/SuperAdminDashboard'));
 
-import Unauthorized from './pages/Unauthorized';
-import PlaceholderPage from './pages/PlaceholderPage';
-import ApprovalsPage from './pages/approvals/ApprovalsPage';
+const Unauthorized = React.lazy(() => import('./pages/Unauthorized'));
+const PlaceholderPage = React.lazy(() => import('./pages/PlaceholderPage'));
+const ApprovalsPage = React.lazy(() => import('./pages/approvals/ApprovalsPage'));
 
 // Workforce Pages
-import PointsmenPage from './pages/workforce/PointsmenPage';
-import StationMastersPage from './pages/workforce/StationMastersPage';
-import TrainManagersPage from './pages/workforce/TrainManagersPage';
-import StationMasterSupervisorsPage from './pages/workforce/StationMasterSupervisorsPage';
-import CabinMastersPage from './pages/workforce/CabinMastersPage';
-import ShuntingMastersPage from './pages/workforce/ShuntingMastersPage';
-import StationMastersInchargePage from './pages/workforce/StationMastersInchargePage';
-import TrafficInspectorsPage from './pages/workforce/TrafficInspectorsPage';
-import AOMUsersPage from './pages/workforce/AOMUsersPage';
-import WorkforceProfilePage from './pages/workforce/WorkforceProfilePage';
-import MyProfilePage from './pages/profile/MyProfilePage';
-import PmeRefStatusPage from './pages/pme-ref/PmeRefStatusPage';
+const PointsmenPage = React.lazy(() => import('./pages/workforce/PointsmenPage'));
+const StationMastersPage = React.lazy(() => import('./pages/workforce/StationMastersPage'));
+const TrainManagersPage = React.lazy(() => import('./pages/workforce/TrainManagersPage'));
+const StationMasterSupervisorsPage = React.lazy(() => import('./pages/workforce/StationMasterSupervisorsPage'));
+const CabinMastersPage = React.lazy(() => import('./pages/workforce/CabinMastersPage'));
+const ShuntingMastersPage = React.lazy(() => import('./pages/workforce/ShuntingMastersPage'));
+const StationMastersInchargePage = React.lazy(() => import('./pages/workforce/StationMastersInchargePage'));
+const TrafficInspectorsPage = React.lazy(() => import('./pages/workforce/TrafficInspectorsPage'));
+const AOMUsersPage = React.lazy(() => import('./pages/workforce/AOMUsersPage'));
+const WorkforceProfilePage = React.lazy(() => import('./pages/workforce/WorkforceProfilePage'));
+const MyProfilePage = React.lazy(() => import('./pages/profile/MyProfilePage'));
+const PmeRefStatusPage = React.lazy(() => import('./pages/pme-ref/PmeRefStatusPage'));
 
 // Audit Log Pages
-import AuditLogsPage from './pages/audit/AuditLogsPage';
-import AuditLogDetailPage from './pages/audit/AuditLogDetailPage';
+const AuditLogsPage = React.lazy(() => import('./pages/audit/AuditLogsPage'));
+const AuditLogDetailPage = React.lazy(() => import('./pages/audit/AuditLogDetailPage'));
 
 // Admin Question Bank Pages
-import UploadQuestionsPage from './pages/admin/question-bank/UploadQuestionsPage';
-import UploadHistoryPage from './pages/admin/question-bank/UploadHistoryPage';
-import QuestionsListPage from './pages/admin/question-bank/QuestionsListPage';
+const UploadQuestionsPage = React.lazy(() => import('./pages/admin/question-bank/UploadQuestionsPage'));
+const UploadHistoryPage = React.lazy(() => import('./pages/admin/question-bank/UploadHistoryPage'));
+const QuestionsListPage = React.lazy(() => import('./pages/admin/question-bank/QuestionsListPage'));
 
 // Assessment Pages
-import AssessmentsLandingPage from './pages/assessments/AssessmentsLandingPage';
-import AssessmentRoleListPage from './pages/assessments/AssessmentRoleListPage';
-import AssessmentFormPage from './pages/assessments/AssessmentFormPage';
-import { AssessmentHistoryPage } from './pages/assessments/AssessmentHistoryPage';
+const AssessmentsLandingPage = React.lazy(() => import('./pages/assessments/AssessmentsLandingPage'));
+const AssessmentRoleListPage = React.lazy(() => import('./pages/assessments/AssessmentRoleListPage'));
+const AssessmentFormPage = React.lazy(() => import('./pages/assessments/AssessmentFormPage'));
+const AssessmentHistoryPage = React.lazy(() => import('./pages/assessments/AssessmentHistoryPage').then(module => ({ default: module.AssessmentHistoryPage })));
 
-import MyAssessmentPage from './pages/my-assessment/MyAssessmentPage';
-import ExamConfirmPage from './pages/my-assessment/ExamConfirmPage';
-import McqExamPage from './pages/my-assessment/McqExamPage';
-import ExamSuccessPage from './pages/my-assessment/ExamSuccessPage';
-import AssessmentScorecardPage from './pages/my-assessment/AssessmentScorecardPage';
+const MyAssessmentPage = React.lazy(() => import('./pages/my-assessment/MyAssessmentPage'));
+const ExamConfirmPage = React.lazy(() => import('./pages/my-assessment/ExamConfirmPage'));
+const McqExamPage = React.lazy(() => import('./pages/my-assessment/McqExamPage'));
+const ExamSuccessPage = React.lazy(() => import('./pages/my-assessment/ExamSuccessPage'));
+const AssessmentScorecardPage = React.lazy(() => import('./pages/my-assessment/AssessmentScorecardPage'));
 
 // Reports Pages
-import ReportsDashboardPage from './pages/reports/ReportsDashboardPage';
-import EmployeeReportPage from './pages/reports/EmployeeReportPage';
-import StationReportPage from './pages/reports/StationReportPage';
-import AssessmentCycleReportPage from './pages/reports/AssessmentCycleReportPage';
+const ReportsDashboardPage = React.lazy(() => import('./pages/reports/ReportsDashboardPage'));
+const EmployeeReportPage = React.lazy(() => import('./pages/reports/EmployeeReportPage'));
+const StationReportPage = React.lazy(() => import('./pages/reports/StationReportPage'));
+const AssessmentCycleReportPage = React.lazy(() => import('./pages/reports/AssessmentCycleReportPage'));
 
 // Stations (Station Intelligence) Pages
-import StationListPage from './pages/stations/StationListPage';
-import StationIntelligencePage from './pages/stations/StationIntelligencePage';
+const StationListPage = React.lazy(() => import('./pages/stations/StationListPage'));
+const StationIntelligencePage = React.lazy(() => import('./pages/stations/StationIntelligencePage'));
 
 import './styles/theme.css';
 import './styles/auth.css';
@@ -111,6 +112,37 @@ const DashboardRoot = () => {
   }
 };
 
+const PageLoader = () => (
+  <div style={{
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '80vh',
+    width: '100%',
+    color: '#0B2341',
+    gap: '16px'
+  }}>
+    <div style={{
+      width: '40px',
+      height: '40px',
+      border: '4px solid #F1F5F9',
+      borderTop: '4px solid #0B2341',
+      borderRadius: '50%',
+      animation: 'spin-loader 1s linear infinite'
+    }}></div>
+    <span style={{ fontSize: '14.5px', fontWeight: 600, color: '#64748B' }}>
+      Loading Safety Console...
+    </span>
+    <style>{`
+      @keyframes spin-loader {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    `}</style>
+  </div>
+);
+
 function App() {
   React.useEffect(() => {
     // Only run version check in production environments
@@ -149,8 +181,9 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        <Routes>
-          {/* Public Routes */}
+        <React.Suspense fallback={<PageLoader />}>
+          <Routes>
+            {/* Public Routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
@@ -647,7 +680,8 @@ function App() {
           {/* Catch-all Redirect */}
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
+          </Routes>
+        </React.Suspense>
       </Router>
     </AuthProvider>
   );

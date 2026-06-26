@@ -324,10 +324,12 @@ function makePerformanceTrend(assessments) {
 // ==========================================
 
 async function getPmDashboardService(profileId) {
-  const summaryData = await db.getPmSummary(profileId);
-  const trendData = await db.getPmPerformanceTrend(profileId);
-  const sectionsData = await db.getPmSectionWisePerformance(profileId);
-  const historyData = await db.getPmCategoryHistory(profileId);
+  const [summaryData, trendData, sectionsData, historyData] = await Promise.all([
+    db.getPmSummary(profileId),
+    db.getPmPerformanceTrend(profileId),
+    db.getPmSectionWisePerformance(profileId),
+    db.getPmCategoryHistory(profileId)
+  ]);
 
   const summary = {
     latestScore: summaryData.latest_score !== null ? Number(summaryData.latest_score) : null,
@@ -384,10 +386,12 @@ async function getPmDashboardService(profileId) {
 }
 
 async function getTmDashboardService(profileId) {
-  const summaryData = await db.getTmSummary(profileId);
-  const trendData = await db.getTmPerformanceTrend(profileId);
-  const sectionsData = await db.getTmSectionWisePerformance(profileId);
-  const historyData = await db.getTmCategoryHistory(profileId);
+  const [summaryData, trendData, sectionsData, historyData] = await Promise.all([
+    db.getTmSummary(profileId),
+    db.getTmPerformanceTrend(profileId),
+    db.getTmSectionWisePerformance(profileId),
+    db.getTmCategoryHistory(profileId)
+  ]);
 
   const summary = {
     latestScore: summaryData.latest_score !== null ? Number(summaryData.latest_score) : null,
@@ -511,12 +515,21 @@ async function getSmDashboardService(profileId) {
 
   const stationId = station.station_id;
 
-  const summaryData = await db.getSmSummary(stationId);
-  const roleWiseData = await db.getSmRoleWiseStaff(stationId);
-  const categoryData = await db.getSmCategoryDistribution(stationId);
-  const stationCategoryDist = await db.getSmStationCategoryDistribution(stationId);
-  const assessments = await db.getSmAssessments(stationId);
-  const staff = await db.getStationStaff(stationId);
+  const [
+    summaryData,
+    roleWiseData,
+    categoryData,
+    stationCategoryDist,
+    assessments,
+    staff
+  ] = await Promise.all([
+    db.getSmSummary(stationId),
+    db.getSmRoleWiseStaff(stationId),
+    db.getSmCategoryDistribution(stationId),
+    db.getSmStationCategoryDistribution(stationId),
+    db.getSmAssessments(stationId),
+    db.getStationStaff(stationId)
+  ]);
 
   const summary = {
     totalPM: summaryData.total_pm || 0,
@@ -633,13 +646,23 @@ async function getTiDashboardService(profileId) {
     };
   }
 
-  const summaryData = await db.getTiSummary(stationIds, profileId);
-  const stationProgress = await db.getTiStationProgress(stationIds);
-  const stationAvgScore = await db.getTiStationAvgScore(stationIds);
-  const roleWiseData = await db.getTiRoleDistribution(stationIds);
-  const categoryData = await db.getTiCategoryDistribution(stationIds);
-  const assessments = await db.getTiAssessments(stationIds);
-  const stationCategoryDist = await db.getTiStationCategoryDistribution(stationIds);
+  const [
+    summaryData,
+    stationProgress,
+    stationAvgScore,
+    roleWiseData,
+    categoryData,
+    assessments,
+    stationCategoryDist
+  ] = await Promise.all([
+    db.getTiSummary(stationIds, profileId),
+    db.getTiStationProgress(stationIds),
+    db.getTiStationAvgScore(stationIds),
+    db.getTiRoleDistribution(stationIds),
+    db.getTiCategoryDistribution(stationIds),
+    db.getTiAssessments(stationIds),
+    db.getTiStationCategoryDistribution(stationIds)
+  ]);
 
   // Calculate overall average score of assessments in this TI's section
   // Formula: average score per person, divided by total persons who have completed assessments
@@ -790,14 +813,25 @@ async function getAomDashboardService(profileId) {
     };
   }
 
-  const summaryData = await db.getAomSummary(divisionId);
-  const stationProgress = await db.getAomStationProgress(divisionId);
-  const stationAvgScore = await db.getAomStationAvgScore(divisionId);
-  const roleWiseData = await db.getAomRoleDistribution(divisionId);
-  const categoryData = await db.getAomCategoryDistribution(divisionId);
-  const tiPerformance = await db.getAomTiPerformance(divisionId);
-  const stationCategoryDist = await db.getAomStationCategoryDistribution(divisionId);
-  const assessments = await db.getAomAssessments(divisionId);
+  const [
+    summaryData,
+    stationProgress,
+    stationAvgScore,
+    roleWiseData,
+    categoryData,
+    tiPerformance,
+    stationCategoryDist,
+    assessments
+  ] = await Promise.all([
+    db.getAomSummary(divisionId),
+    db.getAomStationProgress(divisionId),
+    db.getAomStationAvgScore(divisionId),
+    db.getAomRoleDistribution(divisionId),
+    db.getAomCategoryDistribution(divisionId),
+    db.getAomTiPerformance(divisionId),
+    db.getAomStationCategoryDistribution(divisionId),
+    db.getAomAssessments(divisionId)
+  ]);
 
   const completedApprovals = assessments.filter(a => a.approval_status === 'approved').length;
 
@@ -889,14 +923,25 @@ async function getAomDashboardService(profileId) {
 }
 
 async function getSuperAdminDashboardService() {
-  const summaryData = await db.getSuperAdminSummary();
-  const stationProgress = await db.getSuperAdminStationProgress();
-  const stationAvgScore = await db.getSuperAdminStationAvgScore();
-  const roleWiseData = await db.getSuperAdminRoleDistribution();
-  const categoryData = await db.getSuperAdminCategoryDistribution();
-  const tiPerformance = await db.getSuperAdminTiPerformance();
-  const stationCategoryDist = await db.getSuperAdminStationCategoryDistribution();
-  const assessments = await db.getSuperAdminAssessments();
+  const [
+    summaryData,
+    stationProgress,
+    stationAvgScore,
+    roleWiseData,
+    categoryData,
+    tiPerformance,
+    stationCategoryDist,
+    assessments
+  ] = await Promise.all([
+    db.getSuperAdminSummary(),
+    db.getSuperAdminStationProgress(),
+    db.getSuperAdminStationAvgScore(),
+    db.getSuperAdminRoleDistribution(),
+    db.getSuperAdminCategoryDistribution(),
+    db.getSuperAdminTiPerformance(),
+    db.getSuperAdminStationCategoryDistribution(),
+    db.getSuperAdminAssessments()
+  ]);
 
   const totalEmployees =
     (summaryData.total_aom || 0) +
@@ -1040,12 +1085,21 @@ async function getSmSupervisorDashboardService(profileId) {
 
   const stationId = station.station_id;
 
-  const summaryData = await db.getSmSupervisorSummary(stationId, profileId);
-  const roleWiseData = await db.getSmRoleWiseStaff(stationId);
-  const categoryData = await db.getSmCategoryDistribution(stationId);
-  const stationCategoryDist = await db.getSmStationCategoryDistribution(stationId);
-  const assessments = await db.getSmAssessments(stationId);
-  const staff = await db.getStationStaff(stationId);
+  const [
+    summaryData,
+    roleWiseData,
+    categoryData,
+    stationCategoryDist,
+    assessments,
+    staff
+  ] = await Promise.all([
+    db.getSmSupervisorSummary(stationId, profileId),
+    db.getSmRoleWiseStaff(stationId),
+    db.getSmCategoryDistribution(stationId),
+    db.getSmStationCategoryDistribution(stationId),
+    db.getSmAssessments(stationId),
+    db.getStationStaff(stationId)
+  ]);
 
   const summary = {
     totalPM: summaryData.total_pm || 0,

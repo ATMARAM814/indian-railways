@@ -10,8 +10,10 @@ import {
   Legend 
 } from 'recharts';
 import ChartCard from '../dashboard/ChartCard';
+import { useMobile } from '../../hooks/useMobile';
 
 const EmployeeScoreTrend = ({ scoreTrend }) => {
+  const isMobile = useMobile();
   const hasData = Array.isArray(scoreTrend) && scoreTrend.length > 0;
 
   // Format date to local date string for the trend chart
@@ -41,7 +43,11 @@ const EmployeeScoreTrend = ({ scoreTrend }) => {
               fontSize={11} 
               tickLine={false} 
               axisLine={false} 
-              dy={10} 
+              dy={isMobile ? 5 : 10} 
+              interval={isMobile ? "preserveStartEnd" : 0}
+              angle={isMobile ? -35 : 0}
+              textAnchor={isMobile ? "end" : "middle"}
+              height={isMobile ? 50 : 30}
             />
             <YAxis 
               stroke="#64748B" 

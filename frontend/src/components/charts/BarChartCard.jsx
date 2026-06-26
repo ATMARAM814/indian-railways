@@ -15,6 +15,7 @@ import {
 } from 'recharts';
 import ChartCard from '../dashboard/ChartCard';
 import EmptyState from '../dashboard/EmptyState';
+import { useMobile } from '../../hooks/useMobile';
 import '../../styles/charts.css';
 
 const BarChartCard = ({ 
@@ -32,6 +33,7 @@ const BarChartCard = ({
   yInterval,
   height = 250
 }) => {
+  const isMobile = useMobile();
   const hasData = Array.isArray(data) && data.length > 0;
   const nameToUse = yKeyName || yKey;
 
@@ -65,7 +67,11 @@ const BarChartCard = ({
         <EmptyState />
       ) : (
         <ResponsiveContainer width="100%" height={height}>
-          <BarChart data={data} margin={{ top: 20, right: 10, left: -20, bottom: data.length > 5 ? 25 : 0 }} key={JSON.stringify(data)}>
+          <BarChart 
+            data={data} 
+            margin={{ top: 20, right: 10, left: -20, bottom: isMobile ? 80 : (data.length > 5 ? 25 : 0) }} 
+            key={`${JSON.stringify(data)}-${isMobile}`}
+          >
             <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
             <XAxis 
               dataKey={xKey} 
@@ -73,11 +79,11 @@ const BarChartCard = ({
               fontSize={11} 
               tickLine={false} 
               axisLine={false} 
-              dy={10} 
-              interval={0}
-              angle={0}
-              textAnchor="middle"
-              height={30}
+              dy={isMobile ? 5 : 10} 
+              interval={isMobile ? "preserveStartEnd" : 0}
+              angle={isMobile ? -45 : 0}
+              textAnchor={isMobile ? "end" : "middle"}
+              height={isMobile ? 80 : 30}
             />
             <YAxis 
               stroke="#64748B" 

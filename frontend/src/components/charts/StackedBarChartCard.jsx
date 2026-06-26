@@ -12,6 +12,7 @@ import {
 } from 'recharts';
 import ChartCard from '../dashboard/ChartCard';
 import EmptyState from '../dashboard/EmptyState';
+import { useMobile } from '../../hooks/useMobile';
 import '../../styles/charts.css';
 
 const DEFAULT_STACK_BARS = [
@@ -29,6 +30,7 @@ const StackedBarChartCard = ({
   bars = DEFAULT_STACK_BARS,
   stacked = true
 }) => {
+  const isMobile = useMobile();
   const hasData = Array.isArray(data) && data.length > 0;
 
   return (
@@ -45,11 +47,11 @@ const StackedBarChartCard = ({
               fontSize={11} 
               tickLine={false} 
               axisLine={false} 
-              dy={10} 
-              interval={0}
-              angle={0}
-              textAnchor="middle"
-              height={30}
+              dy={isMobile ? 5 : 10} 
+              interval={isMobile ? "preserveStartEnd" : 0}
+              angle={isMobile ? -35 : 0}
+              textAnchor={isMobile ? "end" : "middle"}
+              height={isMobile ? 50 : 30}
             />
             <YAxis 
               stroke="#64748B" 

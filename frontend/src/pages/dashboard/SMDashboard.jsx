@@ -18,15 +18,15 @@ import LineChartCard from '../../components/charts/LineChartCard';
 import BarChartCard from '../../components/charts/BarChartCard';
 import DonutChartCard from '../../components/charts/DonutChartCard';
 import StaffProfileModal from '../../components/dashboard/StaffProfileModal';
-import { getWorkforceDetails } from '../../services/workforce.service';
 import { 
+  Building2, 
+  ShieldCheck, 
+  ShieldAlert, 
+  Shield, 
+  AlertTriangle, 
   Users, 
+  CheckCircle, 
   ClipboardCheck, 
-  CheckCircle,
-  ShieldAlert,
-  ShieldCheck,
-  Shield,
-  AlertTriangle,
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
@@ -34,7 +34,6 @@ import {
 const SMDashboard = () => {
   const { user, logout } = useAuth();
   const [data, setData] = useState(null);
-  const [personalTrend, setPersonalTrend] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
@@ -70,16 +69,6 @@ const SMDashboard = () => {
         throw new Error(res.message || 'Failed to fetch dashboard data');
       }
 
-      if (user?.id) {
-        const profileRes = await getWorkforceDetails(user.id);
-        if (profileRes.success && profileRes.data?.trend) {
-          const mappedTrend = profileRes.data.trend.map((t, idx) => ({
-            date: t.date ? formatDate(t.date) : `Eval ${idx + 1}`,
-            Score: Number(t.score || 0)
-          }));
-          setPersonalTrend(mappedTrend);
-        }
-      }
     } catch (err) {
       console.error(err);
       if (err.response?.status === 401) {

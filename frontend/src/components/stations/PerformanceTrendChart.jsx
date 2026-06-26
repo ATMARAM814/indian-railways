@@ -1,8 +1,10 @@
 // PerformanceTrendChart.jsx
 import React from 'react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { useMobile } from '../../hooks/useMobile';
 
 export const PerformanceTrendChart = ({ data }) => {
+  const isMobile = useMobile();
   if (!data) return null;
 
   return (
@@ -15,7 +17,18 @@ export const PerformanceTrendChart = ({ data }) => {
           <ResponsiveContainer width="100%" height={240}>
             <LineChart data={data} margin={{ top: 10, right: 20, left: -20, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
-              <XAxis dataKey="month" stroke="#64748B" fontSize={11} />
+              <XAxis 
+                dataKey="month" 
+                stroke="#64748B" 
+                fontSize={11}
+                tickLine={false} 
+                axisLine={false} 
+                dy={isMobile ? 5 : 10} 
+                interval={isMobile ? "preserveStartEnd" : 0}
+                angle={isMobile ? -35 : 0}
+                textAnchor={isMobile ? "end" : "middle"}
+                height={isMobile ? 50 : 30}
+              />
               <YAxis domain={[0, 100]} stroke="#64748B" fontSize={11} />
               <Tooltip
                 contentStyle={{ fontSize: '12px', borderRadius: '8px', border: '1px solid #D7E3EF' }}
