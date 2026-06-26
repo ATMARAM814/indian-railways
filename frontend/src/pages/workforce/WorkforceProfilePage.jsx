@@ -142,7 +142,7 @@ const WorkforceProfilePage = () => {
 
   return (
     <DashboardLayout>
-      <div style={{ padding: '32px' }}>
+      <div className="profile-page-container">
         
         {/* Back Button */}
         <button 
@@ -167,19 +167,7 @@ const WorkforceProfilePage = () => {
         </button>
 
         {/* Profile Header Block */}
-        <div style={{ 
-          backgroundColor: '#FFFFFF', 
-          border: '1px solid #D7E3EF', 
-          borderRadius: '16px', 
-          padding: '28px', 
-          marginBottom: '28px', 
-          boxShadow: '0 1px 3px rgba(11, 35, 65, 0.05)',
-          display: 'flex',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '24px'
-        }}>
+        <div className="profile-header-card">
           {/* Avatar and Main Info */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
             <div style={{
@@ -240,7 +228,7 @@ const WorkforceProfilePage = () => {
         </div>
 
         {/* Two-Column Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: '4fr 6fr', gap: '28px', alignItems: 'start' }}>
+        <div className="profile-layout-grid" style={{ marginBottom: '28px' }}>
           
           {/* Left Column (Bio, Posting, Hierarchy) */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
@@ -387,7 +375,7 @@ const WorkforceProfilePage = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
             
             {/* Assessment Summary stats */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+            <div className="profile-kpi-grid">
               
               {/* Assessments Completed */}
               <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #D7E3EF', borderRadius: '12px', padding: '16px', boxShadow: '0 1px 3px rgba(11, 35, 65, 0.05)' }}>

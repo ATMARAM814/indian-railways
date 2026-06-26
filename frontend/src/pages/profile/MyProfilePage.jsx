@@ -252,7 +252,7 @@ const MyProfilePage = () => {
         }
       `}} />
 
-      <div style={{ padding: '32px', fontFamily: "'Outfit', 'Inter', sans-serif", backgroundColor: '#F8FAFC', minHeight: 'calc(100vh - 70px)' }}>
+      <div className="profile-page-container" style={{ fontFamily: "'Outfit', 'Inter', sans-serif" }}>
         
         {/* Page Header */}
         <div style={{ marginBottom: '28px' }}>
@@ -472,7 +472,7 @@ const MyProfilePage = () => {
             boxShadow: 'var(--shadow-sm, 0 1px 3px rgba(11, 35, 65, 0.05))',
             display: 'flex',
             flexDirection: 'column',
-            height: '420px'
+            minHeight: '420px'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', borderBottom: '1px solid #F1F5F9', paddingBottom: '14px' }}>
               <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: '#1B365D', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -482,7 +482,7 @@ const MyProfilePage = () => {
               <span style={{ color: '#2B5CE6', fontSize: '16px', fontWeight: 700, cursor: 'pointer' }}>•••</span>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 20px', flex: 1 }}>
+            <div className="profile-details-grid">
               <DetailField 
                 icon={<HardDrive />} 
                 label="Employee ID / HRMS ID" 

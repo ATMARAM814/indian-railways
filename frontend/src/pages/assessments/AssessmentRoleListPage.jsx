@@ -213,7 +213,7 @@ const AssessmentRoleListPage = () => {
 
   return (
     <DashboardLayout>
-      <div style={{ padding: '24px 32px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <div className="dashboard-page-container">
         
         {/* Page Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
@@ -472,7 +472,7 @@ const AssessmentRoleListPage = () => {
 
                 {/* Editable Section */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+                  <div className="modal-inputs-grid">
                     <div>
                       <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>Assessment Cycle *</label>
                       <select
@@ -500,7 +500,7 @@ const AssessmentRoleListPage = () => {
                     </div>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+                  <div className="modal-inputs-grid">
                     <div>
                       <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>Scheduled Date *</label>
                       <input
