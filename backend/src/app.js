@@ -32,7 +32,7 @@ const frontendUrl = process.env.FRONTEND_URL;
 const corsOptions = {
   origin: function (origin, callback) {
     const isDevelopment = process.env.NODE_ENV !== "production";
-    if (isDevelopment || !origin || origin === frontendUrl || origin.startsWith("http://localhost:")) {
+    if (isDevelopment || !origin || origin === frontendUrl || origin.startsWith("http://localhost:") || origin.startsWith("http://127.0.0.1:")) {
       callback(null, true);
     } else {
       callback(new Error("CORS policy violation: origin not allowed."));
