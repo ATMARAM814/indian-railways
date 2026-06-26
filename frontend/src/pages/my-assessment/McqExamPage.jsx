@@ -91,7 +91,7 @@ const McqExamPage = () => {
     const res = await submitExam(assessmentId);
     if (res.success) {
       setShowSubmitModal(false);
-      navigate(`/my-assessment/${assessmentId}/success`);
+      navigate(`/my-assessment/${assessmentId}/scorecard`);
     } else {
       alert(res.message || 'Error submitting assessment.');
     }

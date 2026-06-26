@@ -37,12 +37,12 @@ const AssessmentScorecardPage = () => {
     : 'N/A';
 
   const percentage = parseFloat(scorecardDetails?.percentage || 0);
-  const isPendingPractical = scorecardDetails?.status === 'mcq_submitted';
-  const category = isPendingPractical ? 'Pending' : resolveCategory(percentage, scorecardDetails?.alcoholic_status);
+  const isApproved = scorecardDetails?.status === 'approved' || scorecardDetails?.approval_status === 'approved';
+  const category = isApproved ? resolveCategory(percentage, scorecardDetails?.alcoholic_status) : 'Pending';
 
   const getCategoryName = (cat) => {
     switch (cat) {
-      case 'Pending': return 'Pending Practical';
+      case 'Pending': return 'Pending Practical / Approval';
       case 'A': return 'Outstanding';
       case 'B': return 'Good';
       case 'C': return 'Needs Training';
@@ -53,7 +53,7 @@ const AssessmentScorecardPage = () => {
 
   const getCategoryDescription = (cat) => {
     switch (cat) {
-      case 'Pending': return 'Practical safety check & evaluation is pending supervisor scheduling.';
+      case 'Pending': return 'Practical safety check or final manager approval is currently pending.';
       case 'A': return 'Highly competent to execute safety-critical railway operations.';
       case 'B': return 'Competent. Demonstrated standard knowledge & response profiles.';
       case 'C': return 'Requires monitoring and recommended targeted counselling.';
@@ -64,8 +64,8 @@ const AssessmentScorecardPage = () => {
 
   const getCompetencySummaryText = () => {
     if (!scorecardDetails) return '';
-    if (isPendingPractical) {
-      return `MCQ Exam completed with score: ${scorecardDetails.mcq_score}/25. Practical safety checklist evaluation by your Station Master/Supervisor is currently pending. Your final safety score and category will be resolved after practical assessment and final approval.`;
+    if (!isApproved) {
+      return `MCQ Exam completed with score: ${scorecardDetails.mcq_score}/25. Practical safety checklist evaluation and final administrative approval are currently pending. Your final safety score and category will be resolved after full assessment completion and sign-off.`;
     }
     const totalScore = scorecardDetails.total_score || 0;
     const categoryName = getCategoryName(category);
@@ -203,7 +203,7 @@ const AssessmentScorecardPage = () => {
                     onMouseLeave={e => { e.currentTarget.style.backgroundColor = '#2563EB'; }}
                   >
                     <ArrowLeft size={14} />
-                    <span>Return to History</span>
+                    <span>Go back to My Assessment</span>
                   </button>
                 </div>
 
@@ -211,7 +211,7 @@ const AssessmentScorecardPage = () => {
                 <div className="scorecard-top-panel">
                   {/* Gauge */}
                   <div className={`scorecard-gauge-box cat-${category === 'Pending' ? 'pending' : category?.toLowerCase()}`}>
-                    <span className="scorecard-gauge-value">{isPendingPractical ? '—' : (scorecardDetails.total_score ?? 0)}</span>
+                    <span className="scorecard-gauge-value">{isApproved ? (scorecardDetails.total_score ?? 0) : '—'}</span>
                     <span className="scorecard-gauge-label">/ 100</span>
                   </div>
 
@@ -222,10 +222,10 @@ const AssessmentScorecardPage = () => {
                       borderRadius: '6px',
                       fontSize: '11.5px',
                       fontWeight: 700,
-                      background: category === 'Pending' ? '#F1F5F9' : category === 'A' ? '#E0F2FE' : '#F1F5F9',
-                      color: category === 'Pending' ? '#475569' : category === 'A' ? '#0369A1' : '#475569'
+                      background: category === 'Pending' ? '#FFFBEB' : category === 'A' ? '#ECFDF5' : '#EFF6FF',
+                      color: category === 'Pending' ? '#B45309' : category === 'A' ? '#15803D' : '#1D4ED8'
                     }}>
-                      {category === 'Pending' ? 'Status: Pending Practical' : `Final Category: Category ${category}`}
+                      {category === 'Pending' ? 'Status: Pending Practical / Approval' : `Final Category: Category ${category}`}
                     </span>
                     <h2 className="scorecard-info-title">
                       {new Date(scorecardDetails.evaluated_at || scorecardDetails.submitted_at || scorecardDetails.created_at).toLocaleString('en-IN', { month: 'long', year: 'numeric' })} - Safety Evaluation
@@ -256,7 +256,7 @@ const AssessmentScorecardPage = () => {
                   <div className="scorecard-domain-grid" style={{ gap: '16px' }}>
                     {DOMAINS.map((dom) => {
                       const isMcq = dom.key === 'mcq_score';
-                      const isPendingDom = isPendingPractical && !isMcq;
+                      const isPendingDom = !isApproved && !isMcq;
                       
                       const score = isPendingDom ? null : (scorecardDetails[dom.key] ?? 0);
                       const max = dom.max;
@@ -295,6 +295,29 @@ const AssessmentScorecardPage = () => {
               {/* Complete Assessment Question Review section */}
               <div style={{ marginTop: '36px', width: '100%' }}>
                 <QuestionReviewList questions={questionsReview} />
+              </div>
+
+              {/* Bottom Return Button */}
+              <div style={{ display: 'flex', justifyContent: 'center', marginTop: '32px', marginBottom: '16px' }}>
+                <button
+                  onClick={() => navigate('/my-assessment')}
+                  className="btn-premium-primary"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '12px 32px',
+                    fontSize: '14.5px',
+                    fontWeight: 700,
+                    borderRadius: '50px',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 12px rgba(37, 99, 235, 0.2)',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  <ArrowLeft size={16} />
+                  <span>Go back to My Assessment</span>
+                </button>
               </div>
             </>
           ) : null}
