@@ -14,6 +14,9 @@ export const AssessmentOperationalDetails = ({
     onChange(name, type === 'checkbox' ? checked : value);
   };
 
+  const normalizedRole = (assessorRole || '').toUpperCase();
+  const isMcqReadOnly = readOnly || ['SM', 'SS', 'CABIN MASTER'].includes(normalizedRole);
+
   const getRemarksLabel = () => {
     if (['SM', 'SS', 'Cabin Master', 'CABIN MASTER'].includes(assessorRole)) return 'Remarks for SMS/TI';
     if (assessorRole === 'TI') return 'Remarks for AOM';
@@ -32,7 +35,7 @@ export const AssessmentOperationalDetails = ({
         {/* Knowledge Marks (MCQ Test) */}
         <div className="op-item">
           <label className="op-label">Knowledge Marks (MCQ Test) *</label>
-          {readOnly ? (
+          {isMcqReadOnly ? (
             <div className="op-value-readonly">
               {mcqScore !== null && mcqScore !== undefined ? `${mcqScore} / 25 Marks` : 'N/A'}
             </div>
