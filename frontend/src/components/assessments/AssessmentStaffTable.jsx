@@ -793,16 +793,16 @@ export const AssessmentStaffTable = ({
               {/* Visual Progress Tracker */}
               <div>
                 <h4 style={{ fontSize: '13px', fontWeight: 700, color: '#334155', marginBottom: '16px' }}>Progress Tracker</h4>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', width: '100%', padding: '0 16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', width: '100%', padding: '0 4px' }}>
                   {/* Background line */}
-                  <div style={{ position: 'absolute', top: '15px', left: '48px', right: '48px', height: '4px', backgroundColor: '#E2E8F0', zIndex: 1 }}></div>
+                  <div style={{ position: 'absolute', top: '16px', left: '8.3%', right: '8.3%', height: '4px', backgroundColor: '#E2E8F0', zIndex: 1 }}></div>
                   
                   {/* Highlighted active line */}
                   <div style={{
                     position: 'absolute',
-                    top: '15px',
-                    left: '48px',
-                    width: `${Math.max(0, getActiveStepIndex(selectedRow.assessment_status, selectedRow.approval_status) * 20)}%`,
+                    top: '16px',
+                    left: '8.3%',
+                    width: `${Math.max(0, getActiveStepIndex(selectedRow.assessment_status, selectedRow.approval_status) * 16.67)}%`,
                     height: '4px',
                     backgroundColor: '#16A34A',
                     zIndex: 2,
@@ -819,7 +819,7 @@ export const AssessmentStaffTable = ({
                   ].map((step) => {
                     const isPassed = getActiveStepIndex(selectedRow.assessment_status, selectedRow.approval_status) >= step.idx;
                     return (
-                      <div key={step.idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', zIndex: 3, width: '80px' }}>
+                      <div key={step.idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', zIndex: 3, width: '16.6%', maxWidth: '80px' }}>
                         <div style={{
                           width: '32px',
                           height: '32px',
@@ -832,11 +832,22 @@ export const AssessmentStaffTable = ({
                           justifyContent: 'center',
                           fontSize: '12px',
                           fontWeight: 'bold',
-                          transition: 'all 0.3s ease'
+                          transition: 'all 0.3s ease',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
                         }}>
                           {isPassed ? <CheckCircle size={16} /> : step.idx + 1}
                         </div>
-                        <span style={{ fontSize: '10px', fontWeight: 600, color: isPassed ? '#16A34A' : '#64748B', marginTop: '6px', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                        <span style={{
+                          fontSize: '9px',
+                          fontWeight: 600,
+                          color: isPassed ? '#16A34A' : '#64748B',
+                          marginTop: '6px',
+                          textAlign: 'center',
+                          whiteSpace: 'normal',
+                          lineHeight: '1.2',
+                          wordBreak: 'break-word',
+                          maxWidth: '100%',
+                        }}>
                           {step.label}
                         </span>
                       </div>
