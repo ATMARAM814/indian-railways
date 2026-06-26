@@ -619,18 +619,20 @@ async function getAssessmentResultsForUser(userId) {
     SELECT
       a.id,
       a.status,
+      a.approval_status,
       a.assessed_role_code,
       a.mcq_score,
       a.evaluation_score,
       a.total_score,
       a.percentage,
       a.created_at,
+      a.submitted_at,
       a.evaluated_at,
       a.alcoholic_status
     FROM assessments a
     WHERE a.assessed_user_id = $1
-      AND a.status = 'completed'
-    ORDER BY a.evaluated_at DESC;
+      AND a.status IN ('mcq_submitted', 'completed')
+    ORDER BY COALESCE(a.evaluated_at, a.submitted_at, a.created_at) DESC;
   `;
 
   const result = await pool.query(query, [userId]);
@@ -894,9 +896,9 @@ async function getAssessorRoleStats(assessorId, assessorRole) {
   } else if (assessorRole === 'TI') {
     targetRoles = ['SM', 'SS', 'TM', 'Cabin Master'];
   } else if (assessorRole === 'AOM') {
-    targetRoles = ['TI', 'Station Master Supervisor'];
+    targetRoles = ['TI', 'SMS'];
   } else if (assessorRole === 'SUPER_ADMIN') {
-    targetRoles = ['PM', 'SM', 'TM', 'SS', 'TI', 'Cabin Master', 'Shunting Master', 'Station Master Supervisor'];
+    targetRoles = ['PM', 'SM', 'TM', 'SS', 'TI', 'Cabin Master', 'Shunting Master', 'SMS'];
   }
 
   const results = [];

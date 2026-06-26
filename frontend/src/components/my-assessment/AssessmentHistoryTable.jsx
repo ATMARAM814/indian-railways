@@ -104,10 +104,10 @@ const AssessmentHistoryTable = ({ history, resolveCategory }) => {
                   </div>
                 </td>
                 <td>
-                  {isApproved ? (
+                  {item.mcq_score !== null && item.mcq_score !== undefined ? (
                     <>
                       <span style={{ fontWeight: 700, fontSize: '16px', color: 'var(--primary-navy)' }}>
-                        {item.mcq_score ?? 0}
+                        {item.mcq_score}
                       </span>
                       <span style={{ fontSize: '13.5px', color: 'var(--text-muted)', fontWeight: 500 }}>
                         {' '}/ 25
@@ -118,10 +118,10 @@ const AssessmentHistoryTable = ({ history, resolveCategory }) => {
                   )}
                 </td>
                 <td>
-                  {isApproved ? (
+                  {isApproved && item.evaluation_score !== null && item.evaluation_score !== undefined ? (
                     <>
                       <span style={{ fontWeight: 700, fontSize: '16px', color: 'var(--primary-navy)' }}>
-                        {item.evaluation_score ?? 0}
+                        {item.evaluation_score}
                       </span>
                       <span style={{ fontSize: '13.5px', color: 'var(--text-muted)', fontWeight: 500 }}>
                         {' '}/ 75
@@ -147,7 +147,7 @@ const AssessmentHistoryTable = ({ history, resolveCategory }) => {
                   )}
                 </td>
                 <td>
-                  {isApproved ? (
+                  {isApproved && category ? (
                     <span className={`badge ${getCategoryBadgeClass(category)}`}>
                       {getCategoryName(category)}
                     </span>
@@ -156,7 +156,7 @@ const AssessmentHistoryTable = ({ history, resolveCategory }) => {
                   )}
                 </td>
                 <td style={{ textAlign: 'center' }}>
-                  {isApproved ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', justifyContent: 'center' }}>
                     <button
                       className="btn-premium-secondary"
                       title="View Detailed Scorecard"
@@ -166,37 +166,18 @@ const AssessmentHistoryTable = ({ history, resolveCategory }) => {
                       <Eye size={16} />
                       <span>View Scorecard</span>
                     </button>
-                  ) : (
-                    <>
-                      {item.status === 'mcq_submitted' ? (
-                        <span style={{
-                          padding: '6px 12px',
-                          borderRadius: '8px',
-                          fontSize: '13px',
-                          fontWeight: '600',
-                          backgroundColor: '#EFF6FF',
-                          color: '#1D4ED8',
-                          border: '1px solid #BFDBFE',
-                          display: 'inline-block'
-                        }}>
-                          Pending Evaluation
-                        </span>
-                      ) : (
-                        <span style={{
-                          padding: '6px 12px',
-                          borderRadius: '8px',
-                          fontSize: '13px',
-                          fontWeight: '600',
-                          backgroundColor: '#FAF5FF',
-                          color: '#7E22CE',
-                          border: '1px solid #E9D5FF',
-                          display: 'inline-block'
-                        }}>
-                          Pending Approval
-                        </span>
-                      )}
-                    </>
-                  )}
+                    {!isApproved && (
+                      <span style={{
+                        fontSize: '11px',
+                        fontWeight: '700',
+                        color: item.status === 'mcq_submitted' ? '#1D4ED8' : '#7E22CE',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.4px'
+                      }}>
+                        {item.status === 'mcq_submitted' ? 'Pending Evaluation' : 'Pending Approval'}
+                      </span>
+                    )}
+                  </div>
                 </td>
               </tr>
             );

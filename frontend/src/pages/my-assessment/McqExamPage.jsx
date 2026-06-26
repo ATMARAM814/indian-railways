@@ -24,7 +24,6 @@ const McqExamPage = () => {
     answers,
     markedForReview,
     submitting,
-    fetchLandingData,
     loadExamQuestions,
     saveAnswer,
     toggleReview,
@@ -34,11 +33,15 @@ const McqExamPage = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showExitModal, setShowExitModal] = useState(false);
   const [showSubmitModal, setShowSubmitModal] = useState(false);
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
-    fetchLandingData();
-    loadExamQuestions(assessmentId);
-  }, [assessmentId, fetchLandingData, loadExamQuestions]);
+    const init = async () => {
+      await loadExamQuestions(assessmentId);
+      setInitialized(true);
+    };
+    init();
+  }, [assessmentId, loadExamQuestions]);
 
   const activeQuestion = useMemo(() => {
     return questions[currentIndex] || null;
@@ -94,7 +97,7 @@ const McqExamPage = () => {
     }
   };
 
-  if (loading && totalQuestions === 0) {
+  if (!initialized || (loading && totalQuestions === 0)) {
     return (
       <div style={{ backgroundColor: '#F8FAFC', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div className="animate-pulse" style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-secondary)' }}>
@@ -172,7 +175,8 @@ const McqExamPage = () => {
     'AOM': 'Assistant Operations Manager',
     'Shunting Master': 'Shunting Master',
     'SHUNTING MASTER': 'Shunting Master',
-    'SHM': 'Shunting Master'
+    'SHM': 'Shunting Master',
+    'SMS': 'Station Master Supervisor'
   };
 
   const getFullRoleName = (code) => {

@@ -37,10 +37,12 @@ const AssessmentScorecardPage = () => {
     : 'N/A';
 
   const percentage = parseFloat(scorecardDetails?.percentage || 0);
-  const category = resolveCategory(percentage, scorecardDetails?.alcoholic_status);
+  const isPendingPractical = scorecardDetails?.status === 'mcq_submitted';
+  const category = isPendingPractical ? 'Pending' : resolveCategory(percentage, scorecardDetails?.alcoholic_status);
 
   const getCategoryName = (cat) => {
     switch (cat) {
+      case 'Pending': return 'Pending Practical';
       case 'A': return 'Outstanding';
       case 'B': return 'Good';
       case 'C': return 'Needs Training';
@@ -51,6 +53,7 @@ const AssessmentScorecardPage = () => {
 
   const getCategoryDescription = (cat) => {
     switch (cat) {
+      case 'Pending': return 'Practical safety check & evaluation is pending supervisor scheduling.';
       case 'A': return 'Highly competent to execute safety-critical railway operations.';
       case 'B': return 'Competent. Demonstrated standard knowledge & response profiles.';
       case 'C': return 'Requires monitoring and recommended targeted counselling.';
@@ -61,6 +64,9 @@ const AssessmentScorecardPage = () => {
 
   const getCompetencySummaryText = () => {
     if (!scorecardDetails) return '';
+    if (isPendingPractical) {
+      return `MCQ Exam completed with score: ${scorecardDetails.mcq_score}/25. Practical safety checklist evaluation by your Station Master/Supervisor is currently pending. Your final safety score and category will be resolved after practical assessment and final approval.`;
+    }
     const totalScore = scorecardDetails.total_score || 0;
     const categoryName = getCategoryName(category);
     const categoryDesc = getCategoryDescription(category);
@@ -96,29 +102,6 @@ const AssessmentScorecardPage = () => {
 
           {loading && !scorecardDetails ? (
             <ScorecardSkeleton />
-          ) : scorecardDetails && scorecardDetails.approval_status !== 'approved' ? (
-            <div style={{ padding: '40px 20px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
-              <div style={{ backgroundColor: '#FFF9F3', border: '1px solid #FFDBBE', borderRadius: '16px', padding: '40px', maxWidth: '600px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', boxShadow: '0 4px 20px rgba(234, 88, 12, 0.05)', fontFamily: 'Poppins, Inter, sans-serif' }}>
-                <div style={{ width: '64px', height: '64px', borderRadius: '50%', backgroundColor: '#FFEDD5', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#EA580C' }}>
-                  <Shield size={32} />
-                </div>
-                <h2 style={{ fontSize: '20px', fontWeight: 850, color: '#C2410C', margin: 0 }}>Evaluation Pending Approval</h2>
-                <p style={{ fontSize: '14px', color: '#7C2D12', lineHeight: 1.6, margin: 0, fontWeight: 500 }}>
-                  This safety scorecard is currently awaiting review and final sign-off by the Higher Approval Authority (Traffic Inspector / Assistant Operations Manager).
-                </p>
-                <p style={{ fontSize: '13px', color: '#9A3412', opacity: 0.8, margin: 0, fontWeight: 500 }}>
-                  All scorecard details, percentages, and safety category assignments will be revealed here once the approval process is complete.
-                </p>
-                <button
-                  onClick={() => navigate('/my-assessment')}
-                  style={{ marginTop: '10px', padding: '10px 24px', fontSize: '13.5px', fontWeight: 700, color: '#FFFFFF', backgroundColor: '#EA580C', border: 'none', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(234, 88, 12, 0.2)' }}
-                  onMouseEnter={e => e.currentTarget.style.backgroundColor = '#C2410C'}
-                  onMouseLeave={e => e.currentTarget.style.backgroundColor = '#EA580C'}
-                >
-                  Return to My Assessments
-                </button>
-              </div>
-            </div>
           ) : scorecardDetails ? (
             <>
               {/* Page Header - Nagpur Junction Operations / My Assessment with KPI Chips */}
@@ -227,8 +210,8 @@ const AssessmentScorecardPage = () => {
                 {/* Top Panel: circular score gauge on the left, details on the right */}
                 <div className="scorecard-top-panel">
                   {/* Gauge */}
-                  <div className={`scorecard-gauge-box cat-${category?.toLowerCase()}`}>
-                    <span className="scorecard-gauge-value">{scorecardDetails.total_score ?? 0}</span>
+                  <div className={`scorecard-gauge-box cat-${category === 'Pending' ? 'pending' : category?.toLowerCase()}`}>
+                    <span className="scorecard-gauge-value">{isPendingPractical ? '—' : (scorecardDetails.total_score ?? 0)}</span>
                     <span className="scorecard-gauge-label">/ 100</span>
                   </div>
 
@@ -239,16 +222,16 @@ const AssessmentScorecardPage = () => {
                       borderRadius: '6px',
                       fontSize: '11.5px',
                       fontWeight: 700,
-                      background: category === 'A' ? '#E0F2FE' : '#F1F5F9',
-                      color: category === 'A' ? '#0369A1' : '#475569'
+                      background: category === 'Pending' ? '#F1F5F9' : category === 'A' ? '#E0F2FE' : '#F1F5F9',
+                      color: category === 'Pending' ? '#475569' : category === 'A' ? '#0369A1' : '#475569'
                     }}>
-                      Final Category: Category {category}
+                      {category === 'Pending' ? 'Status: Pending Practical' : `Final Category: Category ${category}`}
                     </span>
                     <h2 className="scorecard-info-title">
-                      {new Date(scorecardDetails.evaluated_at || scorecardDetails.submitted_at).toLocaleString('en-IN', { month: 'long', year: 'numeric' })} - Self-Compliance Audit
+                      {new Date(scorecardDetails.evaluated_at || scorecardDetails.submitted_at || scorecardDetails.created_at).toLocaleString('en-IN', { month: 'long', year: 'numeric' })} - Safety Evaluation
                     </h2>
                     <p className="scorecard-info-subtitle">
-                      Attempt Completed: {formattedDate} &nbsp;·&nbsp; Assessed By: {scorecardDetails.assessor_name || `Supervisor (${scorecardDetails.assessor_role_code})`}
+                      Attempt Completed: {formattedDate} &nbsp;·&nbsp; Assessed By: {scorecardDetails.assessor_name || `Supervisor (${scorecardDetails.assessor_role_code || 'N/A'})`}
                     </p>
                   </div>
                 </div>
@@ -272,9 +255,12 @@ const AssessmentScorecardPage = () => {
 
                   <div className="scorecard-domain-grid" style={{ gap: '16px' }}>
                     {DOMAINS.map((dom) => {
-                      const score = scorecardDetails[dom.key] ?? 0;
+                      const isMcq = dom.key === 'mcq_score';
+                      const isPendingDom = isPendingPractical && !isMcq;
+                      
+                      const score = isPendingDom ? null : (scorecardDetails[dom.key] ?? 0);
                       const max = dom.max;
-                      const pct = max > 0 ? (score / max) * 100 : 0;
+                      const pct = (score !== null && max > 0) ? (score / max) * 100 : 0;
                       return (
                         <div key={dom.key} style={{
                           display: 'flex',
@@ -296,7 +282,7 @@ const AssessmentScorecardPage = () => {
 
                           {/* Right: Score */}
                           <div style={{ width: '60px', textAlign: 'right', fontSize: '13px', fontWeight: 700, color: '#0F172A', flexShrink: 0 }}>
-                            {score} / {max}
+                            {score !== null ? `${score} / ${max}` : `— / ${max}`}
                           </div>
                         </div>
                       );

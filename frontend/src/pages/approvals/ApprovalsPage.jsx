@@ -20,7 +20,8 @@ const roleNameMap = {
   TM: 'Train Manager',
   SS: 'SM Incharge',
   TI: 'Traffic Inspector',
-  'Shunting Master': 'Shunting Master'
+  'Shunting Master': 'Shunting Master',
+  SMS: 'Station Master Supervisor'
 };
 
 const ApprovalsPage = () => {

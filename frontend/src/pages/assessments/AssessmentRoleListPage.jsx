@@ -18,7 +18,8 @@ const roleNameMap = {
   SS: 'SM Incharges',
   TI: 'Traffic Inspectors',
   AOM: 'AOM',
-  'Shunting Master': 'Shunting Masters'
+  'Shunting Master': 'Shunting Masters',
+  SMS: 'Station Master Supervisors'
 };
 
 const getDefaultDueDate = () => {
