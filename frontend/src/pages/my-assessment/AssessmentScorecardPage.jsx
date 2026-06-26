@@ -37,8 +37,8 @@ const AssessmentScorecardPage = () => {
     : 'N/A';
 
   const percentage = parseFloat(scorecardDetails?.percentage || 0);
-  const isApproved = scorecardDetails?.status === 'approved' || scorecardDetails?.approval_status === 'approved';
-  const category = isApproved ? resolveCategory(percentage, scorecardDetails?.alcoholic_status) : 'Pending';
+  const isEvaluated = scorecardDetails?.status === 'completed' || scorecardDetails?.status === 'approved' || scorecardDetails?.approval_status === 'approved';
+  const category = isEvaluated ? resolveCategory(percentage, scorecardDetails?.alcoholic_status) : 'Pending';
 
   const getCategoryName = (cat) => {
     switch (cat) {
@@ -64,8 +64,8 @@ const AssessmentScorecardPage = () => {
 
   const getCompetencySummaryText = () => {
     if (!scorecardDetails) return '';
-    if (!isApproved) {
-      return `MCQ Exam completed with score: ${scorecardDetails.mcq_score}/25. Practical safety checklist evaluation and final administrative approval are currently pending. Your final safety score and category will be resolved after full assessment completion and sign-off.`;
+    if (!isEvaluated) {
+      return `MCQ Exam completed with score: ${scorecardDetails.mcq_score}/25. Practical safety checklist evaluation is currently pending. Your final safety score and category will be resolved after practical assessment is completed.`;
     }
     const totalScore = scorecardDetails.total_score || 0;
     const categoryName = getCategoryName(category);
@@ -211,7 +211,7 @@ const AssessmentScorecardPage = () => {
                 <div className="scorecard-top-panel">
                   {/* Gauge */}
                   <div className={`scorecard-gauge-box cat-${category === 'Pending' ? 'pending' : category?.toLowerCase()}`}>
-                    <span className="scorecard-gauge-value">{isApproved ? (scorecardDetails.total_score ?? 0) : '—'}</span>
+                    <span className="scorecard-gauge-value">{isEvaluated ? (scorecardDetails.total_score ?? 0) : '—'}</span>
                     <span className="scorecard-gauge-label">/ 100</span>
                   </div>
 
@@ -225,7 +225,7 @@ const AssessmentScorecardPage = () => {
                       background: category === 'Pending' ? '#FFFBEB' : category === 'A' ? '#ECFDF5' : '#EFF6FF',
                       color: category === 'Pending' ? '#B45309' : category === 'A' ? '#15803D' : '#1D4ED8'
                     }}>
-                      {category === 'Pending' ? 'Status: Pending Practical / Approval' : `Final Category: Category ${category}`}
+                      {category === 'Pending' ? 'Status: Pending Practical Evaluation' : `Final Category: Category ${category}`}
                     </span>
                     <h2 className="scorecard-info-title">
                       {new Date(scorecardDetails.evaluated_at || scorecardDetails.submitted_at || scorecardDetails.created_at).toLocaleString('en-IN', { month: 'long', year: 'numeric' })} - Safety Evaluation
@@ -256,7 +256,7 @@ const AssessmentScorecardPage = () => {
                   <div className="scorecard-domain-grid" style={{ gap: '16px' }}>
                     {DOMAINS.map((dom) => {
                       const isMcq = dom.key === 'mcq_score';
-                      const isPendingDom = !isApproved && !isMcq;
+                      const isPendingDom = !isEvaluated && !isMcq;
                       
                       const score = isPendingDom ? null : (scorecardDetails[dom.key] ?? 0);
                       const max = dom.max;
