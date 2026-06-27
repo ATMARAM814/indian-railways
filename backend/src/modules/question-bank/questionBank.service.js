@@ -446,11 +446,16 @@ async function deleteQuestionService(id, userId) {
 }
 
 async function exportQuestionsExcelService(roleCode) {
-  if (!roleCode || !ALLOWED_ROLES.includes(roleCode.toUpperCase())) {
-    throw new Error(`Invalid role selected. Must be one of: ${ALLOWED_ROLES.join(", ")}`);
+  let questions;
+  if (roleCode) {
+    const roleCodeUpper = roleCode.toUpperCase();
+    if (!ALLOWED_ROLES.includes(roleCodeUpper)) {
+      throw new Error(`Invalid role selected. Must be one of: ${ALLOWED_ROLES.join(", ")}`);
+    }
+    questions = await db.getAllActiveQuestionsByRole(roleCodeUpper);
+  } else {
+    questions = await db.getAllActiveQuestions();
   }
-  const roleCodeUpper = roleCode.toUpperCase();
-  const questions = await db.getAllActiveQuestionsByRole(roleCodeUpper);
 
   const headers = [
     "Question Text",

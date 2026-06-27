@@ -237,7 +237,8 @@ async function exportQuestionsController(req, res) {
   try {
     const { roleCode } = req.query;
     const buffer = await exportQuestionsExcelService(roleCode);
-    res.setHeader("Content-Disposition", `attachment; filename=questions_${roleCode.toUpperCase()}.xlsx`);
+    const filename = roleCode ? `questions_${roleCode.toUpperCase()}.xlsx` : "questions_all.xlsx";
+    res.setHeader("Content-Disposition", `attachment; filename=${filename}`);
     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     return res.send(buffer);
   } catch (error) {

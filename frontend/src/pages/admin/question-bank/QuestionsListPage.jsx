@@ -40,7 +40,6 @@ const QuestionsListPage = () => {
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   const handleDownloadQuestions = async () => {
-    if (!roleCode) return;
     try {
       setDownloading(true);
       const data = await exportQuestionsExcel(roleCode);
@@ -49,7 +48,8 @@ const QuestionsListPage = () => {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `questions_${roleCode.toUpperCase()}.xlsx`);
+      const filename = roleCode ? `questions_${roleCode.toUpperCase()}.xlsx` : 'questions_all.xlsx';
+      link.setAttribute('download', filename);
       document.body.appendChild(link);
       link.click();
       
@@ -228,23 +228,23 @@ const QuestionsListPage = () => {
           {/* Download Questions Button */}
           <button
             onClick={handleDownloadQuestions}
-            disabled={!roleCode || downloading}
+            disabled={downloading}
             style={{
               padding: '10px 16px',
               fontSize: '14px',
               fontWeight: 600,
-              color: roleCode ? '#FFFFFF' : '#94A3B8',
-              backgroundColor: roleCode ? '#0F172A' : '#F1F5F9',
-              border: roleCode ? '1px solid #0F172A' : '1px solid #E2E8F0',
+              color: '#FFFFFF',
+              backgroundColor: '#0F172A',
+              border: '1px solid #0F172A',
               borderRadius: '8px',
-              cursor: (roleCode && !downloading) ? 'pointer' : 'not-allowed',
+              cursor: downloading ? 'not-allowed' : 'pointer',
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
               transition: 'all 0.2s',
-              boxShadow: roleCode ? '0 1px 2px rgba(15, 23, 42, 0.05)' : 'none'
+              boxShadow: '0 1px 2px rgba(15, 23, 42, 0.05)'
             }}
-            title={roleCode ? `Download active question bank for ${ROLE_OPTIONS.find(r => r.value === roleCode)?.label}` : "Select a category first to download questions"}
+            title={roleCode ? `Download active question bank for ${ROLE_OPTIONS.find(r => r.value === roleCode)?.label}` : "Download active question bank for all categories"}
           >
             <Download size={16} />
             <span>{downloading ? 'Downloading...' : 'Download Questions'}</span>
@@ -262,8 +262,8 @@ const QuestionsListPage = () => {
           </div>
         ) : (
           <>
-            <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #D7E3EF', borderRadius: '12px', boxShadow: '0 1px 3px rgba(11, 35, 65, 0.05)', overflow: 'hidden' }}>
-              <div style={{ overflowX: 'auto', width: '100%' }}>
+            <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #D7E3EF', borderRadius: '12px', boxShadow: '0 1px 3px rgba(11, 35, 65, 0.05)' }}>
+              <div style={{ overflowX: 'auto', width: '100%', minHeight: '200px' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                   <thead>
                     <tr style={{ borderBottom: '1px solid #D7E3EF', backgroundColor: '#F8FAFC' }}>

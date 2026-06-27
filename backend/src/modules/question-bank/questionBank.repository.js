@@ -440,6 +440,24 @@ async function getAllActiveQuestionsByRole(roleCode) {
   return result.rows;
 }
 
+async function getAllActiveQuestions() {
+  const query = `
+    SELECT
+      question_text as "questionText",
+      option_a as "optionA",
+      option_b as "optionB",
+      option_c as "optionC",
+      option_d as "optionD",
+      correct_answer as "correctAnswer",
+      explanation
+    FROM question_bank
+    WHERE status = 'active'
+    ORDER BY role_code, created_at ASC;
+  `;
+  const result = await pool.query(query);
+  return result.rows;
+}
+
 module.exports = {
   createQuestion,
   getQuestionByTextAndRole,
@@ -453,5 +471,6 @@ module.exports = {
   getQuestionBankStats,
   deleteQuestion,
   getAllActiveQuestionsByRole,
+  getAllActiveQuestions,
 };
 

@@ -60,7 +60,7 @@ router.get(
   "/templates/excel",
   authenticate,
   enforcePasswordChange,
-  authorize("SUPER_ADMIN"),
+  authorize("SUPER_ADMIN", "AOM"),
   downloadExcelTemplateController
 );
 
@@ -68,7 +68,7 @@ router.get(
   "/export",
   authenticate,
   enforcePasswordChange,
-  authorize("SUPER_ADMIN"),
+  authorize("SUPER_ADMIN", "AOM"),
   exportQuestionsController
 );
 
