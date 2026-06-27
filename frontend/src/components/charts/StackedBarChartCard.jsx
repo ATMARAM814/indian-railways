@@ -13,6 +13,7 @@ import {
 import ChartCard from '../dashboard/ChartCard';
 import EmptyState from '../dashboard/EmptyState';
 import '../../styles/charts.css';
+import useMobile from '../../hooks/useMobile';
 
 const DEFAULT_STACK_BARS = [
   { key: 'Category A', color: '#16A34A', name: 'Cat A' },
@@ -29,6 +30,7 @@ const StackedBarChartCard = ({
   bars = DEFAULT_STACK_BARS,
   stacked = true
 }) => {
+  const isMobile = useMobile();
   const hasData = Array.isArray(data) && data.length > 0;
 
   return (
@@ -36,8 +38,10 @@ const StackedBarChartCard = ({
       {!hasData ? (
         <EmptyState />
       ) : (
-        <ResponsiveContainer width="100%" height={250}>
-          <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: data.length > 5 ? 25 : 0 }} key={JSON.stringify(data)}>
+        <div className="chart-scroll-container">
+          <div style={{ minWidth: isMobile ? `${Math.max(600, data.length * 75)}px` : 'auto', width: '100%' }}>
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: data.length > 5 ? 25 : 0 }} key={JSON.stringify(data)}>
             <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
             <XAxis 
               dataKey={xKey} 
@@ -77,6 +81,8 @@ const StackedBarChartCard = ({
             ))}
           </BarChart>
         </ResponsiveContainer>
+          </div>
+        </div>
       )}
     </ChartCard>
   );

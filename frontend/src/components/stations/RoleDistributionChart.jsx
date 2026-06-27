@@ -1,7 +1,9 @@
 import React from 'react';
 import { ResponsiveContainer, BarChart, Bar, Rectangle, Cell, XAxis, YAxis, CartesianGrid, Tooltip, LabelList } from 'recharts';
+import useMobile from '../../hooks/useMobile';
 
 export const RoleDistributionChart = ({ data }) => {
+  const isMobile = useMobile();
   if (!data) return null;
 
   return (
@@ -16,8 +18,10 @@ export const RoleDistributionChart = ({ data }) => {
       </div>
       <div style={{ width: '100%', height: '240px' }}>
         {data.length > 0 ? (
-          <ResponsiveContainer width="100%" height={240}>
-            <BarChart data={data} margin={{ top: 20, right: 10, left: -20, bottom: 0 }} key={JSON.stringify(data)}>
+          <div className="chart-scroll-container">
+            <div style={{ minWidth: isMobile ? `${Math.max(600, data.length * 75)}px` : 'auto', width: '100%' }}>
+              <ResponsiveContainer width="100%" height={240}>
+                <BarChart data={data} margin={{ top: 20, right: 10, left: -20, bottom: 0 }} key={JSON.stringify(data)}>
               <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
               <XAxis 
                 dataKey="role" 
@@ -66,6 +70,8 @@ export const RoleDistributionChart = ({ data }) => {
               </Bar>
             </BarChart>
           </ResponsiveContainer>
+            </div>
+          </div>
         ) : (
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', color: '#94A3B8', fontSize: '13.5px' }}>
             No workforce roles to display.

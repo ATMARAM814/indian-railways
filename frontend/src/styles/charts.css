@@ -62,3 +62,39 @@
   font-weight: 600;
   color: #60A5FA;
 }
+
+/* Remove default focus outlines (black borders) when clicking Recharts wrappers */
+.recharts-wrapper:focus,
+.recharts-surface:focus,
+.recharts-container:focus,
+.recharts-responsive-container:focus,
+svg:focus {
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Scroll wrapper for charts on mobile viewports */
+.chart-scroll-container {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Slim premium scrollbar styling */
+.chart-scroll-container::-webkit-scrollbar {
+  height: 5px;
+}
+.chart-scroll-container::-webkit-scrollbar-track {
+  background: #f8fafc;
+  border-radius: 4px;
+}
+.chart-scroll-container::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+.chart-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+

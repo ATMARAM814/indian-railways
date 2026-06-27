@@ -1,8 +1,10 @@
 // PerformanceTrendChart.jsx
 import React from 'react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import useMobile from '../../hooks/useMobile';
 
 export const PerformanceTrendChart = ({ data }) => {
+  const isMobile = useMobile();
   if (!data) return null;
 
   return (
@@ -12,8 +14,10 @@ export const PerformanceTrendChart = ({ data }) => {
       </h3>
       <div style={{ width: '100%', height: '240px' }}>
         {data.length > 0 ? (
-          <ResponsiveContainer width="100%" height={240}>
-            <LineChart data={data} margin={{ top: 10, right: 20, left: -20, bottom: 0 }}>
+          <div className="chart-scroll-container">
+            <div style={{ minWidth: isMobile ? `${Math.max(600, data.length * 75)}px` : 'auto', width: '100%' }}>
+              <ResponsiveContainer width="100%" height={240}>
+                <LineChart data={data} margin={{ top: 10, right: 20, left: -20, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
               <XAxis dataKey="month" stroke="#64748B" fontSize={11} />
               <YAxis domain={[0, 100]} stroke="#64748B" fontSize={11} />
@@ -45,6 +49,8 @@ export const PerformanceTrendChart = ({ data }) => {
               />
             </LineChart>
           </ResponsiveContainer>
+            </div>
+          </div>
         ) : (
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', color: '#94A3B8', fontSize: '13.5px' }}>
             No performance trend data recorded to display.

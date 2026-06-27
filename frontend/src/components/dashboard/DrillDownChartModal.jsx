@@ -23,6 +23,7 @@ import {
   Tooltip,
   Legend
 } from 'recharts';
+import useMobile from '../../hooks/useMobile';
 import {
   UserPlus,
   ArrowLeftRight,
@@ -35,6 +36,7 @@ import {
 } from 'lucide-react';
 
 const DrillDownChartModal = ({ isOpen, onClose, graphType }) => {
+  const isMobile = useMobile();
   const { user } = useAuth();
   const role = user?.role || 'TI';
 
@@ -632,8 +634,10 @@ const DrillDownChartModal = ({ isOpen, onClose, graphType }) => {
                   No records found for selected filters.
                 </div>
               ) : (
-                <ResponsiveContainer width="100%" height={320}>
-                  {graphType === 'stationEvaluationProgress' && (
+                <div className="chart-scroll-container">
+                  <div style={{ minWidth: isMobile ? `${Math.max(600, ((graphType === 'highRiskStaff' || graphType === 'workforceActivity' ? extraChartData.length : data.length) || 0) * 75)}px` : 'auto', width: '100%' }}>
+                    <ResponsiveContainer width="100%" height={320}>
+                      {graphType === 'stationEvaluationProgress' && (
                     <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: data.length > 5 ? 25 : 0 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
                       <XAxis 
@@ -738,7 +742,9 @@ const DrillDownChartModal = ({ isOpen, onClose, graphType }) => {
                     </BarChart>
                   )}
                 </ResponsiveContainer>
-              )}
+              </div>
+            </div>
+          )}
               
               {graphType === 'highRiskStaff' && extraChartData.length > highRiskChartLimit && (
                 <div style={{

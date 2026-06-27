@@ -16,6 +16,7 @@ import {
 import ChartCard from '../dashboard/ChartCard';
 import EmptyState from '../dashboard/EmptyState';
 import '../../styles/charts.css';
+import useMobile from '../../hooks/useMobile';
 
 const BarChartCard = ({ 
   title, 
@@ -32,6 +33,7 @@ const BarChartCard = ({
   yInterval,
   height = 250
 }) => {
+  const isMobile = useMobile();
   const hasData = Array.isArray(data) && data.length > 0;
   const nameToUse = yKeyName || yKey;
 
@@ -64,8 +66,10 @@ const BarChartCard = ({
       {!hasData ? (
         <EmptyState />
       ) : (
-        <ResponsiveContainer width="100%" height={height}>
-          <BarChart data={data} margin={{ top: 20, right: 10, left: -20, bottom: data.length > 5 ? 25 : 0 }} key={JSON.stringify(data)}>
+        <div className="chart-scroll-container">
+          <div style={{ minWidth: isMobile ? `${Math.max(600, data.length * 75)}px` : 'auto', width: '100%' }}>
+            <ResponsiveContainer width="100%" height={height}>
+              <BarChart data={data} margin={{ top: 20, right: 10, left: -20, bottom: data.length > 5 ? 25 : 0 }} key={JSON.stringify(data)}>
             <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
             <XAxis 
               dataKey={xKey} 
@@ -136,6 +140,8 @@ const BarChartCard = ({
             )}
           </BarChart>
         </ResponsiveContainer>
+          </div>
+        </div>
       )}
     </ChartCard>
   );

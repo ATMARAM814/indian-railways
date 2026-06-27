@@ -13,6 +13,7 @@ import {
 import ChartCard from '../dashboard/ChartCard';
 import EmptyState from '../dashboard/EmptyState';
 import '../../styles/charts.css';
+import useMobile from '../../hooks/useMobile';
 
 const LineChartCard = ({ 
   title, 
@@ -24,6 +25,7 @@ const LineChartCard = ({
   lines = [], // Pass multiple lines if needed: [{ key, color, name }]
   headerAction
 }) => {
+  const isMobile = useMobile();
   const hasData = Array.isArray(data) && data.length > 0;
 
   return (
@@ -31,8 +33,10 @@ const LineChartCard = ({
       {!hasData ? (
         <EmptyState />
       ) : (
-        <ResponsiveContainer width="100%" height={250}>
-          <LineChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+        <div className="chart-scroll-container">
+          <div style={{ minWidth: isMobile ? `${Math.max(600, data.length * 75)}px` : 'auto', width: '100%' }}>
+            <ResponsiveContainer width="100%" height={250}>
+              <LineChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
             <XAxis 
               dataKey={xKey} 
@@ -80,6 +84,8 @@ const LineChartCard = ({
             )}
           </LineChart>
         </ResponsiveContainer>
+          </div>
+        </div>
       )}
     </ChartCard>
   );

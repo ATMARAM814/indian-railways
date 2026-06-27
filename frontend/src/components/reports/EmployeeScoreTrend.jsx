@@ -10,8 +10,10 @@ import {
   Legend 
 } from 'recharts';
 import ChartCard from '../dashboard/ChartCard';
+import useMobile from '../../hooks/useMobile';
 
 const EmployeeScoreTrend = ({ scoreTrend }) => {
+  const isMobile = useMobile();
   const hasData = Array.isArray(scoreTrend) && scoreTrend.length > 0;
 
   // Format date to local date string for the trend chart
@@ -32,8 +34,10 @@ const EmployeeScoreTrend = ({ scoreTrend }) => {
           No assessment history available yet.
         </div>
       ) : (
-        <ResponsiveContainer width="100%" height={250}>
-          <LineChart data={formattedData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+        <div className="chart-scroll-container">
+          <div style={{ minWidth: isMobile ? `${Math.max(600, formattedData.length * 75)}px` : 'auto', width: '100%' }}>
+            <ResponsiveContainer width="100%" height={250}>
+              <LineChart data={formattedData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
             <XAxis 
               dataKey="date" 
@@ -64,6 +68,8 @@ const EmployeeScoreTrend = ({ scoreTrend }) => {
             />
           </LineChart>
         </ResponsiveContainer>
+          </div>
+        </div>
       )}
     </ChartCard>
   );
