@@ -74,11 +74,22 @@ svg:focus {
   box-shadow: none !important;
 }
 
+/* Constrain chart cards and grid wrappers to prevent horizontal page scrolling */
+.chart-card,
+.trend-card-full,
+.chart-card-body {
+  max-width: 100% !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+
 /* Scroll wrapper for charts on mobile viewports */
 .chart-scroll-container {
-  width: 100%;
-  overflow-x: auto;
-  overflow-y: hidden;
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  display: block !important;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -97,4 +108,5 @@ svg:focus {
 .chart-scroll-container::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+
 
