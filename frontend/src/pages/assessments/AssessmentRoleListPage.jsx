@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useAssessments } from '../../hooks/useAssessments';
+import { getAssessmentList } from '../../services/assessment.service';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import { AssessmentKpiCards } from '../../components/assessments/AssessmentKpiCards';
 import { AssessmentFilterCard } from '../../components/assessments/AssessmentFilterCard';
@@ -139,14 +140,18 @@ const AssessmentRoleListPage = () => {
     }
   }, [user, roleCode, filters, page, fetchEligibleStaff]);
 
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
     try {
       if (!eligibleStaff || eligibleStaff.length === 0) {
         alert("No staff records available to export.");
         return;
       }
 
-      const dataToExport = eligibleStaff.map(row => {
+      // Fetch all matching records from the server using current filter parameters (bypassing page limits)
+      const res = await getAssessmentList(roleCode, { ...filters, limit: 10000, page: 1 });
+      const allStaff = res.success && Array.isArray(res.data) ? res.data : eligibleStaff;
+
+      const dataToExport = allStaff.map(row => {
         let statusText = 'Not Scheduled';
         if (row.assessment_status === 'mcq_access_sent' || row.assessment_status === 'mcq_pending') {
           statusText = 'MCQ Exam Active';
