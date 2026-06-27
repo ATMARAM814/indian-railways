@@ -145,6 +145,35 @@ const PageLoader = () => (
 
 function App() {
   React.useEffect(() => {
+    // Inject Google Translate target element
+    const divId = 'google_translate_element';
+    if (!document.getElementById(divId)) {
+      const googleDiv = document.createElement('div');
+      googleDiv.id = divId;
+      googleDiv.style.display = 'none';
+      document.body.appendChild(googleDiv);
+    }
+
+    // Inject Google Translate translation script
+    const scriptId = 'google-translate-script';
+    if (!document.getElementById(scriptId)) {
+      const addScript = document.createElement('script');
+      addScript.setAttribute('src', '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit');
+      addScript.setAttribute('id', scriptId);
+      document.body.appendChild(addScript);
+
+      window.googleTranslateElementInit = () => {
+        if (window.google && window.google.translate) {
+          new window.google.translate.TranslateElement(
+            { pageLanguage: 'en', includedLanguages: 'en,hi' },
+            'google_translate_element'
+          );
+        }
+      };
+    }
+  }, []);
+
+  React.useEffect(() => {
     // Only run version check in production environments
     if (import.meta.env.DEV) return;
 

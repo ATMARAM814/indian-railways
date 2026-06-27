@@ -198,12 +198,13 @@
 .pme-ref-table-wrapper {
   border: 1px solid var(--border-light, #D7E3EF);
   border-radius: var(--radius-md, 12px);
-  overflow: hidden;
+  overflow-x: auto;
   background-color: #FFFFFF;
 }
 
 .pme-ref-table {
   width: 100%;
+  min-width: 650px;
   border-collapse: collapse;
   text-align: left;
   font-size: 13.5px;

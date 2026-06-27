@@ -3,6 +3,7 @@ import React from 'react';
 import { Menu, Calendar } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { Link, useLocation } from 'react-router-dom';
+import LanguageSwitcher from './LanguageSwitcher';
 
 const Topbar = ({ onToggleSidebar }) => {
   const { user } = useAuth();
@@ -62,6 +63,8 @@ const Topbar = ({ onToggleSidebar }) => {
           <Calendar size={14} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'text-bottom' }} />
           <span>{formattedDate}</span>
         </div>
+        <div className="topbar-divider"></div>
+        <LanguageSwitcher theme="light" />
         <div className="topbar-divider"></div>
         <div className="topbar-user">
           <Link to="/profile" className="user-avatar" title={fullName} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
