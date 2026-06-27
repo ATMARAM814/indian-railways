@@ -2,13 +2,16 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useAssessments } from '../../hooks/useAssessments';
+import { getAssessmentList } from '../../services/assessment.service';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import { AssessmentKpiCards } from '../../components/assessments/AssessmentKpiCards';
 import { AssessmentFilterCard } from '../../components/assessments/AssessmentFilterCard';
 import { AssessmentStaffTable } from '../../components/assessments/AssessmentStaffTable';
 import { TableSkeleton } from '../../components/assessments/AssessmentSkeletons';
 import DrillDownPagination from '../../components/dashboard/DrillDownPagination';
-import { ArrowLeft, CheckCircle2, AlertCircle, X } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, AlertCircle, X, Download } from 'lucide-react';
+import * as XLSX from 'xlsx';
+import { cleanDesignationText } from '../../utils/dashboardMappers';
 import '../../styles/assessments.css';
 
 const roleNameMap = {
@@ -137,6 +140,72 @@ const AssessmentRoleListPage = () => {
     }
   }, [user, roleCode, filters, page, fetchEligibleStaff]);
 
+  const handleExportExcel = async () => {
+    try {
+      if (!eligibleStaff || eligibleStaff.length === 0) {
+        alert("No staff records available to export.");
+        return;
+      }
+
+      // Fetch all matching records from the server using current filter parameters (bypassing page limits)
+      const res = await getAssessmentList(roleCode, { ...filters, limit: 10000, page: 1 });
+      const allStaff = res.success && Array.isArray(res.data) ? res.data : eligibleStaff;
+
+      const dataToExport = allStaff.map(row => {
+        let statusText = 'Not Scheduled';
+        if (row.assessment_status === 'mcq_access_sent' || row.assessment_status === 'mcq_pending') {
+          statusText = 'MCQ Exam Active';
+        } else if (row.assessment_status === 'mcq_submitted') {
+          statusText = 'MCQ Submitted';
+        } else if (row.assessment_status === 'completed' || row.assessment_status === 'approved') {
+          statusText = 'Completed';
+        } else if (row.assessment_status === 'cancelled') {
+          statusText = 'Cancelled';
+        } else if (row.assessment_status) {
+          statusText = row.assessment_status;
+        }
+
+        let approvalText = 'N/A';
+        if (row.approval_status === 'pending_approval') {
+          approvalText = 'Awaiting Approval (Remaining Approval)';
+        } else if (row.approval_status === 'approved') {
+          approvalText = 'Approved';
+        } else if (row.approval_status === 'rejected') {
+          approvalText = 'Rejected';
+        }
+
+        return {
+          'Employee Name': row.full_name,
+          'HRMS ID': row.hrms_id,
+          'Designation': cleanDesignationText(row.designation),
+          'Station': `${row.station_name || ''} (${row.station_code || ''})`,
+          'Safety Category': row.category_code ? `Category ${row.category_code}` : 'Not Categorized',
+          'Latest Score': row.percentage !== null ? `${parseFloat(row.percentage).toFixed(1)}%` : '-',
+          'Assessment Status': statusText,
+          'Approval Status': approvalText
+        };
+      });
+
+      const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Staff Assessments");
+
+      const maxLens = {};
+      dataToExport.forEach(row => {
+        Object.keys(row).forEach(key => {
+          const valStr = String(row[key] || '');
+          maxLens[key] = Math.max(maxLens[key] || key.length, valStr.length);
+        });
+      });
+      worksheet['!cols'] = Object.keys(maxLens).map(key => ({ wch: maxLens[key] + 3 }));
+
+      XLSX.writeFile(workbook, `${friendlyName}_Assessments_Report.xlsx`);
+    } catch (err) {
+      console.error("Export Excel error:", err);
+      alert("Error exporting Excel: " + err.message);
+    }
+  };
+
   if (!user) return <Navigate to="/login" replace />;
 
   const handleFilterChange = (name, value) => {
@@ -257,7 +326,31 @@ const AssessmentRoleListPage = () => {
             </div>
           </div>
 
-          <div>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button
+              onClick={handleExportExcel}
+              style={{
+                padding: '0 20px',
+                height: '42px',
+                fontSize: '14px',
+                fontWeight: '700',
+                borderRadius: '8px',
+                border: '1px solid #CBD5E1',
+                backgroundColor: '#FFFFFF',
+                color: '#0B2341',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                boxShadow: '0 1px 2px rgba(11, 35, 65, 0.05)'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#EEF6FC'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FFFFFF'}
+            >
+              <Download size={16} />
+              <span>Export Excel</span>
+            </button>
             <button
               type="button"
               onClick={handleOpenBulkModal}
