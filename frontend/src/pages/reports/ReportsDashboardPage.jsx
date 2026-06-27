@@ -339,27 +339,42 @@ const ReportsDashboardPage = () => {
             summary={summary} 
             userRole={user?.role} 
             onKpiClick={(kpiTitle) => {
+              let targetTab = '';
+              let targetFilters = {};
+
               if (kpiTitle === 'Completed Assessments') {
-                setFilters({ assessmentStatus: 'completed' });
-                setActiveTab('workforce');
+                targetFilters = { assessmentStatus: 'completed' };
+                targetTab = 'workforce';
               } else if (kpiTitle === 'Total Assessments') {
-                setFilters({});
-                setActiveTab('workforce');
+                targetFilters = {};
+                targetTab = 'workforce';
               } else if (kpiTitle === 'Pending Approvals') {
-                setFilters({ assessmentStatus: 'pending_approval' });
-                setActiveTab('workforce');
+                targetFilters = { assessmentStatus: 'pending_approval' };
+                targetTab = 'workforce';
               } else if (kpiTitle === 'Category A Staff') {
-                setFilters({ category: 'A' });
-                setActiveTab('workforce');
+                targetFilters = { category: 'A' };
+                targetTab = 'workforce';
               } else if (kpiTitle === 'Category D (High Risk) Staff' || kpiTitle === 'High Risk Staff') {
-                setFilters({ category: 'D' });
-                setActiveTab('high-risk');
+                targetFilters = { category: 'D' };
+                targetTab = 'high-risk';
               } else if (kpiTitle === 'Active Stations') {
-                setFilters({});
-                setActiveTab('stations');
+                targetFilters = {};
+                targetTab = 'stations';
               } else if (kpiTitle === 'Completed Cycles') {
-                setFilters({});
-                setActiveTab('cycles');
+                targetFilters = {};
+                targetTab = 'cycles';
+              }
+
+              if (targetTab) {
+                setFilters(targetFilters);
+                setActiveTab(targetTab);
+                // Smooth scroll to table section for mobile responsiveness
+                setTimeout(() => {
+                  const element = document.getElementById('reports-table-section');
+                  if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }
+                }, 100);
               }
             }}
           />
@@ -373,7 +388,7 @@ const ReportsDashboardPage = () => {
         )}
 
         {/* Reports Directory Tabs */}
-        <div className="reports-tabs-bar">
+        <div id="reports-table-section" className="reports-tabs-bar">
           <div className="reports-tabs-list">
             {tabs.map((tab) => (
               <button
