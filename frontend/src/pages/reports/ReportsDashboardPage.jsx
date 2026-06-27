@@ -335,7 +335,34 @@ const ReportsDashboardPage = () => {
         {loading && !summary ? (
           <KpiCardsSkeleton />
         ) : (
-          <ReportKpiCards summary={summary} userRole={user?.role} />
+          <ReportKpiCards 
+            summary={summary} 
+            userRole={user?.role} 
+            onKpiClick={(kpiTitle) => {
+              if (kpiTitle === 'Completed Assessments') {
+                setFilters({ assessmentStatus: 'completed' });
+                setActiveTab('workforce');
+              } else if (kpiTitle === 'Total Assessments') {
+                setFilters({});
+                setActiveTab('workforce');
+              } else if (kpiTitle === 'Pending Approvals') {
+                setFilters({ assessmentStatus: 'pending_approval' });
+                setActiveTab('workforce');
+              } else if (kpiTitle === 'Category A Staff') {
+                setFilters({ category: 'A' });
+                setActiveTab('workforce');
+              } else if (kpiTitle === 'Category D (High Risk) Staff' || kpiTitle === 'High Risk Staff') {
+                setFilters({ category: 'D' });
+                setActiveTab('high-risk');
+              } else if (kpiTitle === 'Active Stations') {
+                setFilters({});
+                setActiveTab('stations');
+              } else if (kpiTitle === 'Completed Cycles') {
+                setFilters({});
+                setActiveTab('cycles');
+              }
+            }}
+          />
         )}
 
         {/* Performance Trends Charts */}
@@ -373,6 +400,7 @@ const ReportsDashboardPage = () => {
 
         {/* Report Filters Card */}
         <ReportFilters 
+          filters={filters}
           onApplyFilters={handleApplyFilters} 
           onResetFilters={handleResetFilters} 
           userRole={user?.role} 

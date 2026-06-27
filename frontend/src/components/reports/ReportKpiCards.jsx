@@ -12,7 +12,7 @@ import {
   CalendarDays
 } from 'lucide-react';
 
-const ReportKpiCards = ({ summary, userRole }) => {
+const ReportKpiCards = ({ summary, userRole, onKpiClick }) => {
   if (!summary) return null;
 
   const isAomOrAdmin = ['AOM', 'SUPER_ADMIN'].includes(userRole);
@@ -94,23 +94,37 @@ const ReportKpiCards = ({ summary, userRole }) => {
 
   return (
     <div className="kpi-grid" style={{ marginBottom: '24px' }}>
-      {displayKpis.map((kpi, idx) => (
-        <div 
-          key={idx} 
-          className="stat-card"
-          style={{ cursor: 'default' }}
-        >
-          <div className="stat-card-header">
-            <span className="stat-card-title">{kpi.title}</span>
-            <div className="stat-card-icon-container">
-              {kpi.icon}
+      {displayKpis.map((kpi, idx) => {
+        const isClickable = [
+          'Total Assessments',
+          'Completed Assessments',
+          'Pending Approvals',
+          'Category A Staff',
+          'Category D (High Risk) Staff',
+          'High Risk Staff',
+          'Active Stations',
+          'Completed Cycles'
+        ].includes(kpi.title);
+
+        return (
+          <div 
+            key={idx} 
+            className="stat-card"
+            style={{ cursor: isClickable ? 'pointer' : 'default' }}
+            onClick={() => isClickable && onKpiClick && onKpiClick(kpi.title)}
+          >
+            <div className="stat-card-header">
+              <span className="stat-card-title">{kpi.title}</span>
+              <div className="stat-card-icon-container">
+                {kpi.icon}
+              </div>
+            </div>
+            <div className="stat-card-body">
+              <span className="stat-card-value">{kpi.value}</span>
             </div>
           </div>
-          <div className="stat-card-body">
-            <span className="stat-card-value">{kpi.value}</span>
-          </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 };
