@@ -422,6 +422,24 @@ async function deleteQuestion(id) {
   return result.rows[0] || null;
 }
 
+async function getAllActiveQuestionsByRole(roleCode) {
+  const query = `
+    SELECT
+      question_text as "questionText",
+      option_a as "optionA",
+      option_b as "optionB",
+      option_c as "optionC",
+      option_d as "optionD",
+      correct_answer as "correctAnswer",
+      explanation
+    FROM question_bank
+    WHERE role_code = $1 AND status = 'active'
+    ORDER BY created_at ASC;
+  `;
+  const result = await pool.query(query, [roleCode]);
+  return result.rows;
+}
+
 module.exports = {
   createQuestion,
   getQuestionByTextAndRole,
@@ -434,4 +452,6 @@ module.exports = {
   getUploadHistory,
   getQuestionBankStats,
   deleteQuestion,
+  getAllActiveQuestionsByRole,
 };
+

@@ -21,6 +21,7 @@ const {
   statsController,
   downloadExcelTemplateController,
   deleteQuestion,
+  exportQuestionsController,
 } = require("./questionBank.controller");
 
 const multer = require("multer");
@@ -61,6 +62,14 @@ router.get(
   enforcePasswordChange,
   authorize("SUPER_ADMIN"),
   downloadExcelTemplateController
+);
+
+router.get(
+  "/export",
+  authenticate,
+  enforcePasswordChange,
+  authorize("SUPER_ADMIN"),
+  exportQuestionsController
 );
 
 router.post(

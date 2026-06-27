@@ -445,6 +445,44 @@ async function deleteQuestionService(id, userId) {
   return result;
 }
 
+async function exportQuestionsExcelService(roleCode) {
+  if (!roleCode || !ALLOWED_ROLES.includes(roleCode.toUpperCase())) {
+    throw new Error(`Invalid role selected. Must be one of: ${ALLOWED_ROLES.join(", ")}`);
+  }
+  const roleCodeUpper = roleCode.toUpperCase();
+  const questions = await db.getAllActiveQuestionsByRole(roleCodeUpper);
+
+  const headers = [
+    "Question Text",
+    "Option A",
+    "Option B",
+    "Option C",
+    "Option D",
+    "Correct Answer (A/B/C/D)",
+    "Explanation (Optional)"
+  ];
+
+  const data = [headers];
+  for (const q of questions) {
+    data.push([
+      q.questionText || "",
+      q.optionA || "",
+      q.optionB || "",
+      q.optionC || "",
+      q.optionD || "",
+      q.correctAnswer || "",
+      q.explanation || ""
+    ]);
+  }
+
+  const worksheet = XLSX.utils.aoa_to_sheet(data);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Questions");
+
+  const buffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
+  return buffer;
+}
+
 module.exports = {
   addQuestionService,
   listQuestionsService,
@@ -458,4 +496,6 @@ module.exports = {
   getQuestionBankStatsService,
   generateExcelTemplateBuffer,
   deleteQuestionService,
+  exportQuestionsExcelService,
 };
+

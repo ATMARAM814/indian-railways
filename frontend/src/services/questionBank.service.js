@@ -28,6 +28,15 @@ export const downloadExcelTemplate = async () => {
   return res.data;
 };
 
+export const exportQuestionsExcel = async (roleCode) => {
+  const res = await apiClient.get('/admin/question-bank/export', {
+    params: { roleCode },
+    responseType: 'blob',
+  });
+  return res.data;
+};
+
+
 export const getQuestionsList = async (filters = {}) => {
   const res = await apiClient.get('/question-bank', { params: filters });
   return res.data;

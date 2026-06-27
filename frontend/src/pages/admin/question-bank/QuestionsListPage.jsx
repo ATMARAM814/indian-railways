@@ -5,8 +5,8 @@ import ErrorState from '../../../components/dashboard/ErrorState';
 import DrillDownPagination from '../../../components/dashboard/DrillDownPagination';
 import EditQuestionModal from '../../../components/question-bank/EditQuestionModal';
 import DeleteQuestionModal from '../../../components/question-bank/DeleteQuestionModal';
-import { getQuestionsList, updateQuestion, deleteQuestion } from '../../../services/questionBank.service';
-import { Search, Edit2, Trash2 } from 'lucide-react';
+import { getQuestionsList, updateQuestion, deleteQuestion, exportQuestionsExcel } from '../../../services/questionBank.service';
+import { Search, Edit2, Trash2, Download } from 'lucide-react';
 
 const ROLE_OPTIONS = [
   { value: '', label: 'All Categories' },
@@ -15,8 +15,8 @@ const ROLE_OPTIONS = [
   { value: 'TM', label: 'Train Manager (TM)' },
   { value: 'SS', label: 'SM Supervisor (SS)' },
   { value: 'SMS', label: 'Station Master Supervisor (SMS)' },
-  { value: 'Cabin Master', label: 'Cabin Master' },
-  { value: 'Shunting Master', label: 'Shunting Master' },
+  { value: 'CABIN MASTER', label: 'Cabin Master' },
+  { value: 'SHM', label: 'Shunting Master (SHM)' },
   { value: 'TI', label: 'Traffic Inspector (TI)' },
   { value: 'AOM', label: 'AOM' },
   { value: 'COMMON', label: 'Common (COMMON)' }
@@ -27,6 +27,7 @@ const QuestionsListPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 10, totalPages: 1 });
+  const [downloading, setDownloading] = useState(false);
 
   // Filters
   const [search, setSearch] = useState('');
@@ -37,6 +38,29 @@ const QuestionsListPage = () => {
   const [selectedQuestion, setSelectedQuestion] = useState(null);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+
+  const handleDownloadQuestions = async () => {
+    if (!roleCode) return;
+    try {
+      setDownloading(true);
+      const data = await exportQuestionsExcel(roleCode);
+      
+      const blob = new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `questions_${roleCode.toUpperCase()}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      alert(err.response?.data?.message || err.message || 'Failed to download question set');
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   const fetchQuestions = useCallback(async () => {
     setLoading(true);
@@ -200,6 +224,31 @@ const QuestionsListPage = () => {
               ))}
             </select>
           </div>
+
+          {/* Download Questions Button */}
+          <button
+            onClick={handleDownloadQuestions}
+            disabled={!roleCode || downloading}
+            style={{
+              padding: '10px 16px',
+              fontSize: '14px',
+              fontWeight: 600,
+              color: roleCode ? '#FFFFFF' : '#94A3B8',
+              backgroundColor: roleCode ? '#0F172A' : '#F1F5F9',
+              border: roleCode ? '1px solid #0F172A' : '1px solid #E2E8F0',
+              borderRadius: '8px',
+              cursor: (roleCode && !downloading) ? 'pointer' : 'not-allowed',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              transition: 'all 0.2s',
+              boxShadow: roleCode ? '0 1px 2px rgba(15, 23, 42, 0.05)' : 'none'
+            }}
+            title={roleCode ? `Download active question bank for ${ROLE_OPTIONS.find(r => r.value === roleCode)?.label}` : "Select a category first to download questions"}
+          >
+            <Download size={16} />
+            <span>{downloading ? 'Downloading...' : 'Download Questions'}</span>
+          </button>
         </div>
 
         {/* Content Area */}
@@ -247,8 +296,8 @@ const QuestionsListPage = () => {
                             {item.questionText}
                           </div>
 
-                          {/* Options grid */}
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px 24px', fontSize: '13.5px' }}>
+                           {/* Options list (stacked vertically to prevent layout clipping and text truncation) */}
+                           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13.5px' }}>
                             <div style={{
                               color: item.correctAnswer === 'A' ? '#16A34A' : '#475569',
                               fontWeight: item.correctAnswer === 'A' ? 600 : 400,

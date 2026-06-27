@@ -11,6 +11,7 @@ const {
   getQuestionBankStatsService,
   generateExcelTemplateBuffer,
   deleteQuestionService,
+  exportQuestionsExcelService,
 } = require("./questionBank.service");
 const { getMe } = require("../auth/auth.service");
 
@@ -232,6 +233,21 @@ async function deleteQuestion(req, res) {
   }
 }
 
+async function exportQuestionsController(req, res) {
+  try {
+    const { roleCode } = req.query;
+    const buffer = await exportQuestionsExcelService(roleCode);
+    res.setHeader("Content-Disposition", `attachment; filename=questions_${roleCode.toUpperCase()}.xlsx`);
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    return res.send(buffer);
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+}
+
 module.exports = {
   addQuestion,
   listQuestions,
@@ -245,4 +261,5 @@ module.exports = {
   statsController,
   downloadExcelTemplateController,
   deleteQuestion,
+  exportQuestionsController,
 };
