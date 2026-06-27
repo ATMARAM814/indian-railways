@@ -779,6 +779,8 @@ function buildQueryContext(filters, scope) {
     }
   }
 
+  const profileValuesCount = values.length;
+
   const assessConditions = [];
   if (filters.assessmentStatus) {
     values.push(filters.assessmentStatus);
@@ -803,7 +805,7 @@ function buildQueryContext(filters, scope) {
 
   let whereAssessClause = assessConditions.length > 0 ? `WHERE ${assessConditions.join(" AND ")}` : "";
 
-  return { values, whereProfileClause, whereAssessClause };
+  return { values, whereProfileClause, whereAssessClause, profileValuesCount };
 }
 
 async function getReportsSummaryDb(filters, scope) {
@@ -862,7 +864,7 @@ async function getReportsSummaryDb(filters, scope) {
 }
 
 async function getReportsPerformanceDb(filters, scope) {
-  const { values, whereProfileClause, whereAssessClause } = buildQueryContext(filters, scope);
+  const { values, whereProfileClause, whereAssessClause, profileValuesCount } = buildQueryContext(filters, scope);
 
   // 1. scoreTrend
   const scoreTrendQuery = `
@@ -975,7 +977,7 @@ async function getReportsPerformanceDb(filters, scope) {
   const [scoreRes, completionRes, categoryRes, approvalRes] = await Promise.all([
     pool.query(scoreTrendQuery, values),
     pool.query(completionTrendQuery, values),
-    pool.query(categoryQuery, values),
+    pool.query(categoryQuery, values.slice(0, profileValuesCount)),
     pool.query(approvalQuery, values)
   ]);
 
@@ -1015,7 +1017,7 @@ async function getReportsPerformanceDb(filters, scope) {
 }
 
 async function getReportsHighRiskDb(filters, scope) {
-  const { values, whereProfileClause } = buildQueryContext(filters, scope);
+  const { values, whereProfileClause, profileValuesCount } = buildQueryContext(filters, scope);
   
   const query = `
     WITH scoped_profiles AS (
@@ -1078,7 +1080,7 @@ async function getReportsHighRiskDb(filters, scope) {
     ORDER BY sp.full_name ASC;
   `;
   
-  const result = await pool.query(query, values);
+  const result = await pool.query(query, values.slice(0, profileValuesCount));
   return result.rows;
 }
 
@@ -1129,7 +1131,7 @@ async function getReportsStationsDb(filters, scope) {
 }
 
 async function getReportsCyclesDb(filters, scope) {
-  const { values, whereProfileClause } = buildQueryContext(filters, scope);
+  const { values, whereProfileClause, profileValuesCount } = buildQueryContext(filters, scope);
   
   const query = `
     WITH scoped_profiles AS (
@@ -1161,7 +1163,7 @@ async function getReportsCyclesDb(filters, scope) {
     ORDER BY "cycleName" ASC;
   `;
 
-  const result = await pool.query(query, values);
+  const result = await pool.query(query, values.slice(0, profileValuesCount));
   return result.rows;
 }
 
