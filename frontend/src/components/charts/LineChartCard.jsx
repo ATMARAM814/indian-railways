@@ -32,7 +32,7 @@ const LineChartCard = ({
         <EmptyState />
       ) : (
         <ResponsiveContainer width="100%" height={250}>
-          <LineChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+          <LineChart data={data} margin={{ top: 10, right: 15, left: 0, bottom: 15 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
             <XAxis 
               dataKey={xKey} 
@@ -40,7 +40,10 @@ const LineChartCard = ({
               fontSize={11} 
               tickLine={false} 
               axisLine={false} 
-              dy={10} 
+              dy={5} 
+              angle={-25}
+              textAnchor="end"
+              height={35}
             />
             <YAxis 
               stroke="#64748B" 

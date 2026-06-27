@@ -37,7 +37,7 @@ const StackedBarChartCard = ({
         <EmptyState />
       ) : (
         <ResponsiveContainer width="100%" height={250}>
-          <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: data.length > 5 ? 25 : 0 }} key={JSON.stringify(data)}>
+          <BarChart data={data} margin={{ top: 10, right: 15, left: 0, bottom: data.length > 5 ? 30 : 15 }} key={JSON.stringify(data)}>
             <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
             <XAxis 
               dataKey={xKey} 
@@ -45,11 +45,10 @@ const StackedBarChartCard = ({
               fontSize={11} 
               tickLine={false} 
               axisLine={false} 
-              dy={10} 
-              interval={0}
-              angle={0}
-              textAnchor="middle"
-              height={30}
+              dy={5} 
+              angle={-35}
+              textAnchor="end"
+              height={45}
             />
             <YAxis 
               stroke="#64748B" 
