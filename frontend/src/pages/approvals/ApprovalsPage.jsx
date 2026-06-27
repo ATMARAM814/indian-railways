@@ -9,8 +9,9 @@ import ApprovalDetailModal from './ApprovalDetailModal';
 import { TableSkeleton } from '../../components/assessments/AssessmentSkeletons';
 import { 
   CheckSquare, History, Search, Filter, RotateCcw, 
-  ChevronRight, Calendar, AlertCircle, Eye, EyeOff
+  ChevronRight, Calendar, AlertCircle, Eye, EyeOff, Download
 } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import { cleanDesignationText } from '../../utils/dashboardMappers';
 import '../../styles/assessments.css';
 
@@ -243,6 +244,85 @@ const ApprovalsPage = () => {
     loadData();
   };
 
+  const handleExportExcel = () => {
+    try {
+      let dataToExport = [];
+      let filename = '';
+
+      if (activeTab === 'pending') {
+        filename = 'Pending_Assessments_Report.xlsx';
+        // Filter pendingList using current filters
+        const filteredPending = pendingList.filter(row => {
+          const matchesSearch = !filters.search || 
+            row.assessed_name.toLowerCase().includes(filters.search.toLowerCase()) ||
+            row.assessed_hrms_id.toLowerCase().includes(filters.search.toLowerCase());
+          const matchesStation = !filters.stationId || String(row.station_id) === String(filters.stationId);
+          const matchesRole = !filters.role || row.assessed_role_code === filters.role;
+          
+          let matchesDate = true;
+          if (filters.fromDate || filters.toDate) {
+            const evalDate = new Date(row.evaluated_at);
+            if (filters.fromDate && evalDate < new Date(filters.fromDate)) matchesDate = false;
+            if (filters.toDate && evalDate > new Date(filters.toDate + 'T23:59:59')) matchesDate = false;
+          }
+
+          return matchesSearch && matchesStation && matchesRole && matchesDate;
+        });
+
+        dataToExport = filteredPending.map(row => ({
+          'Assessment ID': row.id,
+          'Employee Name': row.assessed_name,
+          'HRMS ID': row.assessed_hrms_id,
+          'Role': roleNameMap[row.assessed_role_code] || row.assessed_role_code,
+          'Station': row.station_name ? `${row.station_name} (${row.station_code})` : row.station_code || '-',
+          'Assessor': row.assessor_name,
+          'Assessor Role': roleNameMap[row.assessor_role_code] || row.assessor_role_code,
+          'Assessment Type': row.assessment_type || 'Periodic Assessment',
+          'Total Score': `${row.total_score} (${parseFloat(row.percentage || 0).toFixed(1)}%)`,
+          'Pass/Fail': parseFloat(row.percentage) >= 60 ? 'PASS' : 'FAIL',
+          'Submitted Date': formatDate(row.evaluated_at)
+        }));
+      } else {
+        filename = 'Completed_Assessments_Report.xlsx';
+        dataToExport = historyList.map(row => ({
+          'Assessment ID': row.assessmentId,
+          'Employee Name': row.assessedUserName,
+          'HRMS ID': row.hrmsId,
+          'Role': roleNameMap[row.role] || row.role,
+          'Station': row.stationName || '-',
+          'Total Score': `${row.totalScore} (${parseFloat(row.percentage || 0).toFixed(1)}%)`,
+          'Sign-off Status': row.approvalStatus === 'approved' ? 'Approved' : 'Rejected',
+          'Processed By': row.approvalStatus === 'approved' ? row.approvedBy : row.rejectedBy || '-',
+          'Action Date': formatDate(row.approvalStatus === 'approved' ? row.approvedAt : row.rejectedAt),
+          'Remarks / Reasons': row.approvalStatus === 'approved' ? row.approvalRemark : row.rejectionReason || '-'
+        }));
+      }
+
+      if (dataToExport.length === 0) {
+        alert("No data available to export.");
+        return;
+      }
+
+      const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
+
+      const maxLens = {};
+      dataToExport.forEach(row => {
+        Object.keys(row).forEach(key => {
+          const valStr = String(row[key] || '');
+          maxLens[key] = Math.max(maxLens[key] || key.length, valStr.length);
+        });
+      });
+      worksheet['!cols'] = Object.keys(maxLens).map(key => ({ wch: maxLens[key] + 3 }));
+
+      XLSX.writeFile(workbook, filename);
+    } catch (err) {
+      console.error("Export Excel error:", err);
+      alert("Error exporting Excel: " + err.message);
+    }
+  };
+
   if (!user) return <Navigate to="/login" replace />;
   if (!isApprover) return <Navigate to="/unauthorized" replace />;
 
@@ -260,6 +340,30 @@ const ApprovalsPage = () => {
               Review, modify evaluation parameters, and issue category certification sign-offs for railway crew.
             </p>
           </div>
+          <button
+            onClick={handleExportExcel}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              padding: '10px 20px',
+              borderRadius: '8px',
+              border: 'none',
+              backgroundColor: '#0B2341',
+              color: '#FFFFFF',
+              fontSize: '13.5px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              boxShadow: '0 2px 4px rgba(11, 35, 65, 0.15)',
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1B365D'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#0B2341'}
+          >
+            <Download size={15} />
+            <span>Export to Excel</span>
+          </button>
         </div>
 
         {/* Feedback Alert banner */}
