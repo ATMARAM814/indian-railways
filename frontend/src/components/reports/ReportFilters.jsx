@@ -2,17 +2,29 @@ import React, { useState, useEffect } from 'react';
 import { getStationsList } from '../../services/workforce.service';
 import { Search, Calendar, Filter, RotateCcw } from 'lucide-react';
 
-const ReportFilters = ({ onApplyFilters, onResetFilters, userRole }) => {
-  const [role, setRole] = useState('');
-  const [stationId, setStationId] = useState('');
-  const [category, setCategory] = useState('');
-  const [assessmentStatus, setAssessmentStatus] = useState('');
-  const [approvalStatus, setApprovalStatus] = useState('');
-  const [assessmentCycle, setAssessmentCycle] = useState('');
-  const [fromDate, setFromDate] = useState('');
-  const [toDate, setToDate] = useState('');
-  const [search, setSearch] = useState('');
+const ReportFilters = ({ filters = {}, onApplyFilters, onResetFilters, userRole }) => {
+  const [role, setRole] = useState(filters.role || '');
+  const [stationId, setStationId] = useState(filters.stationId || '');
+  const [category, setCategory] = useState(filters.category || '');
+  const [assessmentStatus, setAssessmentStatus] = useState(filters.assessmentStatus || '');
+  const [approvalStatus, setApprovalStatus] = useState(filters.approvalStatus || '');
+  const [assessmentCycle, setAssessmentCycle] = useState(filters.assessmentCycle || '');
+  const [fromDate, setFromDate] = useState(filters.fromDate || '');
+  const [toDate, setToDate] = useState(filters.toDate || '');
+  const [search, setSearch] = useState(filters.search || '');
   const [stations, setStations] = useState([]);
+
+  useEffect(() => {
+    setRole(filters.role || '');
+    setStationId(filters.stationId || '');
+    setCategory(filters.category || '');
+    setAssessmentStatus(filters.assessmentStatus || '');
+    setApprovalStatus(filters.approvalStatus || '');
+    setAssessmentCycle(filters.assessmentCycle || '');
+    setFromDate(filters.fromDate || '');
+    setToDate(filters.toDate || '');
+    setSearch(filters.search || '');
+  }, [filters]);
 
   useEffect(() => {
     // Only load stations dropdown for roles that see multiple stations

@@ -279,6 +279,21 @@ function buildStaffPerformanceWhere(filters, scope, values) {
        OR p.hrms_id ILIKE $${values.length})
     `);
   }
+  if (filters.approvalStatus) {
+    values.push(filters.approvalStatus);
+    conditions.push(`latest_a.approval_status = $${values.length}`);
+  }
+  if (filters.assessmentStatus) {
+    if (filters.assessmentStatus === 'completed') {
+      conditions.push(`latest_a.percentage IS NOT NULL`);
+    } else if (filters.assessmentStatus === 'pending_approval') {
+      conditions.push(`latest_a.approval_status = 'pending_approval'`);
+    } else if (filters.assessmentStatus === 'mcq_submitted') {
+      conditions.push(`latest_a.approval_status = 'mcq_submitted'`);
+    } else if (filters.assessmentStatus === 'evaluation_pending') {
+      conditions.push(`latest_a.approval_status = 'evaluation_pending'`);
+    }
+  }
 
   return conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
 }
@@ -363,6 +378,19 @@ async function countStaffPerformanceReport(filters, scope) {
   const values = [];
   const whereClause = buildStaffPerformanceWhere(filters, scope, values);
 
+  // Compile date checks for joins
+  let latestDateCond = "";
+  if (filters.fromDate) {
+    values.push(filters.fromDate);
+    const param = `$${values.length}::timestamp`;
+    latestDateCond += ` AND evaluated_at >= ${param}`;
+  }
+  if (filters.toDate) {
+    values.push(filters.toDate);
+    const param = `$${values.length}::timestamp`;
+    latestDateCond += ` AND evaluated_at <= ${param}`;
+  }
+
   const query = `
     SELECT COUNT(DISTINCT p.id)::int as total
     FROM profiles p
@@ -376,6 +404,13 @@ async function countStaffPerformanceReport(filters, scope) {
       LIMIT 1
     ) ec ON true
     LEFT JOIN staff_categories sc ON sc.id = ec.category_id
+    LEFT JOIN LATERAL (
+      SELECT percentage, evaluated_at, approval_status
+      FROM assessments
+      WHERE assessed_user_id = p.id AND status = 'completed' ${latestDateCond}
+      ORDER BY created_at DESC
+      LIMIT 1
+    ) latest_a ON true
     ${whereClause};
   `;
 

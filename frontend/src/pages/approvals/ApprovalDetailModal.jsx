@@ -15,6 +15,14 @@ import {
 } from '../../services/approval.service';
 
 
+const sectionNames = {
+  ALERTNESS: 'Alertness & Vigilance',
+  SAFETY_RECORD: 'Safety Record & Rules Compliance',
+  LEADERSHIP: 'Leadership & Initiative',
+  DISCIPLINE: 'Discipline & Attendance',
+  APPEARANCE: 'Appearance & Turnout'
+};
+
 const ApprovalDetailModal = ({ assessmentId, roleCode, userRole, onClose, onActionSuccess }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

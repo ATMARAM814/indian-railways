@@ -25,10 +25,10 @@ const {
 } = require("./user.repository");
 
 const CREATE_PERMISSIONS = {
-  SM: ["PM", "Shunting Master", "TM"],
-  SS: ["PM", "Shunting Master", "TM"],
-  "Cabin Master": ["PM", "Shunting Master", "TM"],
-  "CABIN MASTER": ["PM", "Shunting Master", "TM"],
+  SM: ["PM", "Shunting Master", "SHUNTING MASTER", "SHM", "TM"],
+  SS: ["PM", "Shunting Master", "SHUNTING MASTER", "SHM", "TM"],
+  "Cabin Master": ["PM", "Shunting Master", "SHUNTING MASTER", "SHM", "TM"],
+  "CABIN MASTER": ["PM", "Shunting Master", "SHUNTING MASTER", "SHM", "TM"],
 
   TI: [
     "PM",
@@ -36,8 +36,13 @@ const CREATE_PERMISSIONS = {
     "TM",
     "SS",
     "Station Master Supervisor",
+    "STATION MASTER SUPERVISOR",
+    "SMS",
     "Cabin Master",
+    "CABIN MASTER",
     "Shunting Master",
+    "SHUNTING MASTER",
+    "SHM",
   ],
 
   "Station Master Supervisor": [
@@ -46,8 +51,13 @@ const CREATE_PERMISSIONS = {
     "TM",
     "SS",
     "Station Master Supervisor",
+    "STATION MASTER SUPERVISOR",
+    "SMS",
     "Cabin Master",
+    "CABIN MASTER",
     "Shunting Master",
+    "SHUNTING MASTER",
+    "SHM",
   ],
 
   SMS: [
@@ -56,8 +66,13 @@ const CREATE_PERMISSIONS = {
     "TM",
     "SS",
     "Station Master Supervisor",
+    "STATION MASTER SUPERVISOR",
+    "SMS",
     "Cabin Master",
+    "CABIN MASTER",
     "Shunting Master",
+    "SHUNTING MASTER",
+    "SHM",
   ],
 
   "STATION MASTER SUPERVISOR": [
@@ -66,8 +81,13 @@ const CREATE_PERMISSIONS = {
     "TM",
     "SS",
     "Station Master Supervisor",
+    "STATION MASTER SUPERVISOR",
+    "SMS",
     "Cabin Master",
+    "CABIN MASTER",
     "Shunting Master",
+    "SHUNTING MASTER",
+    "SHM",
   ],
 
   AOM: [
@@ -77,8 +97,13 @@ const CREATE_PERMISSIONS = {
     "SS",
     "TI",
     "Station Master Supervisor",
+    "STATION MASTER SUPERVISOR",
+    "SMS",
     "Cabin Master",
+    "CABIN MASTER",
     "Shunting Master",
+    "SHUNTING MASTER",
+    "SHM",
   ],
 
   SUPER_ADMIN: [
@@ -89,8 +114,14 @@ const CREATE_PERMISSIONS = {
     "TI",
     "AOM",
     "Station Master Supervisor",
+    "STATION MASTER SUPERVISOR",
+    "SMS",
     "Cabin Master",
+    "CABIN MASTER",
     "Shunting Master",
+    "SHUNTING MASTER",
+    "SHM",
+    "SUPER_ADMIN",
   ],
 };
 
