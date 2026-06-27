@@ -38,23 +38,35 @@ const QuestionsListPage = () => {
   const [selectedQuestion, setSelectedQuestion] = useState(null);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [downloadModalOpen, setDownloadModalOpen] = useState(false);
+  const [selectedDownloadRole, setSelectedDownloadRole] = useState('PM');
 
-  const handleDownloadQuestions = async () => {
+  const handleDownloadClick = () => {
+    setSelectedDownloadRole(roleCode || 'PM');
+    setDownloadModalOpen(true);
+  };
+
+  const handleDownloadSubmit = async () => {
+    if (!selectedDownloadRole) {
+      alert('Please select a staff role');
+      return;
+    }
     try {
       setDownloading(true);
-      const data = await exportQuestionsExcel(roleCode);
+      const data = await exportQuestionsExcel(selectedDownloadRole);
       
       const blob = new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      const filename = roleCode ? `questions_${roleCode.toUpperCase()}.xlsx` : 'questions_all.xlsx';
+      const filename = `questions_${selectedDownloadRole.toUpperCase()}.xlsx`;
       link.setAttribute('download', filename);
       document.body.appendChild(link);
       link.click();
       
       link.parentNode.removeChild(link);
       window.URL.revokeObjectURL(url);
+      setDownloadModalOpen(false);
     } catch (err) {
       alert(err.response?.data?.message || err.message || 'Failed to download question set');
     } finally {
@@ -227,7 +239,7 @@ const QuestionsListPage = () => {
 
           {/* Download Questions Button */}
           <button
-            onClick={handleDownloadQuestions}
+            onClick={handleDownloadClick}
             disabled={downloading}
             style={{
               padding: '10px 16px',
@@ -244,7 +256,7 @@ const QuestionsListPage = () => {
               transition: 'all 0.2s',
               boxShadow: '0 1px 2px rgba(15, 23, 42, 0.05)'
             }}
-            title={roleCode ? `Download active question bank for ${ROLE_OPTIONS.find(r => r.value === roleCode)?.label}` : "Download active question bank for all categories"}
+            title="Download active question bank"
           >
             <Download size={16} />
             <span>{downloading ? 'Downloading...' : 'Download Questions'}</span>
@@ -443,6 +455,144 @@ const QuestionsListPage = () => {
           onSubmit={handleDeleteSubmit}
           question={selectedQuestion}
         />
+
+        {/* Download Questions Modal */}
+        {downloadModalOpen && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(15, 23, 42, 0.6)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1100,
+            padding: '20px'
+          }}>
+            <div style={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: '16px',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+              width: '100%',
+              maxWidth: '480px',
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden',
+              border: '1px solid #D7E3EF',
+              fontFamily: "'Poppins', 'Inter', sans-serif"
+            }}>
+              {/* Header */}
+              <div style={{
+                padding: '16px 24px',
+                borderBottom: '1px solid #D7E3EF',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between'
+              }}>
+                <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#0B2341', margin: 0 }}>
+                  Download Questions
+                </h3>
+                <button
+                  onClick={() => setDownloadModalOpen(false)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#64748B',
+                    cursor: 'pointer',
+                    fontSize: '20px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  &times;
+                </button>
+              </div>
+
+              {/* Body */}
+              <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <p style={{ fontSize: '14px', color: '#475569', margin: 0, lineHeight: 1.5 }}>
+                  Select the staff role for which you want to download the active questions database.
+                </p>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    Staff Role *
+                  </label>
+                  <select
+                    value={selectedDownloadRole}
+                    onChange={(e) => setSelectedDownloadRole(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '10px 14px',
+                      fontSize: '14px',
+                      color: '#1E293B',
+                      backgroundColor: '#FFFFFF',
+                      border: '1px solid #D7E3EF',
+                      borderRadius: '8px',
+                      outline: 'none',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {ROLE_OPTIONS.filter(opt => opt.value !== '').map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div style={{
+                padding: '16px 24px',
+                borderTop: '1px solid #D7E3EF',
+                display: 'flex',
+                justifyContent: 'flex-end',
+                gap: '12px',
+                backgroundColor: '#F8FAFC'
+              }}>
+                <button
+                  onClick={() => setDownloadModalOpen(false)}
+                  style={{
+                    padding: '10px 18px',
+                    borderRadius: '8px',
+                    border: '1px solid #D7E3EF',
+                    backgroundColor: '#FFFFFF',
+                    color: '#475569',
+                    fontSize: '13.5px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDownloadSubmit}
+                  disabled={downloading}
+                  style={{
+                    padding: '10px 18px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    backgroundColor: '#0B2341',
+                    color: '#FFFFFF',
+                    fontSize: '13.5px',
+                    fontWeight: 600,
+                    cursor: downloading ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.2s',
+                    boxShadow: '0 4px 6px -1px rgba(11, 35, 65, 0.2)'
+                  }}
+                >
+                  {downloading ? 'Downloading...' : 'Download'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
       </div>
     </DashboardLayout>
