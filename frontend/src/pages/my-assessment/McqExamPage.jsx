@@ -8,6 +8,7 @@ import ExamNavigation from '../../components/my-assessment/ExamNavigation';
 import ExitExamModal from '../../components/my-assessment/ExitExamModal';
 import SubmitExamModal from '../../components/my-assessment/SubmitExamModal';
 import { ShieldCheck } from 'lucide-react';
+import LanguageSwitcher from '../../components/layout/LanguageSwitcher';
 import '../../styles/my-assessment.css';
 
 const McqExamPage = () => {
@@ -204,7 +205,8 @@ const McqExamPage = () => {
           </div>
         </div>
 
-        <div className="exam-fullscreen-actions">
+        <div className="exam-fullscreen-actions" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <LanguageSwitcher theme="dark" />
           <div className="exam-status-pill">
             <span className="exam-status-dot"></span>
             <span>STATUS: <strong className="status-highlight">Active Exam Session</strong></span>
