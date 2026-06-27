@@ -494,11 +494,6 @@ const MyProfilePage = () => {
                 value={cleanDesignationText(profile.designation || getDisplayRoleName(profile.role)) || '—'} 
               />
               <DetailField 
-                icon={<Calendar />} 
-                label="Date of Birth" 
-                value={profile.dob ? formatDate(profile.dob) : '—'} 
-              />
-              <DetailField 
                 icon={<Compass />} 
                 label="Current Zone" 
                 value={profile.zone || '—'} 
@@ -512,11 +507,6 @@ const MyProfilePage = () => {
                 icon={<MapPin />} 
                 label="Current Division" 
                 value={profile.divisionName || '—'} 
-              />
-              <DetailField 
-                icon={<Mail />} 
-                label="Email ID" 
-                value={profile.email || '—'} 
               />
               <DetailField 
                 icon={<MapPin />} 
@@ -558,11 +548,7 @@ const MyProfilePage = () => {
                 label="Joining Date" 
                 value={profile.created_at ? formatDate(profile.created_at) : '—'} 
               />
-              <DetailField 
-                icon={<FileText />} 
-                label="Employee Type" 
-                value={profile.employee_type || '—'} 
-              />
+
             </div>
           </div>
 
