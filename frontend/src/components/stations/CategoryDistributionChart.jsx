@@ -36,7 +36,7 @@ export const CategoryDistributionChart = ({ data }) => {
       </h3>
       <div style={{ flex: 1, width: '100%', minHeight: '200px' }}>
         <div className="chart-scroll-container">
-          <div style={{ minWidth: isMobile ? `${Math.max(600, chartData.length * 75)}px` : 'auto', width: '100%' }}>
+          <div style={{ minWidth: isMobile ? `${Math.max(800, chartData.length * 130)}px` : 'auto', width: '100%' }}>
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={chartData} layout="horizontal" margin={{ top: 10, right: 10, left: -20, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />

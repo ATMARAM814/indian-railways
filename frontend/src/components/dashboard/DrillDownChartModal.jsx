@@ -635,7 +635,7 @@ const DrillDownChartModal = ({ isOpen, onClose, graphType }) => {
                 </div>
               ) : (
                 <div className="chart-scroll-container">
-                  <div style={{ minWidth: isMobile ? `${Math.max(600, ((graphType === 'highRiskStaff' || graphType === 'workforceActivity' ? extraChartData.length : data.length) || 0) * 75)}px` : 'auto', width: '100%' }}>
+                  <div style={{ minWidth: isMobile ? `${Math.max(800, ((graphType === 'highRiskStaff' || graphType === 'workforceActivity' ? extraChartData.length : data.length) || 0) * 130)}px` : 'auto', width: '100%' }}>
                     <ResponsiveContainer width="100%" height={320}>
                       {graphType === 'stationEvaluationProgress' && (
                     <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: data.length > 5 ? 25 : 0 }}>

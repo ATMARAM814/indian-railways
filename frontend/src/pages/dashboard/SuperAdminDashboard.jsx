@@ -776,13 +776,13 @@ const SuperAdminDashboard = () => {
               </div>
 
               {/* Grouped Bar Chart */}
-              <ResponsiveContainer width="100%" height={280}>
+              <ResponsiveContainer width="100%" height={320}>
                 <BarChart data={pipeline.monthly} margin={{ top: 10, right: 10, left: -20, bottom: 0 }} key={JSON.stringify(pipeline.monthly)}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
                   <XAxis dataKey="month" stroke="#64748B" fontSize={11} tickLine={false} axisLine={false} dy={10} interval={0} />
                   <YAxis domain={[0, 100]} stroke="#64748B" fontSize={11} tickLine={false} axisLine={false} dx={-5} allowDecimals={false} />
                   <Tooltip />
-                  <Legend verticalAlign="bottom" height={36} iconType="circle" iconSize={8} />
+                  <Legend verticalAlign="bottom" height={55} iconType="circle" iconSize={8} />
                   <Bar dataKey="Approved" fill="#1B365D" barSize={10} radius={[2, 2, 0, 0]} isAnimationActive={true} animationBegin={0} animationDuration={1200} animationEasing="ease-out" />
                   <Bar dataKey="Pending" fill="#2563EB" barSize={10} radius={[2, 2, 0, 0]} isAnimationActive={true} animationBegin={0} animationDuration={1200} animationEasing="ease-out" />
                   <Bar dataKey="Rejected" fill="#C53030" barSize={10} radius={[2, 2, 0, 0]} isAnimationActive={true} animationBegin={0} animationDuration={1200} animationEasing="ease-out" />

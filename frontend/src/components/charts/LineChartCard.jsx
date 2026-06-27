@@ -34,7 +34,7 @@ const LineChartCard = ({
         <EmptyState />
       ) : (
         <div className="chart-scroll-container">
-          <div style={{ minWidth: isMobile ? `${Math.max(600, data.length * 75)}px` : 'auto', width: '100%' }}>
+          <div style={{ minWidth: isMobile ? `${Math.max(800, data.length * 130)}px` : 'auto', width: '100%' }}>
             <ResponsiveContainer width="100%" height={250}>
               <LineChart data={data} margin={{ top: 10, right: 15, left: 0, bottom: 15 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />

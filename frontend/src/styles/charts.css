@@ -64,11 +64,14 @@
 }
 
 /* Remove default focus outlines (black borders) when clicking Recharts wrappers */
-.recharts-wrapper:focus,
-.recharts-surface:focus,
-.recharts-container:focus,
-.recharts-responsive-container:focus,
-svg:focus {
+.recharts-wrapper,
+.recharts-surface,
+.recharts-container,
+svg,
+.recharts-wrapper *,
+.recharts-surface *,
+.recharts-container *,
+svg * {
   outline: none !important;
   border: none !important;
   box-shadow: none !important;

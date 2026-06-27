@@ -35,7 +35,7 @@ const EmployeeScoreTrend = ({ scoreTrend }) => {
         </div>
       ) : (
         <div className="chart-scroll-container">
-          <div style={{ minWidth: isMobile ? `${Math.max(600, formattedData.length * 75)}px` : 'auto', width: '100%' }}>
+          <div style={{ minWidth: isMobile ? `${Math.max(800, formattedData.length * 130)}px` : 'auto', width: '100%' }}>
             <ResponsiveContainer width="100%" height={250}>
               <LineChart data={formattedData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />

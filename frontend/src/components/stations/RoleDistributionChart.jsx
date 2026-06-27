@@ -19,7 +19,7 @@ export const RoleDistributionChart = ({ data }) => {
       <div style={{ width: '100%', height: '240px' }}>
         {data.length > 0 ? (
           <div className="chart-scroll-container">
-            <div style={{ minWidth: isMobile ? `${Math.max(600, data.length * 75)}px` : 'auto', width: '100%' }}>
+            <div style={{ minWidth: isMobile ? `${Math.max(800, data.length * 130)}px` : 'auto', width: '100%' }}>
               <ResponsiveContainer width="100%" height={240}>
                 <BarChart data={data} margin={{ top: 20, right: 10, left: -20, bottom: 0 }} key={JSON.stringify(data)}>
               <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />

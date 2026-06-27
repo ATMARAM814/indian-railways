@@ -39,7 +39,7 @@ const StackedBarChartCard = ({
         <EmptyState />
       ) : (
         <div className="chart-scroll-container">
-          <div style={{ minWidth: isMobile ? `${Math.max(600, data.length * 75)}px` : 'auto', width: '100%' }}>
+          <div style={{ minWidth: isMobile ? `${Math.max(800, data.length * 130)}px` : 'auto', width: '100%' }}>
             <ResponsiveContainer width="100%" height={250}>
               <BarChart data={data} margin={{ top: 10, right: 15, left: 0, bottom: data.length > 5 ? 30 : 15 }} key={JSON.stringify(data)}>
             <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
