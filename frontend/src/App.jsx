@@ -165,7 +165,7 @@ function App() {
       window.googleTranslateElementInit = () => {
         if (window.google && window.google.translate) {
           new window.google.translate.TranslateElement(
-            { pageLanguage: 'en', includedLanguages: 'en,hi' },
+            { pageLanguage: 'en', includedLanguages: 'en,hi,mr' },
             'google_translate_element'
           );
         }
