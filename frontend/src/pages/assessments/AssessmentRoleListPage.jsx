@@ -10,6 +10,7 @@ import { TableSkeleton } from '../../components/assessments/AssessmentSkeletons'
 import DrillDownPagination from '../../components/dashboard/DrillDownPagination';
 import { ArrowLeft, CheckCircle2, AlertCircle, X, Download } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import { cleanDesignationText } from '../../utils/dashboardMappers';
 import '../../styles/assessments.css';
 
 const roleNameMap = {
