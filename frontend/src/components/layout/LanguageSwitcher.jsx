@@ -53,6 +53,7 @@ const LanguageSwitcher = ({ theme = 'light' }) => {
       >
         <option value="en" style={{ color: '#000000' }}>English</option>
         <option value="hi" style={{ color: '#000000' }}>हिन्दी (Hindi)</option>
+        <option value="mr" style={{ color: '#000000' }}>मराठी (Marathi)</option>
       </select>
     </div>
   );
