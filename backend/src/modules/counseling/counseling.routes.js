@@ -1,5 +1,6 @@
 const express = require("express");
-const { authenticate, authorize } = require("../../middleware/auth");
+const { authenticate } = require("../../middleware/auth.middleware");
+const { authorize } = require("../../middleware/role.middleware");
 const {
   getCandidateCounselingController,
   saveCandidateCounselingController
