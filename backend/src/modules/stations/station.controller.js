@@ -6,6 +6,7 @@ const {
   listDivisions,
   listScopedStationsService,
   getStationIntelligenceService,
+  getCategoryCandidatesService,
   createStationService
 } = require("./station.service");
 
@@ -155,6 +156,34 @@ async function createStationController(req, res) {
   }
 }
 
+async function getCategoryCandidatesController(req, res) {
+  try {
+    const { stationId } = req.params;
+    const { category } = req.query;
+    if (!category || !["C", "D"].includes(category.toUpperCase())) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or missing category parameter. Must be 'C' or 'D'."
+      });
+    }
+    const data = await getCategoryCandidatesService(
+      stationId,
+      category.toUpperCase(),
+      req.user.userId,
+      req.user.role
+    );
+    return res.status(200).json({
+      success: true,
+      data
+    });
+  } catch (error) {
+    return res.status(error.message.includes("Access Denied") ? 403 : 400).json({
+      success: false,
+      message: error.message
+    });
+  }
+}
+
 module.exports = {
   getStationsController,
   getStationStaffController,
@@ -162,5 +191,6 @@ module.exports = {
   getStationStaffGroupedController,
   getDivisionsController,
   getStationIntelligenceController,
+  getCategoryCandidatesController,
   createStationController
 };

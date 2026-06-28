@@ -35,6 +35,8 @@ const PlaceholderPage = () => {
         return { title: 'System Audit Logs', desc: 'Detailed log records of all administrative actions and database changes.' };
       case '/question-bank':
         return { title: 'Question Bank', desc: 'Manage evaluation question categories, MCQ questions, and assessment criteria.' };
+      case '/counseling':
+        return { title: 'Staff Counseling & Guidance', desc: 'Detailed counseling records, corrective training schedules, and safety performance improvements for monitored staff.' };
       default:
         return { title: 'Module Coming Soon', desc: 'This page is currently being integrated and will be available shortly.' };
     }

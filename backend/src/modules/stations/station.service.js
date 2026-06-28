@@ -61,6 +61,7 @@ async function getStationIntelligenceService(stationId, userId, userRole) {
     operationalReadiness,
     workforce,
     highRiskWatchlist,
+    categoryCWatchlist,
     recentActivities
   ] = await Promise.all([
     db.getStationSummaryDb(stationId),
@@ -72,6 +73,7 @@ async function getStationIntelligenceService(stationId, userId, userRole) {
     db.getStationOperationalReadinessDb(stationId),
     db.getStationWorkforceDb(stationId),
     db.getStationHighRiskWatchlistDb(stationId),
+    db.getStationCategoryCWatchlistDb(stationId),
     db.getStationRecentActivitiesDb(stationId)
   ]);
 
@@ -85,6 +87,7 @@ async function getStationIntelligenceService(stationId, userId, userRole) {
     operationalReadiness,
     workforce,
     highRiskWatchlist,
+    categoryCWatchlist,
     recentActivities
   };
 }
@@ -153,6 +156,36 @@ async function poolQuery(sql, params) {
   return await pool.query(sql, params);
 }
 
+async function getCategoryCandidatesService(stationId, categoryCode, userId, userRole) {
+  if (userRole === "TI") {
+    const tiStations = await db.getTiStations(userId);
+    const stationRes = await poolQuery(`SELECT division_id FROM stations WHERE id = $1`, [stationId]);
+    if (stationRes.rows.length === 0) {
+      throw new Error("Station not found.");
+    }
+    return await db.getTiCategoryCandidatesDb(tiStations, categoryCode);
+  } else if (["AOM", "SUPER_ADMIN"].includes(userRole)) {
+    if (userRole === "AOM") {
+      const aomDiv = await db.getAomDivision(userId);
+      const stationRes = await poolQuery(`SELECT division_id FROM stations WHERE id = $1`, [stationId]);
+      if (stationRes.rows.length === 0) {
+        throw new Error("Station not found.");
+      }
+      if (stationRes.rows[0].division_id !== aomDiv) {
+        throw new Error("Access Denied: This station belongs to another division.");
+      }
+    }
+    const stationRes = await poolQuery(`SELECT division_id FROM stations WHERE id = $1`, [stationId]);
+    if (stationRes.rows.length === 0) {
+      throw new Error("Station not found.");
+    }
+    const divisionId = stationRes.rows[0].division_id;
+    return await db.getDivisionCategoryCandidatesDb(divisionId, categoryCode);
+  } else {
+    throw new Error("Access Denied: Unauthorized role.");
+  }
+}
+
 module.exports = {
   listStations,
   listStationStaff,
@@ -161,5 +194,6 @@ module.exports = {
   listDivisions,
   listScopedStationsService,
   getStationIntelligenceService,
+  getCategoryCandidatesService,
   createStationService
 };

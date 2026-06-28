@@ -640,8 +640,127 @@ async function assignSmToStationDb(profileId, stationId) {
   return result.rows[0];
 }
 
+async function getStationCategoryCWatchlistDb(stationId) {
+  const query = `
+    SELECT 
+      p.id as "userId",
+      p.full_name as "fullName",
+      r.name as "role",
+      sc.category_code as "category",
+      lca.percentage as "latestScore",
+      lca.evaluated_at as "lastAssessmentDate",
+      CASE
+        WHEN sc.category_code = 'C' THEN 'Category C / Medium Risk'
+        WHEN lca.percentage >= 60 AND lca.percentage < 70 THEN 'Medium Assessment Score (60-69%)'
+        ELSE 'Medium Risk Watchlist'
+      END as "reason"
+    FROM staff_station_postings ssp
+    JOIN profiles p ON p.id = ssp.profile_id
+    JOIN roles r ON r.id = p.role_id
+    LEFT JOIN LATERAL (
+      SELECT category_id FROM employee_categories ec_inner
+      WHERE ec_inner.profile_id = p.id
+      ORDER BY ec_inner.created_at DESC
+      LIMIT 1
+    ) ec ON true
+    LEFT JOIN staff_categories sc ON sc.id = ec.category_id
+    LEFT JOIN LATERAL (
+      SELECT percentage, evaluated_at FROM assessments
+      WHERE assessed_user_id = p.id AND status = 'completed' AND approval_status = 'approved'
+      ORDER BY created_at DESC
+      LIMIT 1
+    ) lca ON true
+    WHERE ssp.station_id = $1 
+      AND ssp.is_current = true
+      AND (sc.category_code = 'C' OR (lca.percentage >= 60 AND lca.percentage < 70))
+    ORDER BY lca.percentage ASC NULLS LAST;
+  `;
+  const result = await pool.query(query, [stationId]);
+  return result.rows;
+}
+
+async function getDivisionCategoryCandidatesDb(divisionId, categoryCode) {
+  const query = `
+    SELECT 
+      p.id as "userId",
+      p.full_name as "fullName",
+      r.name as "role",
+      sc.category_code as "category",
+      lca.percentage as "latestScore",
+      lca.evaluated_at as "lastAssessmentDate",
+      s.station_name as "stationName"
+    FROM staff_station_postings ssp
+    JOIN stations s ON s.id = ssp.station_id
+    JOIN profiles p ON p.id = ssp.profile_id
+    JOIN roles r ON r.id = p.role_id
+    LEFT JOIN LATERAL (
+      SELECT category_id FROM employee_categories ec_inner
+      WHERE ec_inner.profile_id = p.id
+      ORDER BY ec_inner.created_at DESC
+      LIMIT 1
+    ) ec ON true
+    LEFT JOIN staff_categories sc ON sc.id = ec.category_id
+    LEFT JOIN LATERAL (
+      SELECT percentage, evaluated_at FROM assessments
+      WHERE assessed_user_id = p.id AND status = 'completed' AND approval_status = 'approved'
+      ORDER BY created_at DESC
+      LIMIT 1
+    ) lca ON true
+    WHERE s.division_id = $1 
+      AND ssp.is_current = true
+      AND (
+        ($2 = 'C' AND (sc.category_code = 'C' OR (lca.percentage >= 60 AND lca.percentage < 70)))
+        OR
+        ($2 = 'D' AND (sc.category_code = 'D' OR lca.percentage < 60))
+      )
+    ORDER BY lca.percentage ASC NULLS LAST, p.full_name ASC;
+  `;
+  const result = await pool.query(query, [divisionId, categoryCode]);
+  return result.rows;
+}
+
+async function getTiCategoryCandidatesDb(stationIds, categoryCode) {
+  if (!stationIds || stationIds.length === 0) return [];
+  const query = `
+    SELECT 
+      p.id as "userId",
+      p.full_name as "fullName",
+      r.name as "role",
+      sc.category_code as "category",
+      lca.percentage as "latestScore",
+      lca.evaluated_at as "lastAssessmentDate",
+      s.station_name as "stationName"
+    FROM staff_station_postings ssp
+    JOIN stations s ON s.id = ssp.station_id
+    JOIN profiles p ON p.id = ssp.profile_id
+    JOIN roles r ON r.id = p.role_id
+    LEFT JOIN LATERAL (
+      SELECT category_id FROM employee_categories ec_inner
+      WHERE ec_inner.profile_id = p.id
+      ORDER BY ec_inner.created_at DESC
+      LIMIT 1
+    ) ec ON true
+    LEFT JOIN staff_categories sc ON sc.id = ec.category_id
+    LEFT JOIN LATERAL (
+      SELECT percentage, evaluated_at FROM assessments
+      WHERE assessed_user_id = p.id AND status = 'completed' AND approval_status = 'approved'
+      ORDER BY created_at DESC
+      LIMIT 1
+    ) lca ON true
+    WHERE ssp.station_id = ANY($1) 
+      AND ssp.is_current = true
+      AND (
+        ($2 = 'C' AND (sc.category_code = 'C' OR (lca.percentage >= 60 AND lca.percentage < 70)))
+        OR
+        ($2 = 'D' AND (sc.category_code = 'D' OR lca.percentage < 60))
+      )
+    ORDER BY lca.percentage ASC NULLS LAST, p.full_name ASC;
+  `;
+  const result = await pool.query(query, [stationIds, categoryCode]);
+  return result.rows;
+}
+
 module.exports = {
-  getAllStations,
   getStationStaff,
   getStationStaffSummary,
   getStationStaffGrouped,
@@ -658,6 +777,9 @@ module.exports = {
   getStationOperationalReadinessDb,
   getStationWorkforceDb,
   getStationHighRiskWatchlistDb,
+  getStationCategoryCWatchlistDb,
+  getDivisionCategoryCandidatesDb,
+  getTiCategoryCandidatesDb,
   getStationRecentActivitiesDb,
   createStationDb,
   assignTiToStationDb,

@@ -11,6 +11,11 @@ export const getStationIntelligence = async (stationId) => {
   return res.data;
 };
 
+export const getCategoryCandidates = async (stationId, category) => {
+  const res = await apiClient.get(`/stations/${stationId}/category-candidates`, { params: { category } });
+  return res.data;
+};
+
 export const createStation = async (stationData) => {
   const res = await apiClient.post('/stations', stationData);
   return res.data;

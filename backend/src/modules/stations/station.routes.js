@@ -15,6 +15,7 @@ const {
   getStationStaffGroupedController,
   getDivisionsController,
   getStationIntelligenceController,
+  getCategoryCandidatesController,
   createStationController
 } = require("./station.controller");
 
@@ -45,6 +46,14 @@ router.get(
   enforcePasswordChange,
   validateStationId,
   getStationIntelligenceController
+);
+
+router.get(
+  "/:stationId/category-candidates",
+  authenticate,
+  enforcePasswordChange,
+  validateStationId,
+  getCategoryCandidatesController
 );
 
 router.get(

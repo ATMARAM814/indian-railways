@@ -530,6 +530,7 @@ function App() {
             }
           />
           <Route path="/staff-management" element={<ProtectedRoute><PlaceholderPage /></ProtectedRoute>} />
+          <Route path="/counseling" element={<ProtectedRoute><PlaceholderPage /></ProtectedRoute>} />
           
           {/* Secure Audit Logs module */}
           <Route
