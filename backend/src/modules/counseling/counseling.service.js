@@ -21,8 +21,7 @@ async function getCandidateCounselingData(profileId) {
       subjectId: sub.id,
       subjectName: sub.subjectName,
       description: sub.description,
-      isCompleted: statusRecord.isCompleted ?? false,
-      remarks: statusRecord.remarks || "",
+      isCompleted: statusRecord.isCompleted ?? null,
       markedByName: statusRecord.markedByName || null,
       markedAt: statusRecord.markedAt || null
     };
@@ -43,16 +42,15 @@ async function saveCandidateCounselingData({ profileId, statusList, markedBy }) 
   }
 
   for (const item of statusList) {
-    const { subjectId, isCompleted, remarks } = item;
+    const { subjectId, isCompleted } = item;
     if (!subjectId) {
       throw new Error("Each status update must contain a subjectId.");
     }
     await db.upsertCounselingStatusDb({
       profileId,
       subjectId,
-      isCompleted: !!isCompleted,
-      markedBy,
-      remarks: remarks || ""
+      isCompleted: isCompleted === null ? null : !!isCompleted,
+      markedBy
     });
   }
 

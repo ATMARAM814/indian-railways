@@ -56,24 +56,13 @@ const CounselingPage = () => {
     );
   };
 
-  const handleRemarksChange = (subjectId, remarks) => {
-    setSubjects(prev =>
-      prev.map(sub =>
-        sub.subjectId === subjectId
-          ? { ...sub, remarks }
-          : sub
-      )
-    );
-  };
-
   const handleSave = async () => {
     setSubmitting(true);
     setFeedback(null);
     try {
       const statusList = subjects.map(sub => ({
         subjectId: sub.subjectId,
-        isCompleted: sub.isCompleted,
-        remarks: sub.remarks
+        isCompleted: sub.isCompleted
       }));
 
       const res = await saveCandidateCounselingData({
@@ -332,7 +321,7 @@ const CounselingPage = () => {
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '2px' }}>
                 <span style={{ fontSize: '11px', fontWeight: 600, color: '#94A3B8', textTransform: 'uppercase' }}>Latest Score</span>
                 <span style={{ fontSize: '14.5px', fontWeight: 700, color: categoryColor }}>
-                  {candidate.latestScore !== null ? `${parseFloat(candidate.latestScore).toFixed(1)}%` : '—'}
+                  {candidate.latestScore !== null ? `${parseFloat(candidate.latestScore).toFixed(1)}%` : 'N/A'}
                 </span>
               </div>
 
@@ -374,7 +363,7 @@ const CounselingPage = () => {
                   border: '1px solid #E2E8F0',
                   borderRadius: '12px',
                   padding: '18px',
-                  backgroundColor: sub.isCompleted ? '#F8FAF8' : '#FFFFFF',
+                  backgroundColor: sub.isCompleted === true ? '#F8FAF8' : sub.isCompleted === false ? '#FFF5F5' : '#FFFFFF',
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '12px',
@@ -402,9 +391,9 @@ const CounselingPage = () => {
                         fontWeight: 600,
                         borderRadius: '6px',
                         border: '1px solid',
-                        borderColor: sub.isCompleted ? '#10B981' : '#CBD5E1',
-                        backgroundColor: sub.isCompleted ? '#E6FBF3' : '#FFFFFF',
-                        color: sub.isCompleted ? '#059669' : '#64748B',
+                        borderColor: sub.isCompleted === true ? '#10B981' : '#CBD5E1',
+                        backgroundColor: sub.isCompleted === true ? '#E6FBF3' : '#FFFFFF',
+                        color: sub.isCompleted === true ? '#059669' : '#64748B',
                         cursor: 'pointer',
                         transition: 'all 0.2s',
                         outline: 'none'
@@ -421,9 +410,9 @@ const CounselingPage = () => {
                         fontWeight: 600,
                         borderRadius: '6px',
                         border: '1px solid',
-                        borderColor: !sub.isCompleted ? '#EF4444' : '#CBD5E1',
-                        backgroundColor: !sub.isCompleted ? '#FEE2E2' : '#FFFFFF',
-                        color: !sub.isCompleted ? '#DC2626' : '#64748B',
+                        borderColor: sub.isCompleted === false ? '#EF4444' : '#CBD5E1',
+                        backgroundColor: sub.isCompleted === false ? '#FEE2E2' : '#FFFFFF',
+                        color: sub.isCompleted === false ? '#DC2626' : '#64748B',
                         cursor: 'pointer',
                         transition: 'all 0.2s',
                         outline: 'none'
@@ -434,31 +423,15 @@ const CounselingPage = () => {
                   </div>
                 </div>
 
-                {/* Inline Remarks Input */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%' }}>
-                  <MessageSquare size={16} style={{ color: '#94A3B8', flexShrink: 0 }} />
-                  <input
-                    type="text"
-                    value={sub.remarks}
-                    onChange={(e) => handleRemarksChange(sub.subjectId, e.target.value)}
-                    placeholder="Enter counseling observations / comments for this subject..."
-                    style={{
-                      width: '100%',
-                      padding: '8px 12px',
-                      fontSize: '13px',
-                      color: '#334155',
-                      border: '1px solid #CBD5E1',
-                      borderRadius: '6px',
-                      outline: 'none',
-                      transition: 'border-color 0.2s'
-                    }}
-                  />
-                </div>
-
                 {/* Last Completed Timestamp Info */}
-                {sub.isCompleted && sub.markedByName && (
+                {sub.isCompleted === true && sub.markedByName && (
                   <span style={{ fontSize: '11px', color: '#10B981', fontWeight: 500, alignSelf: 'flex-start' }}>
                     ✔ Marked Completed by {sub.markedByName} on {formatDate(sub.markedAt)}
+                  </span>
+                )}
+                {sub.isCompleted === false && sub.markedByName && (
+                  <span style={{ fontSize: '11px', color: '#EF4444', fontWeight: 500, alignSelf: 'flex-start' }}>
+                    ✘ Marked Pending by {sub.markedByName} on {formatDate(sub.markedAt)}
                   </span>
                 )}
               </div>

@@ -23,14 +23,19 @@ async function runAutoMigration() {
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         profile_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
         subject_id UUID NOT NULL REFERENCES counseling_subjects(id) ON DELETE CASCADE,
-        is_completed BOOLEAN DEFAULT FALSE,
+        is_completed BOOLEAN,
         marked_by UUID REFERENCES profiles(id) ON DELETE SET NULL,
         marked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        remarks TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         CONSTRAINT unique_candidate_subject UNIQUE (profile_id, subject_id)
       );
+      
+      -- Remove remarks column if exists
+      ALTER TABLE staff_counseling_status DROP COLUMN IF EXISTS remarks;
+
+      -- Remove default constraint from is_completed if exists
+      ALTER TABLE staff_counseling_status ALTER COLUMN is_completed DROP DEFAULT;
     `);
 
     // 3. Seed subjects if empty
@@ -161,7 +166,6 @@ async function getCandidateCounselingStatusesDb(profileId) {
     SELECT 
       scs.subject_id as "subjectId",
       scs.is_completed as "isCompleted",
-      scs.remarks as "remarks",
       scs.marked_at as "markedAt",
       p.full_name as "markedByName"
     FROM staff_counseling_status scs
@@ -172,20 +176,19 @@ async function getCandidateCounselingStatusesDb(profileId) {
   return result.rows;
 }
 
-async function upsertCounselingStatusDb({ profileId, subjectId, isCompleted, markedBy, remarks }) {
+async function upsertCounselingStatusDb({ profileId, subjectId, isCompleted, markedBy }) {
   const query = `
-    INSERT INTO staff_counseling_status (profile_id, subject_id, is_completed, marked_by, remarks, marked_at, updated_at)
-    VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+    INSERT INTO staff_counseling_status (profile_id, subject_id, is_completed, marked_by, marked_at, updated_at)
+    VALUES ($1, $2, $3, $4, NOW(), NOW())
     ON CONFLICT (profile_id, subject_id) DO UPDATE
     SET 
       is_completed = EXCLUDED.is_completed,
       marked_by = EXCLUDED.marked_by,
-      remarks = EXCLUDED.remarks,
       marked_at = NOW(),
       updated_at = NOW()
     RETURNING *;
   `;
-  const result = await pool.query(query, [profileId, subjectId, isCompleted, markedBy, remarks]);
+  const result = await pool.query(query, [profileId, subjectId, isCompleted, markedBy]);
   return result.rows[0];
 }
 
