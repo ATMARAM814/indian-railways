@@ -6,9 +6,9 @@ const pool = new Pool({
   max: Number(process.env.DB_POOL_MAX || 15), // Set production pool size limit
   idleTimeoutMillis: Number(process.env.DB_POOL_IDLE_TIMEOUT || 30000),
   connectionTimeoutMillis: Number(process.env.DB_POOL_CONN_TIMEOUT || 5000),
-  ssl: {
+  ssl: process.env.DB_SSL === "true" || process.env.NODE_ENV === "production" ? {
     rejectUnauthorized: false, // Required for Supabase/Railway connections
-  },
+  } : false,
 });
 
 // Immediately verify connection on module load

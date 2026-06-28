@@ -16,6 +16,7 @@ const reportRoutes = require("./modules/reports/report.routes");
 const auditRoutes = require("./modules/audit/audit.routes");
 const questionBankRoutes = require("./modules/question-bank/questionBank.routes");
 const candidateAssessmentRoutes = require("./modules/candidate-assessments/candidateAssessment.routes");
+const counselingRoutes = require("./modules/counseling/counseling.routes");
 const { getPmeRefStatusController } = require("./modules/assessments/assessment.controller");
 const { globalErrorHandler } = require("./middleware/error.middleware");
 
@@ -76,6 +77,7 @@ app.use("/audit", auditRoutes);
 app.use("/question-bank", questionBankRoutes);
 app.use("/admin/question-bank", questionBankRoutes);
 app.use("/my-assessments", candidateAssessmentRoutes);
+app.use("/counseling", counselingRoutes);
 
 app.get("/me/pme-ref-status", authenticate, getPmeRefStatusController);
 

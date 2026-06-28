@@ -225,7 +225,7 @@ const CategoryCandidatesPage = () => {
                       </td>
                       <td style={{ padding: '14px 16px', textAlign: 'center' }}>
                         <button
-                          onClick={() => navigate('/counseling')}
+                          onClick={() => navigate(`/counseling?candidateId=${row.userId}`)}
                           style={{
                             padding: '6px 16px',
                             backgroundColor: '#DC2626',

@@ -20,6 +20,7 @@ const SMSupervisorDashboard = React.lazy(() => import('./pages/dashboard/SMSuper
 const TIDashboard = React.lazy(() => import('./pages/dashboard/TIDashboard'));
 const AOMDashboard = React.lazy(() => import('./pages/dashboard/AOMDashboard'));
 const SuperAdminDashboard = React.lazy(() => import('./pages/dashboard/SuperAdminDashboard'));
+const CounselingPage = React.lazy(() => import('./pages/counseling/CounselingPage'));
 
 const Unauthorized = React.lazy(() => import('./pages/Unauthorized'));
 const PlaceholderPage = React.lazy(() => import('./pages/PlaceholderPage'));
@@ -541,7 +542,16 @@ function App() {
             }
           />
           <Route path="/staff-management" element={<ProtectedRoute><PlaceholderPage /></ProtectedRoute>} />
-          <Route path="/counseling" element={<ProtectedRoute><PlaceholderPage /></ProtectedRoute>} />
+          <Route
+            path="/counseling"
+            element={
+              <ProtectedRoute>
+                <RoleRoute allowedRoles={['TI', 'AOM', 'SUPER_ADMIN', 'SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR']}>
+                  <CounselingPage />
+                </RoleRoute>
+              </ProtectedRoute>
+            }
+          />
           
           {/* Secure Audit Logs module */}
           <Route
