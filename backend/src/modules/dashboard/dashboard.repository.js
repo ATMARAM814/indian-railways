@@ -1494,6 +1494,8 @@ async function getSmSupervisorSummary(stationId, profileId) {
   `;
   const result = await pool.query(query, [stationId, profileId]);
   return result.rows[0];
+}
+
 async function getDashboardCategoryCandidatesDb({
   role,
   userId,
