@@ -50,3 +50,8 @@ export const getSmSupervisorDashboardData = async () => {
   const res = await apiClient.get('/dashboard/station-master-supervisor');
   return res.data;
 };
+
+export const getDashboardCategoryCandidates = async (params = {}) => {
+  const res = await apiClient.get('/dashboard/category-candidates', { params });
+  return res.data;
+};

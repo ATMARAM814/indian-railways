@@ -1189,6 +1189,24 @@ async function getSmSupervisorDashboardService(profileId) {
   };
 }
 
+async function getDashboardCategoryCandidatesService({
+  role,
+  userId,
+  category,
+  search,
+  stationSearch,
+  limit
+}) {
+  return await db.getDashboardCategoryCandidatesDb({
+    role,
+    userId,
+    category,
+    search,
+    stationSearch,
+    limit
+  });
+}
+
 module.exports = {
   getPmDashboardService,
   getTmDashboardService,
@@ -1199,4 +1217,5 @@ module.exports = {
   getSuperAdminWorkforceActivityService,
   getSuperAdminHighRiskStaffService,
   getSmSupervisorDashboardService,
+  getDashboardCategoryCandidatesService,
 };

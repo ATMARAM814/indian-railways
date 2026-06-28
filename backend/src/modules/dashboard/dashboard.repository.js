@@ -1494,6 +1494,96 @@ async function getSmSupervisorSummary(stationId, profileId) {
   `;
   const result = await pool.query(query, [stationId, profileId]);
   return result.rows[0];
+async function getDashboardCategoryCandidatesDb({
+  role,
+  userId,
+  category,
+  search,
+  stationSearch,
+  limit
+}) {
+  let conditions = [];
+  let values = [];
+  
+  if (role === 'TI') {
+    const tiStations = await getTiStations(userId);
+    if (!tiStations || tiStations.length === 0) return [];
+    values.push(tiStations);
+    conditions.push(`ssp.station_id = ANY($${values.length})`);
+  } else if (role === 'AOM') {
+    const aomDiv = await getAomDivision(userId);
+    if (!aomDiv) return [];
+    values.push(aomDiv);
+    conditions.push(`s.division_id = $${values.length}`);
+  }
+  
+  values.push(category);
+  if (category === 'C') {
+    conditions.push(`(sc.category_code = 'C' OR (lca.percentage >= 60 AND lca.percentage < 70))`);
+  } else if (category === 'D') {
+    conditions.push(`(sc.category_code = 'D' OR lca.percentage < 60)`);
+  }
+  
+  if (search && search.trim()) {
+    values.push(`%${search.trim().toLowerCase()}%`);
+    conditions.push(`(LOWER(p.full_name) LIKE $${values.length} OR LOWER(p.hrms_id) LIKE $${values.length})`);
+  }
+  
+  if (stationSearch && stationSearch.trim()) {
+    values.push(`%${stationSearch.trim().toLowerCase()}%`);
+    conditions.push(`(LOWER(s.station_name) LIKE $${values.length} OR LOWER(s.station_code) LIKE $${values.length})`);
+  }
+  
+  let query = `
+    SELECT 
+      p.id as "userId",
+      p.full_name as "fullName",
+      r.name as "role",
+      sc.category_code as "category",
+      lca.percentage as "latestScore",
+      lca.evaluated_at as "lastAssessmentDate",
+      s.station_name as "stationName",
+      s.station_code as "stationCode",
+      CASE
+        WHEN sc.category_code = 'D' THEN 'Category D / Critical Risk'
+        WHEN sc.category_code = 'C' THEN 'Category C / Medium Risk'
+        WHEN lca.percentage < 60 THEN 'Low Assessment Score (< 60%)'
+        WHEN lca.percentage >= 60 AND lca.percentage < 70 THEN 'Medium Assessment Score (60-69%)'
+        ELSE 'Risk Watchlist'
+      END as "reason"
+    FROM staff_station_postings ssp
+    JOIN stations s ON s.id = ssp.station_id
+    JOIN profiles p ON p.id = ssp.profile_id
+    JOIN roles r ON r.id = p.role_id
+    LEFT JOIN LATERAL (
+      SELECT category_id FROM employee_categories ec_inner
+      WHERE ec_inner.profile_id = p.id
+      ORDER BY ec_inner.created_at DESC
+      LIMIT 1
+    ) ec ON true
+    LEFT JOIN staff_categories sc ON sc.id = ec.category_id
+    LEFT JOIN LATERAL (
+      SELECT percentage, evaluated_at FROM assessments
+      WHERE assessed_user_id = p.id AND status = 'completed' AND approval_status = 'approved'
+      ORDER BY created_at DESC
+      LIMIT 1
+    ) lca ON true
+    WHERE ssp.is_current = true
+  `;
+  
+  if (conditions.length > 0) {
+    query += ` AND ` + conditions.join(' AND ');
+  }
+  
+  query += ` ORDER BY lca.percentage ASC NULLS LAST, p.full_name ASC`;
+  
+  if (limit) {
+    values.push(limit);
+    query += ` LIMIT $${values.length}`;
+  }
+  
+  const result = await pool.query(query, values);
+  return result.rows;
 }
 
 module.exports = {
@@ -1546,4 +1636,5 @@ module.exports = {
   getSuperAdminAssessments,
   getSuperAdminWorkforceActivity,
   getSuperAdminHighRiskStaff,
+  getDashboardCategoryCandidatesDb,
 };

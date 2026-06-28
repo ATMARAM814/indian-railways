@@ -8,6 +8,7 @@ const {
   getSuperAdminWorkforceActivityService,
   getSuperAdminHighRiskStaffService,
   getSmSupervisorDashboardService,
+  getDashboardCategoryCandidatesService,
 } = require("./dashboard.service");
 
 async function getPmDashboard(req, res) {
@@ -171,6 +172,35 @@ async function getSmSupervisorDashboard(req, res) {
   }
 }
 
+async function getDashboardCategoryCandidates(req, res) {
+  try {
+    const { category, search, stationSearch, limit } = req.query;
+    if (!category || !["C", "D"].includes(category.toUpperCase())) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or missing category parameter. Must be 'C' or 'D'."
+      });
+    }
+    const data = await getDashboardCategoryCandidatesService({
+      role: req.user.role,
+      userId: req.user.userId,
+      category: category.toUpperCase(),
+      search,
+      stationSearch,
+      limit: limit ? parseInt(limit, 10) : null
+    });
+    return res.status(200).json({
+      success: true,
+      data
+    });
+  } catch (error) {
+    return res.status(error.message.includes("Access Denied") ? 403 : 400).json({
+      success: false,
+      message: error.message
+    });
+  }
+}
+
 module.exports = {
   getPmDashboard,
   getTmDashboard,
@@ -181,4 +211,5 @@ module.exports = {
   getSuperAdminWorkforceActivity,
   getSuperAdminHighRiskStaff,
   getSmSupervisorDashboard,
+  getDashboardCategoryCandidates,
 };

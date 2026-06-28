@@ -1,7 +1,9 @@
 // AOMDashboard.jsx
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { getAomDashboardData } from '../../api/dashboardApi';
+import { useNavigate } from 'react-router-dom';
+import { getAomDashboardData, getDashboardCategoryCandidates } from '../../api/dashboardApi';
+import HighRiskWatchlist from '../../components/stations/HighRiskWatchlist';
 import { 
   mapRoleDistribution, 
   mapCategoryDistribution, 
@@ -49,21 +51,34 @@ import {
 
 const AOMDashboard = () => {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isDrillDownOpen, setIsDrillDownOpen] = useState(false);
   const [drillDownType, setDrillDownType] = useState(null);
+  const [categoryCWatchlist, setCategoryCWatchlist] = useState([]);
+  const [categoryDWatchlist, setCategoryDWatchlist] = useState([]);
 
   const fetchDashboardData = async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await getAomDashboardData();
+      const [res, catCRes, catDRes] = await Promise.all([
+        getAomDashboardData(),
+        getDashboardCategoryCandidates({ category: 'C', limit: 5 }),
+        getDashboardCategoryCandidates({ category: 'D', limit: 5 })
+      ]);
       if (res.success) {
         setData(res.data);
       } else {
         throw new Error(res.message || 'Failed to fetch dashboard data');
+      }
+      if (catCRes.success) {
+        setCategoryCWatchlist(catCRes.data || []);
+      }
+      if (catDRes.success) {
+        setCategoryDWatchlist(catDRes.data || []);
       }
     } catch (err) {
       console.error(err);
@@ -392,6 +407,34 @@ const AOMDashboard = () => {
               <Compass size={18} />
             </div>
           </div>
+        </div>
+
+        {/* Watchlists stacked vertically, 100% width */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', marginTop: '24px' }}>
+          <HighRiskWatchlist 
+            list={categoryCWatchlist}
+            category="C"
+            title="Category C Watchlist & Safety Concerns"
+            badgeText="Requires Counseling & Monitoring"
+            themeColor="#B45309"
+            themeBg="#FEF3C7"
+            themeBorder="#FDE68A"
+            themeLightBg="#FFFDF9"
+            themeTableRowBorder="#FFFBEB"
+            onViewMore={() => navigate('/dashboard/category-candidates?category=C')}
+          />
+          <HighRiskWatchlist 
+            list={categoryDWatchlist}
+            category="D"
+            title="High Risk Watchlist & Safety Concerns"
+            badgeText="Requires Supervision"
+            themeColor="#991B1B"
+            themeBg="#FEE2E2"
+            themeBorder="#FCA5A5"
+            themeLightBg="#FFFDFD"
+            themeTableRowBorder="#FFF1F1"
+            onViewMore={() => navigate('/dashboard/category-candidates?category=D')}
+          />
         </div>
 
         {/* Row 1: Progress & Average Score Charts */}

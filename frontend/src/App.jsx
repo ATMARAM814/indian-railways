@@ -69,6 +69,7 @@ const AssessmentCycleReportPage = React.lazy(() => import('./pages/reports/Asses
 // Stations (Station Intelligence) Pages
 const StationListPage = React.lazy(() => import('./pages/stations/StationListPage'));
 const StationIntelligencePage = React.lazy(() => import('./pages/stations/StationIntelligencePage'));
+const CategoryCandidatesPage = React.lazy(() => import('./pages/dashboard/CategoryCandidatesPage'));
 
 import './styles/theme.css';
 import './styles/auth.css';
@@ -331,6 +332,16 @@ function App() {
               <ProtectedRoute>
                 <RoleRoute allowedRoles={['SUPER_ADMIN']}>
                   <SuperAdminDashboard />
+                </RoleRoute>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/category-candidates"
+            element={
+              <ProtectedRoute>
+                <RoleRoute allowedRoles={['SUPER_ADMIN', 'AOM', 'TI']}>
+                  <CategoryCandidatesPage />
                 </RoleRoute>
               </ProtectedRoute>
             }
