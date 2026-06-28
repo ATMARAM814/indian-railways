@@ -500,7 +500,6 @@ const SuperAdminDashboard = () => {
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
           gap: '24px',
-          marginTop: '24px',
           width: '100%'
         }}>
           {/* Category C KPI Card */}
@@ -613,7 +612,7 @@ const SuperAdminDashboard = () => {
         </div>
 
         {/* Row 1: Progress & Average Score Charts */}
-        <div className="charts-grid" style={{ marginTop: '24px' }}>
+        <div className="charts-grid">
           <BarChartCard 
             title="Station-wise Evaluation Progress"
             subtitle="Completed vs pending evaluation counts per station"

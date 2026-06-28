@@ -367,7 +367,6 @@ const TIDashboard = () => {
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
           gap: '24px',
-          marginTop: '24px',
           width: '100%'
         }}>
           {/* Category C KPI Card */}
