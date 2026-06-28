@@ -1520,9 +1520,9 @@ async function getDashboardCategoryCandidatesDb({
   }
   
   if (category === 'C') {
-    conditions.push(`(sc.category_code = 'C' OR (lca.percentage >= 60 AND lca.percentage < 70))`);
+    conditions.push(`COALESCE(sc.category_code, CASE WHEN lca.percentage >= 60 AND lca.percentage < 70 THEN 'C' ELSE NULL END) = 'C'`);
   } else if (category === 'D') {
-    conditions.push(`(sc.category_code = 'D' OR lca.percentage < 60)`);
+    conditions.push(`COALESCE(sc.category_code, CASE WHEN lca.percentage < 60 THEN 'D' ELSE NULL END) = 'D'`);
   }
   
   if (search && search.trim()) {
@@ -1540,7 +1540,7 @@ async function getDashboardCategoryCandidatesDb({
       p.id as "userId",
       p.full_name as "fullName",
       r.name as "role",
-      sc.category_code as "category",
+      COALESCE(sc.category_code, CASE WHEN lca.percentage < 60 THEN 'D' WHEN lca.percentage >= 60 AND lca.percentage < 70 THEN 'C' ELSE NULL END) as "category",
       lca.percentage as "latestScore",
       lca.evaluated_at as "lastAssessmentDate",
       s.station_name as "stationName",

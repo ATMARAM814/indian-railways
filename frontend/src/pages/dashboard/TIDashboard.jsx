@@ -375,10 +375,10 @@ const TIDashboard = () => {
             onClick={() => navigate('/dashboard/category-candidates?category=C')}
             style={{
               backgroundColor: '#FFFFFF',
-              borderRadius: '12px',
+              borderRadius: '10px',
               border: '1px solid #E2E8F0',
               borderLeft: '4px solid #D69E2E',
-              padding: '24px',
+              padding: '14px 20px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
@@ -396,30 +396,31 @@ const TIDashboard = () => {
             }}
           >
             <div>
-              <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#475569', margin: '0 0 4px 0' }}>
+              <h3 style={{ fontSize: '13.5px', fontWeight: 600, color: '#475569', margin: '0 0 2px 0' }}>
                 Category C Watchlist
               </h3>
-              <p style={{ fontSize: '12.5px', color: '#64748B', margin: '0 0 12px 0' }}>
+              <p style={{ fontSize: '11px', color: '#64748B', margin: '0 0 6px 0' }}>
                 Medium safety risk. Requires counseling & monitoring.
               </p>
-              <span style={{ fontSize: '28px', fontWeight: 700, color: '#1E293B' }}>
+              <span style={{ fontSize: '22px', fontWeight: 700, color: '#1E293B' }}>
                 {categoryCWatchlist.length}
               </span>
-              <span style={{ fontSize: '13px', color: '#94A3B8', marginLeft: '6px' }}>
+              <span style={{ fontSize: '11.5px', color: '#94A3B8', marginLeft: '6px' }}>
                 staff flagged
               </span>
             </div>
             <div style={{
               backgroundColor: '#FEF3C7',
               borderRadius: '50%',
-              width: '48px',
-              height: '48px',
+              width: '36px',
+              height: '36px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#D97706'
+              color: '#D97706',
+              flexShrink: 0
             }}>
-              <AlertTriangle size={24} />
+              <AlertTriangle size={18} />
             </div>
           </div>
 
@@ -428,10 +429,10 @@ const TIDashboard = () => {
             onClick={() => navigate('/dashboard/category-candidates?category=D')}
             style={{
               backgroundColor: '#FFFFFF',
-              borderRadius: '12px',
+              borderRadius: '10px',
               border: '1px solid #E2E8F0',
               borderLeft: '4px solid #DC2626',
-              padding: '24px',
+              padding: '14px 20px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
@@ -449,30 +450,31 @@ const TIDashboard = () => {
             }}
           >
             <div>
-              <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#475569', margin: '0 0 4px 0' }}>
+              <h3 style={{ fontSize: '13.5px', fontWeight: 600, color: '#475569', margin: '0 0 2px 0' }}>
                 Category D Watchlist
               </h3>
-              <p style={{ fontSize: '12.5px', color: '#64748B', margin: '0 0 12px 0' }}>
+              <p style={{ fontSize: '11px', color: '#64748B', margin: '0 0 6px 0' }}>
                 Critical safety risk. Requires supervisor supervision.
               </p>
-              <span style={{ fontSize: '28px', fontWeight: 700, color: '#1E293B' }}>
+              <span style={{ fontSize: '22px', fontWeight: 700, color: '#1E293B' }}>
                 {categoryDWatchlist.length}
               </span>
-              <span style={{ fontSize: '13px', color: '#94A3B8', marginLeft: '6px' }}>
+              <span style={{ fontSize: '11.5px', color: '#94A3B8', marginLeft: '6px' }}>
                 staff flagged
               </span>
             </div>
             <div style={{
               backgroundColor: '#FEE2E2',
               borderRadius: '50%',
-              width: '48px',
-              height: '48px',
+              width: '36px',
+              height: '36px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#DC2626'
+              color: '#DC2626',
+              flexShrink: 0
             }}>
-              <ShieldAlert size={24} />
+              <ShieldAlert size={18} />
             </div>
           </div>
         </div>
