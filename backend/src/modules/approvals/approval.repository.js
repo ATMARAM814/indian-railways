@@ -35,8 +35,6 @@ async function getPendingApprovalsForUser(userId, role) {
     WHERE a.status = 'completed'
       AND a.approval_status = 'pending_approval'
       AND (
-        ($1 = 'SUPER_ADMIN')
-        OR
         (assessed.reporting_officer_id = $2)
         OR
         (assessed.reporting_officer_id IS NULL AND (
