@@ -1519,7 +1519,6 @@ async function getDashboardCategoryCandidatesDb({
     conditions.push(`s.division_id = $${values.length}`);
   }
   
-  values.push(category);
   if (category === 'C') {
     conditions.push(`(sc.category_code = 'C' OR (lca.percentage >= 60 AND lca.percentage < 70))`);
   } else if (category === 'D') {
