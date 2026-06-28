@@ -12,7 +12,7 @@ const router = express.Router();
 router.get(
   "/candidate/:profileId",
   authenticate,
-  authorize(["TI", "SMS", "AOM", "SUPER_ADMIN", "Station Master Supervisor", "STATION MASTER SUPERVISOR", "SMS", "AOM Users", "AOM Users"]),
+  authorize("TI", "SMS", "AOM", "SUPER_ADMIN", "Station Master Supervisor", "STATION MASTER SUPERVISOR", "SMS", "AOM Users"),
   getCandidateCounselingController
 );
 
@@ -20,7 +20,7 @@ router.get(
 router.post(
   "/save",
   authenticate,
-  authorize(["TI", "SMS", "AOM", "SUPER_ADMIN", "Station Master Supervisor", "STATION MASTER SUPERVISOR", "SMS", "AOM Users", "AOM Users"]),
+  authorize("TI", "SMS", "AOM", "SUPER_ADMIN", "Station Master Supervisor", "STATION MASTER SUPERVISOR", "SMS", "AOM Users"),
   saveCandidateCounselingController
 );
 
