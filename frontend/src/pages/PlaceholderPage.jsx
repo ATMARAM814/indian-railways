@@ -1,12 +1,12 @@
-// PlaceholderPage.jsx
 import React from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import DashboardLayout from '../components/layout/DashboardLayout';
-import { Construction } from 'lucide-react';
+import { Construction, ArrowLeft } from 'lucide-react';
 import '../styles/dashboard.css';
 
 const PlaceholderPage = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   
   const getPageMeta = () => {
     const path = location.pathname;
@@ -46,15 +46,41 @@ const PlaceholderPage = () => {
 
   return (
     <DashboardLayout>
-      <div className="placeholder-page-container">
-        <div className="placeholder-icon">
-          <Construction size={40} />
+      <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div>
+          <button
+            onClick={() => navigate(-1)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              backgroundColor: '#FFFFFF',
+              border: '1px solid #D7E3EF',
+              borderRadius: '8px',
+              padding: '8px 16px',
+              fontSize: '13px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              color: '#475569',
+              transition: 'all 0.2s',
+              fontFamily: "'Poppins', 'Inter', sans-serif"
+            }}
+          >
+            <ArrowLeft size={16} /> Back
+          </button>
         </div>
-        <h2 className="placeholder-title">{meta.title}</h2>
-        <p className="placeholder-desc">{meta.desc}</p>
-        <p style={{ fontSize: '12px', color: '#64748B', marginTop: '16px', fontWeight: '500' }}>
-          INDIAN RAILWAY EVALUATION SYSTEM • PORTAL MODULE
-        </p>
+
+        <div className="placeholder-page-container" style={{ marginTop: '12px' }}>
+          <div className="placeholder-icon">
+            <Construction size={40} />
+          </div>
+          <h2 className="placeholder-title">{meta.title}</h2>
+          <p className="placeholder-desc">{meta.desc}</p>
+          <p style={{ fontSize: '12px', color: '#64748B', marginTop: '16px', fontWeight: '500' }}>
+            INDIAN RAILWAY EVALUATION SYSTEM • PORTAL MODULE
+          </p>
+        </div>
       </div>
     </DashboardLayout>
   );

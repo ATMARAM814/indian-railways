@@ -362,32 +362,119 @@ const TIDashboard = () => {
             </div>
           </div>
         </div>
-        {/* Watchlists stacked vertically, 100% width */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', marginTop: '24px' }}>
-          <HighRiskWatchlist 
-            list={categoryCWatchlist}
-            category="C"
-            title="Category C Watchlist & Safety Concerns"
-            badgeText="Requires Counseling & Monitoring"
-            themeColor="#B45309"
-            themeBg="#FEF3C7"
-            themeBorder="#FDE68A"
-            themeLightBg="#FFFDF9"
-            themeTableRowBorder="#FFFBEB"
-            onViewMore={() => navigate('/dashboard/category-candidates?category=C')}
-          />
-          <HighRiskWatchlist 
-            list={categoryDWatchlist}
-            category="D"
-            title="High Risk Watchlist & Safety Concerns"
-            badgeText="Requires Supervision"
-            themeColor="#991B1B"
-            themeBg="#FEE2E2"
-            themeBorder="#FCA5A5"
-            themeLightBg="#FFFDFD"
-            themeTableRowBorder="#FFF1F1"
-            onViewMore={() => navigate('/dashboard/category-candidates?category=D')}
-          />
+        {/* Scoped Category Watchlist KPI Cards */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+          gap: '24px',
+          marginTop: '24px',
+          width: '100%'
+        }}>
+          {/* Category C KPI Card */}
+          <div 
+            onClick={() => navigate('/dashboard/category-candidates?category=C')}
+            style={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: '12px',
+              border: '1px solid #E2E8F0',
+              borderLeft: '4px solid #D69E2E',
+              padding: '24px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              cursor: 'pointer',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
+              transition: 'transform 0.2s, box-shadow 0.2s',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)';
+            }}
+          >
+            <div>
+              <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#475569', margin: '0 0 4px 0' }}>
+                Category C Watchlist
+              </h3>
+              <p style={{ fontSize: '12.5px', color: '#64748B', margin: '0 0 12px 0' }}>
+                Medium safety risk. Requires counseling & monitoring.
+              </p>
+              <span style={{ fontSize: '28px', fontWeight: 700, color: '#1E293B' }}>
+                {categoryCWatchlist.length}
+              </span>
+              <span style={{ fontSize: '13px', color: '#94A3B8', marginLeft: '6px' }}>
+                staff flagged
+              </span>
+            </div>
+            <div style={{
+              backgroundColor: '#FEF3C7',
+              borderRadius: '50%',
+              width: '48px',
+              height: '48px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#D97706'
+            }}>
+              <AlertTriangle size={24} />
+            </div>
+          </div>
+
+          {/* Category D KPI Card */}
+          <div 
+            onClick={() => navigate('/dashboard/category-candidates?category=D')}
+            style={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: '12px',
+              border: '1px solid #E2E8F0',
+              borderLeft: '4px solid #DC2626',
+              padding: '24px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              cursor: 'pointer',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
+              transition: 'transform 0.2s, box-shadow 0.2s',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)';
+            }}
+          >
+            <div>
+              <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#475569', margin: '0 0 4px 0' }}>
+                Category D Watchlist
+              </h3>
+              <p style={{ fontSize: '12.5px', color: '#64748B', margin: '0 0 12px 0' }}>
+                Critical safety risk. Requires supervisor supervision.
+              </p>
+              <span style={{ fontSize: '28px', fontWeight: 700, color: '#1E293B' }}>
+                {categoryDWatchlist.length}
+              </span>
+              <span style={{ fontSize: '13px', color: '#94A3B8', marginLeft: '6px' }}>
+                staff flagged
+              </span>
+            </div>
+            <div style={{
+              backgroundColor: '#FEE2E2',
+              borderRadius: '50%',
+              width: '48px',
+              height: '48px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#DC2626'
+            }}>
+              <ShieldAlert size={24} />
+            </div>
+          </div>
         </div>
 
         {/* First Screenshot: Progress and Average Score */}
