@@ -6,10 +6,55 @@ const {
   saveCandidateCounselingController,
   activateRetestController,
   getCounselingDirectoryController,
-  getCandidateCounselingHistoryController
+  getCandidateCounselingHistoryController,
+  getEligibleCandidatesForSchedulingController,
+  scheduleCounselingController,
+  getScheduledCounselingListController,
+  cancelScheduledCounselingController,
+  getRetestHistoryController
 } = require("./counseling.controller");
 
 const router = express.Router();
+
+// Get list of eligible candidates for scheduling
+router.get(
+  "/schedule/eligible-candidates",
+  authenticate,
+  authorize("TI", "AOM", "SUPER_ADMIN", "AOM Users"),
+  getEligibleCandidatesForSchedulingController
+);
+
+// Schedule a counseling session
+router.post(
+  "/schedule",
+  authenticate,
+  authorize("TI", "AOM", "SUPER_ADMIN", "AOM Users"),
+  scheduleCounselingController
+);
+
+// Get list of scheduled counseling sessions
+router.get(
+  "/schedule/list",
+  authenticate,
+  authorize("TI", "AOM", "SUPER_ADMIN", "AOM Users"),
+  getScheduledCounselingListController
+);
+
+// Cancel a scheduled counseling session
+router.post(
+  "/schedule/cancel/:scheduleId",
+  authenticate,
+  authorize("TI", "AOM", "SUPER_ADMIN", "AOM Users"),
+  cancelScheduledCounselingController
+);
+
+// Get completed retests log
+router.get(
+  "/history-retests",
+  authenticate,
+  authorize("TI", "AOM", "SUPER_ADMIN", "AOM Users"),
+  getRetestHistoryController
+);
 
 // Get overall counseling directory
 router.get(

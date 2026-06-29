@@ -49,6 +49,22 @@ async function runAutoMigration() {
       );
     `);
 
+    // 4. Create manual_counseling_schedules table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS manual_counseling_schedules (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        profile_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+        scheduled_by UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+        scheduled_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        status VARCHAR(50) DEFAULT 'scheduled',
+        completed_at TIMESTAMP
+      );
+      
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_active_counseling_schedule 
+      ON manual_counseling_schedules (profile_id) 
+      WHERE status = 'scheduled';
+    `);
+
     // 3. Seed subjects if empty
     const subjectsCheck = await pool.query('SELECT COUNT(*)::int FROM counseling_subjects');
     if (subjectsCheck.rows[0].count === 0) {
@@ -339,6 +355,182 @@ async function clearCandidateCounselingStatusesDb(profileId) {
   );
 }
 
+async function getEligibleCandidatesForSchedulingDb({ assessorId, assessorRole }) {
+  const roleUpper = (assessorRole || "").toUpperCase();
+  let scopeCondition = "";
+  let queryParams = [];
+
+  if (roleUpper === "TI" || roleUpper.includes("TI")) {
+    const tiStations = await getTiStations(assessorId);
+    if (tiStations.length === 0) return [];
+    scopeCondition = "AND ssp.station_id = ANY($1)";
+    queryParams = [tiStations];
+  } else {
+    const divisionId = await getUserDivisionId(assessorId);
+    if (!divisionId) return [];
+    scopeCondition = "AND s.division_id = $1";
+    queryParams = [divisionId];
+  }
+
+  const query = `
+    SELECT 
+      p.id as "userId",
+      p.full_name as "fullName",
+      p.hrms_id as "hrmsId",
+      r.name as "role",
+      s.station_name as "stationName",
+      s.station_code as "stationCode"
+    FROM staff_station_postings ssp
+    JOIN stations s ON s.id = ssp.station_id
+    JOIN profiles p ON p.id = ssp.profile_id
+    JOIN roles r ON r.id = p.role_id
+    WHERE ssp.is_current = true
+      AND p.id != $${queryParams.length + 1}
+      ${scopeCondition}
+    ORDER BY p.full_name ASC;
+  `;
+  
+  queryParams.push(assessorId);
+  const result = await pool.query(query, queryParams);
+  return result.rows;
+}
+
+async function scheduleCounselingDb({ profileId, scheduledBy }) {
+  const activeCheck = await pool.query(
+    "SELECT 1 FROM manual_counseling_schedules WHERE profile_id = $1 AND status = 'scheduled'",
+    [profileId]
+  );
+  if (activeCheck.rows.length > 0) {
+    throw new Error("Candidate already has an active scheduled counselling session.");
+  }
+
+  const query = `
+    INSERT INTO manual_counseling_schedules (profile_id, scheduled_by, status, scheduled_at)
+    VALUES ($1, $2, 'scheduled', NOW())
+    RETURNING *;
+  `;
+  const result = await pool.query(query, [profileId, scheduledBy]);
+  return result.rows[0];
+}
+
+async function getScheduledCounselingListDb({ assessorId, assessorRole }) {
+  const roleUpper = (assessorRole || "").toUpperCase();
+  let scopeCondition = "";
+  let queryParams = [];
+
+  if (roleUpper === "TI" || roleUpper.includes("TI")) {
+    const tiStations = await getTiStations(assessorId);
+    if (tiStations.length === 0) return [];
+    scopeCondition = "AND ssp.station_id = ANY($1)";
+    queryParams = [tiStations];
+  } else {
+    const divisionId = await getUserDivisionId(assessorId);
+    if (!divisionId) return [];
+    scopeCondition = "AND s.division_id = $1";
+    queryParams = [divisionId];
+  }
+
+  const query = `
+    SELECT 
+      mcs.id as "scheduleId",
+      mcs.scheduled_at as "scheduledAt",
+      mcs.status,
+      p.id as "userId",
+      p.full_name as "fullName",
+      p.hrms_id as "hrmsId",
+      r.name as "role",
+      s.station_name as "stationName",
+      s.station_code as "stationCode",
+      COALESCE(sc.category_code, CASE WHEN lca.percentage <= 25 THEN 'D' WHEN lca.percentage >= 26 AND lca.percentage < 50 THEN 'C' ELSE NULL END) as "category",
+      lca.percentage as "latestScore"
+    FROM manual_counseling_schedules mcs
+    JOIN profiles p ON p.id = mcs.profile_id
+    JOIN staff_station_postings ssp ON ssp.profile_id = p.id AND ssp.is_current = true
+    JOIN stations s ON s.id = ssp.station_id
+    JOIN roles r ON r.id = p.role_id
+    LEFT JOIN LATERAL (
+      SELECT category_id FROM employee_categories ec_inner
+      WHERE ec_inner.profile_id = p.id
+      ORDER BY ec_inner.created_at DESC
+      LIMIT 1
+    ) ec ON true
+    LEFT JOIN staff_categories sc ON sc.id = ec.category_id
+    LEFT JOIN LATERAL (
+      SELECT percentage FROM assessments
+      WHERE assessed_user_id = p.id AND status = 'completed' AND approval_status = 'approved'
+      ORDER BY created_at DESC
+      LIMIT 1
+    ) lca ON true
+    WHERE mcs.status = 'scheduled'
+      ${scopeCondition}
+    ORDER BY mcs.scheduled_at DESC;
+  `;
+  const result = await pool.query(query, queryParams);
+  return result.rows;
+}
+
+async function cancelScheduledCounselingDb(scheduleId) {
+  const query = `
+    UPDATE manual_counseling_schedules 
+    SET status = 'cancelled', completed_at = NOW() 
+    WHERE id = $1
+    RETURNING *;
+  `;
+  const result = await pool.query(query, [scheduleId]);
+  return result.rows[0];
+}
+
+async function getRetestHistoryDb({ assessorId, assessorRole }) {
+  const roleUpper = (assessorRole || "").toUpperCase();
+  let scopeCondition = "";
+  let queryParams = [];
+
+  if (roleUpper === "TI" || roleUpper.includes("TI")) {
+    const tiStations = await getTiStations(assessorId);
+    if (tiStations.length === 0) return [];
+    scopeCondition = "AND ssp.station_id = ANY($1)";
+    queryParams = [tiStations];
+  } else {
+    const divisionId = await getUserDivisionId(assessorId);
+    if (!divisionId) return [];
+    scopeCondition = "AND s.division_id = $1";
+    queryParams = [divisionId];
+  }
+
+  const query = `
+    SELECT 
+      a.id as "assessmentId",
+      a.evaluated_at as "completedAt",
+      a.percentage as "retestScore",
+      a.total_score as "totalScore",
+      p.full_name as "fullName",
+      p.hrms_id as "hrmsId",
+      r.name as "role",
+      s.station_name as "stationName",
+      s.station_code as "stationCode",
+      sc.category_code as "category"
+    FROM assessments a
+    JOIN profiles p ON p.id = a.assessed_user_id
+    JOIN staff_station_postings ssp ON ssp.profile_id = p.id AND ssp.is_current = true
+    JOIN stations s ON s.id = ssp.station_id
+    JOIN roles r ON r.id = p.role_id
+    LEFT JOIN LATERAL (
+      SELECT category_id FROM employee_categories ec_inner
+      WHERE ec_inner.profile_id = p.id
+      ORDER BY ec_inner.created_at DESC
+      LIMIT 1
+    ) ec ON true
+    LEFT JOIN staff_categories sc ON sc.id = ec.category_id
+    WHERE a.assessment_type = 'Retest'
+      AND a.status = 'completed'
+      AND a.approval_status = 'approved'
+      ${scopeCondition}
+    ORDER BY a.evaluated_at DESC;
+  `;
+  const result = await pool.query(query, queryParams);
+  return result.rows;
+}
+
 module.exports = {
   getCandidateDetailsDb,
   getCounselingSubjectsForRoleDb,
@@ -349,5 +541,10 @@ module.exports = {
   getCounselingDirectoryCandidatesDb,
   getCandidateCounselingHistoryDb,
   insertCounselingHistoryDb,
-  clearCandidateCounselingStatusesDb
+  clearCandidateCounselingStatusesDb,
+  getEligibleCandidatesForSchedulingDb,
+  scheduleCounselingDb,
+  getScheduledCounselingListDb,
+  cancelScheduledCounselingDb,
+  getRetestHistoryDb
 };

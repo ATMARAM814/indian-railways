@@ -132,6 +132,13 @@ async function activateRetestService({ profileId, assessorId, assessorRole }) {
   });
   await db.clearCandidateCounselingStatusesDb(profileId);
 
+  // Update status of any active manual schedule for this candidate to 'completed'
+  const pool = require("../../config/database");
+  await pool.query(
+    "UPDATE manual_counseling_schedules SET status = 'completed', completed_at = NOW() WHERE profile_id = $1 AND status = 'scheduled'",
+    [profileId]
+  );
+
   return { success: true, assessmentId: assessment.id };
 }
 
@@ -157,10 +164,71 @@ async function getCandidateCounselingHistoryService({ profileId, assessorId, ass
   return await db.getCandidateCounselingHistoryDb(profileId);
 }
 
+async function getEligibleCandidatesForScheduling({ assessorId, assessorRole }) {
+  const validRoles = ["TI", "AOM", "SUPER_ADMIN", "AOM Users"];
+  const roleUpper = (assessorRole || "").toUpperCase();
+  const isAuthorizedRole = validRoles.includes(roleUpper) || 
+    roleUpper.includes("AOM") || 
+    roleUpper.includes("SUPER_ADMIN") || 
+    roleUpper.includes("TI");
+
+  if (!isAuthorizedRole) {
+    throw new Error("Access Denied: You do not have permission to view eligible candidates.");
+  }
+
+  return await db.getEligibleCandidatesForSchedulingDb({ assessorId, assessorRole });
+}
+
+async function scheduleCounseling({ profileId, scheduledBy, assessorRole }) {
+  const candidate = await db.getCandidateDetailsDb(profileId);
+  await verifyAssessorAccess(candidate, scheduledBy, assessorRole);
+  
+  return await db.scheduleCounselingDb({ profileId, scheduledBy });
+}
+
+async function getScheduledCounselingList({ assessorId, assessorRole }) {
+  const validRoles = ["TI", "AOM", "SUPER_ADMIN", "AOM Users"];
+  const roleUpper = (assessorRole || "").toUpperCase();
+  const isAuthorizedRole = validRoles.includes(roleUpper) || 
+    roleUpper.includes("AOM") || 
+    roleUpper.includes("SUPER_ADMIN") || 
+    roleUpper.includes("TI");
+
+  if (!isAuthorizedRole) {
+    throw new Error("Access Denied: You do not have permission to view scheduled counselling list.");
+  }
+
+  return await db.getScheduledCounselingListDb({ assessorId, assessorRole });
+}
+
+async function cancelScheduledCounseling(scheduleId) {
+  return await db.cancelScheduledCounselingDb(scheduleId);
+}
+
+async function getRetestHistory({ assessorId, assessorRole }) {
+  const validRoles = ["TI", "AOM", "SUPER_ADMIN", "AOM Users"];
+  const roleUpper = (assessorRole || "").toUpperCase();
+  const isAuthorizedRole = validRoles.includes(roleUpper) || 
+    roleUpper.includes("AOM") || 
+    roleUpper.includes("SUPER_ADMIN") || 
+    roleUpper.includes("TI");
+
+  if (!isAuthorizedRole) {
+    throw new Error("Access Denied: You do not have permission to view retest history.");
+  }
+
+  return await db.getRetestHistoryDb({ assessorId, assessorRole });
+}
+
 module.exports = {
   getCandidateCounselingData,
   saveCandidateCounselingData,
   activateRetestService,
   getCounselingDirectoryCandidatesService,
-  getCandidateCounselingHistoryService
+  getCandidateCounselingHistoryService,
+  getEligibleCandidatesForScheduling,
+  scheduleCounseling,
+  getScheduledCounselingList,
+  cancelScheduledCounseling,
+  getRetestHistory
 };
