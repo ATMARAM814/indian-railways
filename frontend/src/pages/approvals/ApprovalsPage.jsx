@@ -663,9 +663,7 @@ const ApprovalsPage = () => {
                       <th style={{ verticalAlign: 'middle', textAlign: 'center' }}>Station</th>
                       <th style={{ verticalAlign: 'middle', textAlign: 'center' }}>Assessor</th>
                       <th style={{ verticalAlign: 'middle', textAlign: 'center' }}>Assessor Role</th>
-                      <th style={{ verticalAlign: 'middle', textAlign: 'center' }}>Assessment Type</th>
                       <th style={{ verticalAlign: 'middle', textAlign: 'center' }}>Total Score</th>
-                      <th style={{ verticalAlign: 'middle', textAlign: 'center' }}>Pass/Fail</th>
                       <th style={{ verticalAlign: 'middle', textAlign: 'center' }}>Submitted Date</th>
                       <th style={{ verticalAlign: 'middle', textAlign: 'center' }}>Action</th>
                     </tr>
@@ -699,13 +697,6 @@ const ApprovalsPage = () => {
                         </td>
                         <td style={{ verticalAlign: 'middle', textAlign: 'center', fontWeight: '700' }}>
                           {row.total_score} ({parseFloat(row.percentage || 0).toFixed(1)}%)
-                        </td>
-                        <td style={{ verticalAlign: 'middle', textAlign: 'center' }}>
-                          {parseFloat(row.percentage) >= 60 ? (
-                            <span style={{ color: 'var(--success)', fontWeight: 700, fontSize: '12px' }}>PASS</span>
-                          ) : (
-                            <span style={{ color: 'var(--error)', fontWeight: 700, fontSize: '12px' }}>FAIL</span>
-                          )}
                         </td>
                         <td style={{ verticalAlign: 'middle', textAlign: 'center' }}>
                           {formatDate(row.evaluated_at)}

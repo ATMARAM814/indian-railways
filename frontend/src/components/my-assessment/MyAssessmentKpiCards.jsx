@@ -79,9 +79,9 @@ const MyAssessmentKpiCards = ({ stats }) => {
         </div>
         <div className="stat-card-desc">
           {stats.currentCategory === 'A' && 'Highly Competent (Score ≥ 80%)'}
-          {stats.currentCategory === 'B' && 'Competent (Score 70% - 79%)'}
-          {stats.currentCategory === 'C' && 'Needs Monitoring (Score 60% - 69%)'}
-          {stats.currentCategory === 'D' && 'Critical/Unfit (Score < 60%)'}
+          {stats.currentCategory === 'B' && 'Competent (Score 50% - 79%)'}
+          {stats.currentCategory === 'C' && 'Needs Monitoring (Score 26% - 49%)'}
+          {stats.currentCategory === 'D' && 'Critical/Unfit (Score ≤ 25%)'}
           {stats.currentCategory === 'N/A' && 'No assessments completed yet'}
         </div>
       </div>

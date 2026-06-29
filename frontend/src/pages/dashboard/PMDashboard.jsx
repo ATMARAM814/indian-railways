@@ -113,7 +113,7 @@ const PMDashboard = () => {
             title="Latest Score"
             value={summary.latestScore !== null ? `${summary.latestScore}%` : 'No score'}
             icon={<Award size={20} />}
-            type={summary.latestScore >= 80 ? 'success' : summary.latestScore >= 60 ? 'warning' : 'danger'}
+            type={summary.latestScore >= 80 ? 'success' : summary.latestScore >= 50 ? 'warning' : 'danger'}
             trend="Current assessment result"
           />
           <StatCard 

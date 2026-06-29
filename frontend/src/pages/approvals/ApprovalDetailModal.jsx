@@ -236,7 +236,7 @@ const ApprovalDetailModal = ({ assessmentId, roleCode, userRole, onClose, onActi
 
   const getPassFailStatus = (percentage) => {
     const pct = parseFloat(percentage);
-    return pct >= 60 ? (
+    return pct >= 50 ? (
       <span style={{ color: 'var(--success)', fontWeight: '700', backgroundColor: 'var(--success-light)', padding: '4px 12px', borderRadius: '4px', fontSize: '13px' }}>PASS</span>
     ) : (
       <span style={{ color: 'var(--error)', fontWeight: '700', backgroundColor: 'var(--error-light)', padding: '4px 12px', borderRadius: '4px', fontSize: '13px' }}>FAIL</span>
@@ -247,8 +247,8 @@ const ApprovalDetailModal = ({ assessmentId, roleCode, userRole, onClose, onActi
     if (alcoholicStatus === 'Alcoholic') return 'cat-d';
     const pct = parseFloat(percentage || 0);
     if (pct >= 80) return 'cat-a';
-    if (pct >= 70) return 'cat-b';
-    if (pct >= 60) return 'cat-c';
+    if (pct >= 50) return 'cat-b';
+    if (pct >= 26) return 'cat-c';
     return 'cat-d';
   };
 
@@ -256,8 +256,8 @@ const ApprovalDetailModal = ({ assessmentId, roleCode, userRole, onClose, onActi
     if (alcoholicStatus === 'Alcoholic') return 'D (High Risk)';
     const pct = parseFloat(percentage || 0);
     if (pct >= 80) return 'A (Low Risk)';
-    if (pct >= 70) return 'B (Medium Risk)';
-    if (pct >= 60) return 'C (Medium Risk)';
+    if (pct >= 50) return 'B (Medium Risk)';
+    if (pct >= 26) return 'C (Medium Risk)';
     return 'D (High Risk)';
   };
 
@@ -410,7 +410,7 @@ const ApprovalDetailModal = ({ assessmentId, roleCode, userRole, onClose, onActi
                           cy="50" 
                           r="40" 
                           fill="none" 
-                          stroke={parseFloat(assessment.percentage) >= 60 ? 'var(--success)' : 'var(--error)'} 
+                          stroke={parseFloat(assessment.percentage) >= 50 ? 'var(--success)' : 'var(--error)'} 
                           strokeWidth="8" 
                           strokeDasharray={`${2 * Math.PI * 40}`} 
                           strokeDashoffset={`${2 * Math.PI * 40 * (1 - (parseFloat(assessment.percentage) || 0) / 100)}`}
