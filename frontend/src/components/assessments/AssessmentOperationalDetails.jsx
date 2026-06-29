@@ -122,25 +122,7 @@ export const AssessmentOperationalDetails = ({
           )}
         </div>
 
-        {/* Counselling */}
-        <div className="op-item">
-          <label className="op-label">Counselling</label>
-          {readOnly ? (
-            <div className="op-value-readonly">{details.counsellingStatus || 'Not Specified'}</div>
-          ) : (
-            <select
-              name="counsellingStatus"
-              value={details.counsellingStatus || ''}
-              onChange={handleInputChange}
-              className="op-input"
-            >
-              <option value="">Select Counselling</option>
-              <option value="Not required">Not required</option>
-              <option value="Recommended">Recommended</option>
-              <option value="Mandatory">Mandatory</option>
-            </select>
-          )}
-        </div>
+
 
         {/* Automatic Training */}
         <div className="op-item">

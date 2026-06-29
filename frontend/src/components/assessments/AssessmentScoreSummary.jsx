@@ -49,14 +49,18 @@ export const AssessmentScoreSummary = ({
       categoryCode = 'A';
       categoryName = 'Category A (Low Risk)';
       categoryClass = 'cat-a';
-    } else if (percentage >= 70) {
+    } else if (percentage >= 50) {
       categoryCode = 'B';
       categoryName = 'Category B (Medium Risk)';
       categoryClass = 'cat-b';
-    } else if (percentage >= 60) {
+    } else if (percentage >= 26) {
       categoryCode = 'C';
       categoryName = 'Category C (Medium Risk)';
       categoryClass = 'cat-c';
+    } else {
+      categoryCode = 'D';
+      categoryName = 'Category D (High Risk)';
+      categoryClass = 'cat-d';
     }
   }
 
@@ -116,7 +120,7 @@ export const AssessmentScoreSummary = ({
               Category {categoryCode}
             </div>
             <p className="proj-description">
-              Grading thresholds: Category A (≥80%), Category B (70-79%), Category C (60-69%), Category D (&lt;60%).
+              Grading thresholds: Category A (≥80%), Category B (50-79%), Category C (26-49%), Category D (≤25%).
             </p>
 
             {readOnly && approvalStatus && (

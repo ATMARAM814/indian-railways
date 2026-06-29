@@ -475,12 +475,7 @@ const ApprovalDetailModal = ({ assessmentId, roleCode, userRole, onClose, onActi
                     <span style={{ display: 'block', color: '#64748B', fontSize: '12px', fontWeight: 500, marginBottom: '2px' }}>Refresher Training Status</span>
                     <span style={{ fontWeight: '600', color: '#0F172A' }}>{assessment.ref_status || 'N/A'}</span>
                   </div>
-                  <div>
-                    <span style={{ display: 'block', color: '#64748B', fontSize: '12px', fontWeight: 500, marginBottom: '2px' }}>Counselling Required</span>
-                    <span style={{ fontWeight: '600', color: assessment.counselling_required ? 'var(--warning)' : '#0F172A' }}>
-                      {assessment.counselling_required ? `YES (${assessment.counselling_status || 'Pending'})` : 'NO'}
-                    </span>
-                  </div>
+
                   <div>
                     <span style={{ display: 'block', color: '#64748B', fontSize: '12px', fontWeight: 500, marginBottom: '2px' }}>Safety Training Required</span>
                     <span style={{ fontWeight: '600', color: assessment.training_required ? 'var(--warning)' : '#0F172A' }}>
