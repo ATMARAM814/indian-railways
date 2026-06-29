@@ -321,6 +321,87 @@ const CounselingPage = () => {
     );
   }
 
+  if (error) {
+    return (
+      <DashboardLayout>
+        <div style={{
+          padding: '24px 32px',
+          fontFamily: "'Poppins', 'Inter', sans-serif",
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '24px',
+          maxWidth: '1200px',
+          margin: '0 auto',
+          width: '100%'
+        }}>
+          {/* Header Row */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <button
+              onClick={() => navigate(-1)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: '#FFFFFF',
+                border: '1px solid #D7E3EF',
+                borderRadius: '8px',
+                width: '36px',
+                height: '36px',
+                cursor: 'pointer',
+                color: '#475569',
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#EFF6FF';
+                e.currentTarget.style.borderColor = '#BFDBFE';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#FFFFFF';
+                e.currentTarget.style.borderColor = '#D7E3EF';
+              }}
+            >
+              <ArrowLeft size={18} />
+            </button>
+            <div>
+              <h1 style={{ fontSize: '24px', fontWeight: 800, color: '#0B2341', margin: 0 }}>
+                Railway Evaluation System
+              </h1>
+            </div>
+          </div>
+
+          <div style={{
+            padding: '20px',
+            backgroundColor: '#FEF2F2',
+            border: '1px solid #FCA5A5',
+            borderRadius: '12px',
+            color: '#991B1B',
+            maxWidth: '600px',
+            marginTop: '20px'
+          }}>
+            <h3 style={{ margin: '0 0 8px 0', fontSize: '16px', fontWeight: 700 }}>Connection Error</h3>
+            <p style={{ margin: 0, fontSize: '13.5px' }}>{error}</p>
+            <button
+              onClick={() => navigate(-1)}
+              style={{
+                marginTop: '16px',
+                padding: '8px 16px',
+                backgroundColor: '#DC2626',
+                color: '#FFFFFF',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '13px',
+                fontWeight: 600,
+                cursor: 'pointer'
+              }}
+            >
+              Go Back
+            </button>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   if (!candidateId) {
     const handleScheduleSubmit = async (e) => {
       e.preventDefault();
@@ -1449,86 +1530,6 @@ const CounselingPage = () => {
     );
   }
 
-  if (error) {
-    return (
-      <DashboardLayout>
-        <div style={{
-          padding: '24px 32px',
-          fontFamily: "'Poppins', 'Inter', sans-serif",
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '24px',
-          maxWidth: '1200px',
-          margin: '0 auto',
-          width: '100%'
-        }}>
-          {/* Header Row */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <button
-              onClick={() => navigate(-1)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: '#FFFFFF',
-                border: '1px solid #D7E3EF',
-                borderRadius: '8px',
-                width: '36px',
-                height: '36px',
-                cursor: 'pointer',
-                color: '#475569',
-                transition: 'all 0.2s',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#EFF6FF';
-                e.currentTarget.style.borderColor = '#BFDBFE';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#FFFFFF';
-                e.currentTarget.style.borderColor = '#D7E3EF';
-              }}
-            >
-              <ArrowLeft size={18} />
-            </button>
-            <div>
-              <h1 style={{ fontSize: '24px', fontWeight: 800, color: '#0B2341', margin: 0 }}>
-                Railway Evaluation System
-              </h1>
-            </div>
-          </div>
-
-          <div style={{
-            padding: '20px',
-            backgroundColor: '#FEF2F2',
-            border: '1px solid #FCA5A5',
-            borderRadius: '12px',
-            color: '#991B1B',
-            maxWidth: '600px',
-            marginTop: '20px'
-          }}>
-            <h3 style={{ margin: '0 0 8px 0', fontSize: '16px', fontWeight: 700 }}>Connection Error</h3>
-            <p style={{ margin: 0, fontSize: '13.5px' }}>{error}</p>
-            <button
-              onClick={() => navigate(-1)}
-              style={{
-                marginTop: '16px',
-                padding: '8px 16px',
-                backgroundColor: '#DC2626',
-                color: '#FFFFFF',
-                border: 'none',
-                borderRadius: '8px',
-                fontSize: '13px',
-                fontWeight: 600,
-                cursor: 'pointer'
-              }}
-            >
-              Go Back
-            </button>
-          </div>
-        </div>
-      </DashboardLayout>
-    );
-  }
 
   const categoryColor = candidate?.category === 'D' ? '#EF4444' : '#F59E0B';
   const categoryBg = candidate?.category === 'D' ? '#FEE2E2' : '#FEF3C7';

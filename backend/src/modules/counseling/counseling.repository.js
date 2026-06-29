@@ -256,7 +256,10 @@ async function getCounselingDirectoryCandidatesDb({ assessorId, assessorRole }) 
   let scopeCondition = "";
   let queryParams = [];
 
-  if (roleUpper === "TI" || roleUpper.includes("TI")) {
+  if (roleUpper === "SUPER_ADMIN" || roleUpper.includes("SUPER")) {
+    scopeCondition = "";
+    queryParams = [];
+  } else if (roleUpper === "TI" || roleUpper.includes("TI")) {
     const tiStations = await getTiStations(assessorId);
     if (tiStations.length === 0) return [];
     scopeCondition = "AND ssp.station_id = ANY($1)";
@@ -360,7 +363,10 @@ async function getEligibleCandidatesForSchedulingDb({ assessorId, assessorRole }
   let scopeCondition = "";
   let queryParams = [];
 
-  if (roleUpper === "TI" || roleUpper.includes("TI")) {
+  if (roleUpper === "SUPER_ADMIN" || roleUpper.includes("SUPER")) {
+    scopeCondition = "";
+    queryParams = [];
+  } else if (roleUpper === "TI" || roleUpper.includes("TI")) {
     const tiStations = await getTiStations(assessorId);
     if (tiStations.length === 0) return [];
     scopeCondition = "AND ssp.station_id = ANY($1)";
@@ -418,7 +424,10 @@ async function getScheduledCounselingListDb({ assessorId, assessorRole }) {
   let scopeCondition = "";
   let queryParams = [];
 
-  if (roleUpper === "TI" || roleUpper.includes("TI")) {
+  if (roleUpper === "SUPER_ADMIN" || roleUpper.includes("SUPER")) {
+    scopeCondition = "";
+    queryParams = [];
+  } else if (roleUpper === "TI" || roleUpper.includes("TI")) {
     const tiStations = await getTiStations(assessorId);
     if (tiStations.length === 0) return [];
     scopeCondition = "AND ssp.station_id = ANY($1)";
@@ -485,7 +494,10 @@ async function getRetestHistoryDb({ assessorId, assessorRole }) {
   let scopeCondition = "";
   let queryParams = [];
 
-  if (roleUpper === "TI" || roleUpper.includes("TI")) {
+  if (roleUpper === "SUPER_ADMIN" || roleUpper.includes("SUPER")) {
+    scopeCondition = "";
+    queryParams = [];
+  } else if (roleUpper === "TI" || roleUpper.includes("TI")) {
     const tiStations = await getTiStations(assessorId);
     if (tiStations.length === 0) return [];
     scopeCondition = "AND ssp.station_id = ANY($1)";
