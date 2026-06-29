@@ -244,9 +244,32 @@ if (!assessment) {
   throw new Error("Assessment not found");
 }
 
-if (assessment.assessor_user_id !== userId) {
-  throw new Error("Only assessor can submit evaluation");
-}
+  const checkAuthRes = await pool.query(
+    `SELECT 
+       (
+         r_user.name IN ('SM', 'Station Master', 'STATION MASTER', 'Cabin Master', 'CABIN MASTER', 'SS', 'Station Master Incharge', 'STATION MASTER INCHARGE', 'SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR')
+         AND EXISTS (
+           SELECT 1 
+           FROM staff_station_postings ssp1
+           JOIN staff_station_postings ssp2 ON ssp1.station_id = ssp2.station_id
+           WHERE ssp1.profile_id = $1 
+             AND ssp2.profile_id = $2 
+             AND ssp1.is_current = true 
+             AND ssp2.is_current = true
+         )
+       ) as "isStationAuthority"
+     FROM profiles p_user
+     JOIN roles r_user ON r_user.id = p_user.role_id
+     WHERE p_user.id = $2`,
+    [assessment.assessed_user_id, userId]
+  );
+  
+  const isAssessor = assessment.assessor_user_id === userId;
+  const isStationAuthority = checkAuthRes.rows[0]?.isStationAuthority || false;
+
+  if (!isAssessor && !isStationAuthority) {
+    throw new Error("Only assessor or station master can submit evaluation");
+  }
 
 const isMcqSubmitted = assessment.status === "mcq_submitted";
 const isUnapprovedCompleted = assessment.status === "completed" && ["pending_approval", "rejected"].includes(assessment.approval_status);
@@ -436,13 +459,31 @@ async function saveEvaluationDraftService(
     );
   }
 
-  if (
-    assessment.assessor_user_id !==
-    assessorId
-  ) {
-    throw new Error(
-      "Only assessor can save draft"
-    );
+  const checkAuthRes = await pool.query(
+    `SELECT 
+       (
+         r_user.name IN ('SM', 'Station Master', 'STATION MASTER', 'Cabin Master', 'CABIN MASTER', 'SS', 'Station Master Incharge', 'STATION MASTER INCHARGE', 'SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR')
+         AND EXISTS (
+           SELECT 1 
+           FROM staff_station_postings ssp1
+           JOIN staff_station_postings ssp2 ON ssp1.station_id = ssp2.station_id
+           WHERE ssp1.profile_id = $1 
+             AND ssp2.profile_id = $2 
+             AND ssp1.is_current = true 
+             AND ssp2.is_current = true
+         )
+       ) as "isStationAuthority"
+     FROM profiles p_user
+     JOIN roles r_user ON r_user.id = p_user.role_id
+     WHERE p_user.id = $2`,
+    [assessment.assessed_user_id, assessorId]
+  );
+  
+  const isAssessor = assessment.assessor_user_id === assessorId;
+  const isStationAuthority = checkAuthRes.rows[0]?.isStationAuthority || false;
+
+  if (!isAssessor && !isStationAuthority) {
+    throw new Error("Only assessor or station master can save draft");
   }
 
   if (operationalDetails) {
@@ -466,10 +507,31 @@ async function getEvaluationDraftService(
     throw new Error("Assessment not found");
   }
 
-  if (assessment.assessor_user_id !== userId) {
-    throw new Error(
-      "Only assessor can view evaluation draft"
-    );
+  const checkAuthRes = await pool.query(
+    `SELECT 
+       (
+         r_user.name IN ('SM', 'Station Master', 'STATION MASTER', 'Cabin Master', 'CABIN MASTER', 'SS', 'Station Master Incharge', 'STATION MASTER INCHARGE', 'SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR')
+         AND EXISTS (
+           SELECT 1 
+           FROM staff_station_postings ssp1
+           JOIN staff_station_postings ssp2 ON ssp1.station_id = ssp2.station_id
+           WHERE ssp1.profile_id = $1 
+             AND ssp2.profile_id = $2 
+             AND ssp1.is_current = true 
+             AND ssp2.is_current = true
+         )
+       ) as "isStationAuthority"
+     FROM profiles p_user
+     JOIN roles r_user ON r_user.id = p_user.role_id
+     WHERE p_user.id = $2`,
+    [assessment.assessed_user_id, userId]
+  );
+  
+  const isAssessor = assessment.assessor_user_id === userId;
+  const isStationAuthority = checkAuthRes.rows[0]?.isStationAuthority || false;
+
+  if (!isAssessor && !isStationAuthority) {
+    throw new Error("Only assessor or station master can view evaluation draft");
   }
 
   return await getEvaluationDraftAnswers(
