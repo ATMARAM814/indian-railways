@@ -126,10 +126,12 @@ async function approveAssessmentService(
     const pct = Number(assessment.percentage || 0);
     if (pct >= 80) {
       categoryCode = 'A';
-    } else if (pct >= 70) {
+    } else if (pct >= 50) {
       categoryCode = 'B';
-    } else if (pct >= 60) {
+    } else if (pct >= 26) {
       categoryCode = 'C';
+    } else {
+      categoryCode = 'D';
     }
   }
 

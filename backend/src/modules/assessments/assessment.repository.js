@@ -99,8 +99,9 @@ async function selfHealUserCategories() {
         expectedCode = 'D';
       } else {
         if (pct >= 80) expectedCode = 'A';
-        else if (pct >= 70) expectedCode = 'B';
-        else if (pct >= 60) expectedCode = 'C';
+        else if (pct >= 50) expectedCode = 'B';
+        else if (pct >= 26) expectedCode = 'C';
+        else expectedCode = 'D';
       }
 
       const currentRes = await pool.query(`

@@ -1540,7 +1540,7 @@ async function getDashboardCategoryCandidatesDb({
       p.id as "userId",
       p.full_name as "fullName",
       r.name as "role",
-      COALESCE(sc.category_code, CASE WHEN lca.percentage < 60 THEN 'D' WHEN lca.percentage >= 60 AND lca.percentage < 70 THEN 'C' ELSE NULL END) as "category",
+      COALESCE(sc.category_code, CASE WHEN lca.percentage <= 25 THEN 'D' WHEN lca.percentage >= 26 AND lca.percentage < 50 THEN 'C' ELSE NULL END) as "category",
       lca.percentage as "latestScore",
       lca.evaluated_at as "lastAssessmentDate",
       s.station_name as "stationName",
@@ -1548,8 +1548,8 @@ async function getDashboardCategoryCandidatesDb({
       CASE
         WHEN sc.category_code = 'D' THEN 'Category D / Critical Risk'
         WHEN sc.category_code = 'C' THEN 'Category C / Medium Risk'
-        WHEN lca.percentage < 60 THEN 'Low Assessment Score (< 60%)'
-        WHEN lca.percentage >= 60 AND lca.percentage < 70 THEN 'Medium Assessment Score (60-69%)'
+        WHEN lca.percentage <= 25 THEN 'Low Assessment Score (<= 25%)'
+        WHEN lca.percentage >= 26 AND lca.percentage < 50 THEN 'Medium Assessment Score (26-49%)'
         ELSE 'Risk Watchlist'
       END as "reason"
     FROM staff_station_postings ssp

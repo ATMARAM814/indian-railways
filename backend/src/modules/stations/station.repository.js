@@ -524,7 +524,7 @@ async function getStationHighRiskWatchlistDb(stationId) {
       lca.evaluated_at as "lastAssessmentDate",
       CASE
         WHEN sc.category_code = 'D' THEN 'Category D / Critical Risk'
-        WHEN lca.percentage < 60 THEN 'Low Assessment Score (< 60%)'
+        WHEN lca.percentage <= 25 THEN 'Low Assessment Score (<= 25%)'
         ELSE 'Risk Watchlist'
       END as "reason"
     FROM staff_station_postings ssp
@@ -545,7 +545,7 @@ async function getStationHighRiskWatchlistDb(stationId) {
     ) lca ON true
     WHERE ssp.station_id = $1 
       AND ssp.is_current = true
-      AND (sc.category_code = 'D' OR lca.percentage < 60)
+      AND (sc.category_code = 'D' OR lca.percentage <= 25)
     ORDER BY lca.percentage ASC NULLS LAST;
   `;
   const result = await pool.query(query, [stationId]);
@@ -651,7 +651,7 @@ async function getStationCategoryCWatchlistDb(stationId) {
       lca.evaluated_at as "lastAssessmentDate",
       CASE
         WHEN sc.category_code = 'C' THEN 'Category C / Medium Risk'
-        WHEN lca.percentage >= 60 AND lca.percentage < 70 THEN 'Medium Assessment Score (60-69%)'
+        WHEN lca.percentage >= 26 AND lca.percentage < 50 THEN 'Medium Assessment Score (26-49%)'
         ELSE 'Medium Risk Watchlist'
       END as "reason"
     FROM staff_station_postings ssp
@@ -672,7 +672,7 @@ async function getStationCategoryCWatchlistDb(stationId) {
     ) lca ON true
     WHERE ssp.station_id = $1 
       AND ssp.is_current = true
-      AND (sc.category_code = 'C' OR (lca.percentage >= 60 AND lca.percentage < 70))
+      AND (sc.category_code = 'C' OR (lca.percentage >= 26 AND lca.percentage < 50))
     ORDER BY lca.percentage ASC NULLS LAST;
   `;
   const result = await pool.query(query, [stationId]);
@@ -709,9 +709,9 @@ async function getDivisionCategoryCandidatesDb(divisionId, categoryCode) {
     WHERE s.division_id = $1 
       AND ssp.is_current = true
       AND (
-        ($2 = 'C' AND (sc.category_code = 'C' OR (lca.percentage >= 60 AND lca.percentage < 70)))
+        ($2 = 'C' AND (sc.category_code = 'C' OR (lca.percentage >= 26 AND lca.percentage < 50)))
         OR
-        ($2 = 'D' AND (sc.category_code = 'D' OR lca.percentage < 60))
+        ($2 = 'D' AND (sc.category_code = 'D' OR lca.percentage <= 25))
       )
     ORDER BY lca.percentage ASC NULLS LAST, p.full_name ASC;
   `;
@@ -750,9 +750,9 @@ async function getTiCategoryCandidatesDb(stationIds, categoryCode) {
     WHERE ssp.station_id = ANY($1) 
       AND ssp.is_current = true
       AND (
-        ($2 = 'C' AND (sc.category_code = 'C' OR (lca.percentage >= 60 AND lca.percentage < 70)))
+        ($2 = 'C' AND (sc.category_code = 'C' OR (lca.percentage >= 26 AND lca.percentage < 50)))
         OR
-        ($2 = 'D' AND (sc.category_code = 'D' OR lca.percentage < 60))
+        ($2 = 'D' AND (sc.category_code = 'D' OR lca.percentage <= 25))
       )
     ORDER BY lca.percentage ASC NULLS LAST, p.full_name ASC;
   `;

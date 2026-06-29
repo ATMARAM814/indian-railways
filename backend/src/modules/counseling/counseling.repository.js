@@ -108,7 +108,7 @@ async function getCandidateDetailsDb(profileId) {
       p.id as "userId",
       p.full_name as "fullName",
       r.name as "role",
-      COALESCE(sc.category_code, CASE WHEN lca.percentage < 60 THEN 'D' WHEN lca.percentage >= 60 AND lca.percentage < 70 THEN 'C' ELSE NULL END) as "category",
+      COALESCE(sc.category_code, CASE WHEN lca.percentage <= 25 THEN 'D' WHEN lca.percentage >= 26 AND lca.percentage < 50 THEN 'C' ELSE NULL END) as "category",
       lca.percentage as "latestScore",
       s.station_name as "stationName",
       s.station_code as "stationCode",
