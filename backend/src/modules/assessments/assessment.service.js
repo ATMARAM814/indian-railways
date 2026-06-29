@@ -46,20 +46,33 @@ async function createAssessment({
 
   const pool = require("../../config/database");
   const checkReportingRes = await pool.query(
-    "SELECT reporting_officer_id FROM profiles WHERE id = $1",
+    `SELECT p.reporting_officer_id, r.name as reporting_officer_role
+     FROM profiles p
+     LEFT JOIN profiles ro ON ro.id = p.reporting_officer_id
+     LEFT JOIN roles r ON r.id = ro.role_id
+     WHERE p.id = $1`,
     [assessedUserId]
   );
   const reportingOfficerId = checkReportingRes.rows[0]?.reporting_officer_id;
+  const reportingOfficerRole = checkReportingRes.rows[0]?.reporting_officer_role;
 
-  if (reportingOfficerId !== assessorUserId && assessmentType !== 'Retest' && assessmentCycle !== 'Retest after Counseling') {
+  let finalAssessorUserId = assessorUserId;
+  let finalAssessorRoleCode = assessorRoleCode;
+
+  if (reportingOfficerId && (assessmentType === 'Retest' || ['TI', 'AOM', 'SUPER_ADMIN'].includes(assessorRoleCode))) {
+    finalAssessorUserId = reportingOfficerId;
+    finalAssessorRoleCode = reportingOfficerRole || 'SM';
+  }
+
+  if (reportingOfficerId !== finalAssessorUserId && assessmentType !== 'Retest' && assessmentCycle !== 'Retest after Counseling') {
     validateAssessmentHierarchy(
-      assessorRoleCode,
+      finalAssessorRoleCode,
       assessedRoleCode,
-      assessorUserId
+      finalAssessorUserId
     );
   }
 
-  if (assessmentType !== 'Retest' && assessmentCycle !== 'Retest after Counseling' && assessorRoleCode === "TI" && assessedRoleCode !== "TM") {
+  if (assessmentType !== 'Retest' && assessmentCycle !== 'Retest after Counseling' && finalAssessorRoleCode === "TI" && assessedRoleCode !== "TM") {
     const hasSms = await hasStationSupervisor(assessedUserId);
     if (hasSms) {
       throw new Error(
@@ -86,9 +99,9 @@ async function createAssessment({
 
   const assessment = await createAssessmentRecord({
     assessedUserId,
-    assessorUserId,
+    assessorUserId: finalAssessorUserId,
     assessedRoleCode,
-    assessorRoleCode,
+    assessorRoleCode: finalAssessorRoleCode,
     assessmentCycle,
     assessmentType,
     scheduledDate,
