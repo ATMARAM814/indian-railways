@@ -961,6 +961,24 @@ const CounselingPage = () => {
           </div>
         )}
 
+        {candidate?.hasActiveTest && (
+          <div style={{
+            padding: '14px 18px',
+            borderRadius: '10px',
+            border: '1px solid #BFDBFE',
+            backgroundColor: '#EFF6FF',
+            color: '#1D4ED8',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            fontSize: '14px',
+            fontWeight: 600
+          }}>
+            <AlertCircle size={18} />
+            <span>Retest is already active for this candidate. No further counselling actions or retest scheduling are required at this time.</span>
+          </div>
+        )}
+
         {/* Counseling Checklist Table */}
         <div style={{
           backgroundColor: '#FFFFFF',
@@ -1003,6 +1021,7 @@ const CounselingPage = () => {
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <button
                       type="button"
+                      disabled={candidate?.hasActiveTest}
                       onClick={() => handleToggle(sub.subjectId, true)}
                       style={{
                         padding: '6px 14px',
@@ -1013,7 +1032,8 @@ const CounselingPage = () => {
                         borderColor: sub.isCompleted === true ? '#10B981' : '#CBD5E1',
                         backgroundColor: sub.isCompleted === true ? '#E6FBF3' : '#FFFFFF',
                         color: sub.isCompleted === true ? '#059669' : '#64748B',
-                        cursor: 'pointer',
+                        cursor: candidate?.hasActiveTest ? 'not-allowed' : 'pointer',
+                        opacity: candidate?.hasActiveTest ? 0.75 : 1,
                         transition: 'all 0.2s',
                         outline: 'none'
                       }}
@@ -1022,6 +1042,7 @@ const CounselingPage = () => {
                     </button>
                     <button
                       type="button"
+                      disabled={candidate?.hasActiveTest}
                       onClick={() => handleToggle(sub.subjectId, false)}
                       style={{
                         padding: '6px 14px',
@@ -1032,7 +1053,8 @@ const CounselingPage = () => {
                         borderColor: sub.isCompleted === false ? '#EF4444' : '#CBD5E1',
                         backgroundColor: sub.isCompleted === false ? '#FEE2E2' : '#FFFFFF',
                         color: sub.isCompleted === false ? '#DC2626' : '#64748B',
-                        cursor: 'pointer',
+                        cursor: candidate?.hasActiveTest ? 'not-allowed' : 'pointer',
+                        opacity: candidate?.hasActiveTest ? 0.75 : 1,
                         transition: 'all 0.2s',
                         outline: 'none'
                       }}
@@ -1144,27 +1166,27 @@ const CounselingPage = () => {
           </button>
           <button
             onClick={handleSave}
-            disabled={submitting || activatingRetest}
+            disabled={submitting || activatingRetest || candidate?.hasActiveTest}
             style={{
               padding: '10px 24px',
-              backgroundColor: '#10B981',
-              color: '#FFFFFF',
+              backgroundColor: candidate?.hasActiveTest ? '#E2E8F0' : '#10B981',
+              color: candidate?.hasActiveTest ? '#94A3B8' : '#FFFFFF',
               border: 'none',
               borderRadius: '8px',
               fontSize: '14px',
               fontWeight: 600,
-              cursor: (submitting || activatingRetest) ? 'not-allowed' : 'pointer',
+              cursor: (submitting || activatingRetest || candidate?.hasActiveTest) ? 'not-allowed' : 'pointer',
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
-              boxShadow: '0 4px 6px -1px rgba(16, 185, 129, 0.2)',
+              boxShadow: candidate?.hasActiveTest ? 'none' : '0 4px 6px -1px rgba(16, 185, 129, 0.2)',
               transition: 'background-color 0.2s'
             }}
             onMouseEnter={(e) => {
-              if (!submitting && !activatingRetest) e.currentTarget.style.backgroundColor = '#059669';
+              if (!submitting && !activatingRetest && !candidate?.hasActiveTest) e.currentTarget.style.backgroundColor = '#059669';
             }}
             onMouseLeave={(e) => {
-              if (!submitting && !activatingRetest) e.currentTarget.style.backgroundColor = '#10B981';
+              if (!submitting && !activatingRetest && !candidate?.hasActiveTest) e.currentTarget.style.backgroundColor = '#10B981';
             }}
           >
             {submitting ? (
@@ -1181,29 +1203,29 @@ const CounselingPage = () => {
           </button>
           <button
             onClick={handleActivateRetest}
-            disabled={!allCompleted || activatingRetest || submitting}
+            disabled={!allCompleted || activatingRetest || submitting || candidate?.hasActiveTest}
             style={{
               padding: '10px 24px',
-              backgroundColor: allCompleted ? '#2563EB' : '#E2E8F0',
-              color: allCompleted ? '#FFFFFF' : '#94A3B8',
+              backgroundColor: (allCompleted && !candidate?.hasActiveTest) ? '#2563EB' : '#E2E8F0',
+              color: (allCompleted && !candidate?.hasActiveTest) ? '#FFFFFF' : '#94A3B8',
               border: 'none',
               borderRadius: '8px',
               fontSize: '14px',
               fontWeight: 600,
-              cursor: (!allCompleted || activatingRetest || submitting) ? 'not-allowed' : 'pointer',
+              cursor: (!allCompleted || activatingRetest || submitting || candidate?.hasActiveTest) ? 'not-allowed' : 'pointer',
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
-              boxShadow: allCompleted ? '0 4px 6px -1px rgba(37, 99, 235, 0.2)' : 'none',
+              boxShadow: (allCompleted && !candidate?.hasActiveTest) ? '0 4px 6px -1px rgba(37, 99, 235, 0.2)' : 'none',
               transition: 'all 0.2s'
             }}
             onMouseEnter={(e) => {
-              if (allCompleted && !activatingRetest && !submitting) {
+              if (allCompleted && !activatingRetest && !submitting && !candidate?.hasActiveTest) {
                 e.currentTarget.style.backgroundColor = '#1D4ED8';
               }
             }}
             onMouseLeave={(e) => {
-              if (allCompleted && !activatingRetest && !submitting) {
+              if (allCompleted && !activatingRetest && !submitting && !candidate?.hasActiveTest) {
                 e.currentTarget.style.backgroundColor = '#2563EB';
               }
             }}

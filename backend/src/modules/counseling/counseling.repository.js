@@ -124,7 +124,14 @@ async function getCandidateDetailsDb(profileId) {
       s.station_name as "stationName",
       s.station_code as "stationCode",
       s.id as "stationId",
-      s.division_id as "divisionId"
+      s.division_id as "divisionId",
+      (
+        SELECT EXISTS (
+          SELECT 1 FROM assessments a_active
+          WHERE a_active.assessed_user_id = p.id
+            AND a_active.status IN ('scheduled', 'mcq_access_sent', 'mcq_pending', 'mcq_submitted', 'evaluation_pending', 'evaluation_submitted', 'pending_approval', 'created')
+        )
+      ) as "hasActiveTest"
     FROM staff_station_postings ssp
     JOIN stations s ON s.id = ssp.station_id
     JOIN profiles p ON p.id = ssp.profile_id
@@ -284,6 +291,11 @@ async function getCounselingDirectoryCandidatesDb({ assessorId, assessorRole }) 
     ) lca ON true
     WHERE ssp.is_current = true
       AND COALESCE(sc.category_code, CASE WHEN lca.percentage <= 25 THEN 'D' WHEN lca.percentage >= 26 AND lca.percentage < 50 THEN 'C' ELSE NULL END) IN ('C', 'D')
+      AND NOT EXISTS (
+        SELECT 1 FROM assessments a_active
+        WHERE a_active.assessed_user_id = p.id
+          AND a_active.status IN ('scheduled', 'mcq_access_sent', 'mcq_pending', 'mcq_submitted', 'evaluation_pending', 'evaluation_submitted', 'pending_approval', 'created')
+      )
       ${scopeCondition}
     ORDER BY p.full_name ASC;
   `;
