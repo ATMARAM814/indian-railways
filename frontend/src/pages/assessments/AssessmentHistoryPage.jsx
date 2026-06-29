@@ -411,8 +411,8 @@ export const AssessmentHistoryPage = () => {
                       if (r.alcoholic_status === 'Alcoholic') return 'D';
                       const pctVal = parseFloat(r.percentage || 0);
                       if (pctVal >= 80) return 'A';
-                      if (pctVal >= 70) return 'B';
-                      if (pctVal >= 60) return 'C';
+                      if (pctVal >= 50) return 'B';
+                      if (pctVal >= 26) return 'C';
                       return 'D';
                     };
                     const rowCategory = getRowCategory(row);

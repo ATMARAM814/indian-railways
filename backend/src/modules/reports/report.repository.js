@@ -831,7 +831,7 @@ async function getReportsSummaryDb(filters, scope) {
       SELECT a.id, a.assessed_user_id, a.status, a.approval_status, a.percentage, a.assessment_cycle
       FROM assessments a
       JOIN scoped_profiles sp ON sp.id = a.assessed_user_id
-      ${whereAssessClause}
+      ${whereAssessClause ? whereAssessClause + " AND a.status NOT IN ('cancelled', 'invalid_test_record')" : "WHERE a.status NOT IN ('cancelled', 'invalid_test_record')"}
     )
     SELECT
       COUNT(sa.id)::int as "totalAssessments",
@@ -915,10 +915,10 @@ async function getReportsPerformanceDb(filters, scope) {
       TO_CHAR(a.created_at, 'Mon YYYY') as month,
       DATE_TRUNC('month', a.created_at) as month_date,
       COUNT(a.id) FILTER (WHERE a.status = 'completed')::int as completed,
-      COUNT(a.id) FILTER (WHERE a.status != 'completed')::int as pending
+      COUNT(a.id) FILTER (WHERE a.status NOT IN ('completed', 'cancelled', 'invalid_test_record'))::int as pending
     FROM assessments a
     JOIN scoped_profiles sp ON sp.id = a.assessed_user_id
-    ${whereAssessClause}
+    ${whereAssessClause ? whereAssessClause + " AND a.status NOT IN ('cancelled', 'invalid_test_record')" : "WHERE a.status NOT IN ('cancelled', 'invalid_test_record')"}
     GROUP BY month, month_date
     ORDER BY month_date ASC;
   `;
@@ -1153,12 +1153,13 @@ async function getReportsCyclesDb(filters, scope) {
       COALESCE(a.assessment_cycle, 'General Assessment') as "cycleName",
       COUNT(a.id)::int as "totalAssessments",
       COUNT(a.id) FILTER (WHERE a.status = 'completed')::int as "completedCount",
-      COUNT(a.id) FILTER (WHERE a.status != 'completed')::int as "pendingCount",
+      COUNT(a.id) FILTER (WHERE a.status NOT IN ('completed', 'cancelled', 'invalid_test_record'))::int as "pendingCount",
       COUNT(a.id) FILTER (WHERE a.approval_status = 'approved')::int as "approvedCount",
       COUNT(a.id) FILTER (WHERE a.approval_status = 'rejected')::int as "rejectedCount",
       COALESCE(AVG(a.percentage) FILTER (WHERE a.status = 'completed'), 0)::numeric(10,2) as "averageScore"
     FROM assessments a
     JOIN scoped_profiles sp ON sp.id = a.assessed_user_id
+    WHERE a.status NOT IN ('cancelled', 'invalid_test_record')
     GROUP BY a.assessment_cycle
     ORDER BY "cycleName" ASC;
   `;
