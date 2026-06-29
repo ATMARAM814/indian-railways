@@ -614,100 +614,151 @@ async function transferUserService(
   targetUserId,
   transferData
 ) {
-  const existingUser =
-    await getUserById(
-      targetUserId
-    );
+  const existingUser = await getUserById(targetUserId);
 
   if (!existingUser) {
-    throw new Error(
-      "User not found"
+    throw new Error("User not found");
+  }
+
+  if (creatorUserId === targetUserId) {
+    throw new Error("You cannot transfer yourself");
+  }
+
+  const allowedRoles = CREATE_PERMISSIONS[creatorRole] || [];
+
+  if (!allowedRoles.includes(existingUser.role)) {
+    throw new Error(`${creatorRole} cannot transfer ${existingUser.role}`);
+  }
+
+  const isTargetTi = transferData.newRole === 'TI';
+  
+  if (!isTargetTi) {
+    const station = await getStationById(transferData.newStationId);
+    if (!station) {
+      throw new Error("Target station not found");
+    }
+  }
+
+  const designationMap = {
+    'PM': 'Pointsman',
+    'Shunting Master': 'Shunting Master',
+    'Cabin Master': 'Cabin Master',
+    'TM': 'Train Manager',
+    'SM': 'Station Master',
+    'SS': 'Station Master Incharge',
+    'SMS': 'Station Master Supervisor',
+    'TI': 'Traffic Inspector',
+    'AOM': 'AOM',
+    'SUPER_ADMIN': 'SUPER_ADMIN'
+  };
+
+  const ROLE_HIERARCHY = {
+    'PM': 1,
+    'Shunting Master': 1,
+    'Cabin Master': 1,
+    'TM': 2,
+    'SM': 3,
+    'SS': 4,
+    'SMS': 4,
+    'TI': 5
+  };
+
+  const oldRole = existingUser.role;
+  const newRole = transferData.newRole || oldRole;
+
+  const oldRank = ROLE_HIERARCHY[oldRole] || 0;
+  const newRank = ROLE_HIERARCHY[newRole] || 0;
+
+  if (newRank < oldRank) {
+    throw new Error(`Invalid role change: Demotions are not permitted during transfer.`);
+  }
+
+  const pool = require("../../config/database");
+
+  // Update profile role & designation
+  let newDesignation = existingUser.designation;
+  if (newRole !== oldRole) {
+    const roleRes = await pool.query("SELECT id FROM roles WHERE name = $1", [newRole]);
+    if (roleRes.rows.length === 0) {
+      throw new Error(`Role ${newRole} not found`);
+    }
+    const roleId = roleRes.rows[0].id;
+    newDesignation = designationMap[newRole] || newRole;
+
+    await pool.query(
+      `UPDATE profiles SET role_id = $1, designation = $2, updated_at = now() WHERE id = $3`,
+      [roleId, newDesignation, targetUserId]
     );
   }
 
-  if (
-    creatorUserId ===
-    targetUserId
-  ) {
-    throw new Error(
-      "You cannot transfer yourself"
-    );
-  }
+  let currentPosting = await getCurrentPosting(targetUserId);
 
-  const allowedRoles =
-    CREATE_PERMISSIONS[
-      creatorRole
-    ] || [];
+  if (isTargetTi) {
+    if (currentPosting) {
+      await closeCurrentPosting(currentPosting.id);
+    }
 
-  if (
-    !allowedRoles.includes(
-      existingUser.role
-    )
-  ) {
-    throw new Error(
-      `${creatorRole} cannot transfer ${existingUser.role}`
-    );
-  }
-
-  const station =
-    await getStationById(
-      transferData.newStationId
+    await pool.query(
+      `UPDATE station_assignments SET assigned_to = CURRENT_DATE WHERE profile_id = $1 AND assignment_type = 'TI_AREA' AND assigned_to IS NULL`,
+      [targetUserId]
     );
 
-  if (!station) {
-    throw new Error(
-      "Target station not found"
-    );
-  }
+    const tiAreaStationIds = transferData.tiAreaStationIds || [];
+    if (!Array.isArray(tiAreaStationIds) || tiAreaStationIds.length === 0) {
+      throw new Error("TI Area monitored stations list must be provided when promoting to TI.");
+    }
 
-  const currentPosting =
-    await getCurrentPosting(
-      targetUserId
-    );
+    for (const stationId of tiAreaStationIds) {
+      await pool.query(
+        `UPDATE station_assignments SET assigned_to = CURRENT_DATE WHERE station_id = $1 AND assignment_type = 'TI_AREA' AND assigned_to IS NULL`,
+        [stationId]
+      );
+      await pool.query(
+        `INSERT INTO station_assignments (profile_id, station_id, assignment_type, is_primary, assigned_from, assigned_to) 
+         VALUES ($1, $2, 'TI_AREA', true, CURRENT_DATE, NULL)`,
+        [targetUserId, stationId]
+      );
+    }
+  } else {
+    if (oldRole === 'TI') {
+      await pool.query(
+        `UPDATE station_assignments SET assigned_to = CURRENT_DATE WHERE profile_id = $1 AND assignment_type = 'TI_AREA' AND assigned_to IS NULL`,
+        [targetUserId]
+      );
+    }
 
-  if (!currentPosting) {
-    throw new Error(
-      "Current posting not found"
-    );
-  }
+    if (currentPosting) {
+      await closeCurrentPosting(currentPosting.id);
+    }
 
-  if (
-    currentPosting.station_id ===
-    transferData.newStationId
-  ) {
-    throw new Error(
-      "User is already posted at this station"
-    );
-  }
-
-  await closeCurrentPosting(
-    currentPosting.id
-  );
-
-  const newPosting =
     await createNewPosting({
-      profileId:
-        targetUserId,
-      stationId:
-        transferData.newStationId,
-      transferredBy:
-        creatorUserId,
-      reason:
-        transferData.reason ||
-        "Transfer",
+      profileId: targetUserId,
+      stationId: transferData.newStationId,
+      transferredBy: creatorUserId,
+      reason: transferData.reason || "Transfer",
     });
+  }
 
   await logAction(
     creatorUserId,
     "EMPLOYEE_TRANSFERRED",
     "TRANSFER",
     targetUserId,
-    { stationId: currentPosting.station_id },
-    { stationId: transferData.newStationId },
-    `Employee ${existingUser.full_name} transferred`
+    { 
+      stationId: currentPosting?.station_id || null, 
+      role: oldRole, 
+      designation: existingUser.designation 
+    },
+    { 
+      stationId: isTargetTi ? null : transferData.newStationId, 
+      role: newRole, 
+      designation: newDesignation,
+      tiAreaStationIds: isTargetTi ? transferData.tiAreaStationIds : null
+    },
+    `Employee ${existingUser.full_name} transferred/promoted to ${newDesignation}`
   );
 
-  return newPosting;
+  return { success: true };
 }
 
 async function getWorkforcePresenceService(userId, role) {

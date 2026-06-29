@@ -2,6 +2,28 @@ import React, { useState, useEffect } from 'react';
 import { X, Loader } from 'lucide-react';
 import { getWorkforceDetails } from '../../services/workforce.service';
 
+const ROLE_HIERARCHY = {
+  'PM': 1,
+  'Shunting Master': 1,
+  'Cabin Master': 1,
+  'TM': 2,
+  'SM': 3,
+  'SS': 4,
+  'SMS': 4,
+  'TI': 5
+};
+
+const ROLE_DISPLAY_NAMES = {
+  'PM': 'Pointsman',
+  'Shunting Master': 'Shunting Master',
+  'Cabin Master': 'Cabin Master',
+  'TM': 'Train Manager',
+  'SM': 'Station Master',
+  'SS': 'SS (Station Master Incharge)',
+  'SMS': 'SMS (Station Master Supervisor)',
+  'TI': 'Traffic Inspector'
+};
+
 const WorkforceTransferModal = ({
   isOpen,
   onClose,
@@ -11,6 +33,8 @@ const WorkforceTransferModal = ({
 }) => {
   const [formData, setFormData] = useState({
     newStationId: '',
+    newRole: '',
+    tiAreaStationIds: [],
     reason: '',
     effectiveDate: new Date().toISOString().split('T')[0]
   });
@@ -24,6 +48,8 @@ const WorkforceTransferModal = ({
     if (isOpen && user) {
       setFormData({
         newStationId: '',
+        newRole: user.role || '',
+        tiAreaStationIds: [],
         reason: '',
         effectiveDate: new Date().toISOString().split('T')[0]
       });
@@ -36,6 +62,7 @@ const WorkforceTransferModal = ({
           const res = await getWorkforceDetails(user.id);
           if (res.success && res.data) {
             setFullUser(res.data);
+            setFormData(prev => ({ ...prev, newRole: res.data.role || user.role }));
           }
         } catch (err) {
           console.error("Failed to load user details for transfer", err);
@@ -57,23 +84,44 @@ const WorkforceTransferModal = ({
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleStationCheckboxChange = (stationId) => {
+    setFormData(prev => {
+      const checked = prev.tiAreaStationIds.includes(stationId);
+      const newIds = checked 
+        ? prev.tiAreaStationIds.filter(id => id !== stationId)
+        : [...prev.tiAreaStationIds, stationId];
+      return { ...prev, tiAreaStationIds: newIds };
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
 
-    if (!formData.newStationId) {
+    const isTi = formData.newRole === 'TI';
+
+    if (!isTi && !formData.newStationId) {
       return setError('Please select a new station for the transfer');
     }
 
-    // Check if new station is same as current station
+    if (isTi && formData.tiAreaStationIds.length === 0) {
+      return setError('Please select at least one station for the TI Area');
+    }
+
     const targetUser = fullUser || user || {};
     const currentStationId = targetUser.station_id || targetUser.stationId;
-    if (formData.newStationId === currentStationId) {
+    if (!isTi && formData.newStationId === currentStationId) {
       return setError('The new station must be different from the current station');
     }
 
     setSubmitting(true);
-    const result = await onSubmit(user.id, formData);
+    const result = await onSubmit(user.id, {
+      newStationId: isTi ? null : formData.newStationId,
+      newRole: formData.newRole,
+      tiAreaStationIds: isTi ? formData.tiAreaStationIds : [],
+      reason: formData.reason,
+      effectiveDate: formData.effectiveDate
+    });
     setSubmitting(false);
 
     if (result.success) {
@@ -89,6 +137,13 @@ const WorkforceTransferModal = ({
   const currentStationCode = stationCodeVal ? `(${stationCodeVal})` : '';
   const currentTi = targetUser.hierarchy?.assignedTi?.full_name || (loadingDetails ? 'Loading...' : 'Unassigned');
   const currentAom = targetUser.hierarchy?.assignedAom?.full_name || (loadingDetails ? 'Loading...' : 'Unassigned');
+
+  // Compute selectable roles
+  const currentRole = targetUser.role || 'PM';
+  const currentRank = ROLE_HIERARCHY[currentRole] || 1;
+  const selectableRoles = Object.keys(ROLE_HIERARCHY).filter(r => ROLE_HIERARCHY[r] >= currentRank);
+
+  const isNewRoleTi = formData.newRole === 'TI';
 
   return (
     <div style={{
@@ -126,8 +181,8 @@ const WorkforceTransferModal = ({
           alignItems: 'center'
         }}>
           <div>
-            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#0F172A' }}>Transfer Employee</h3>
-            <p style={{ margin: '4px 0 0 0', fontSize: '12.5px', color: '#64748B' }}>Reassign employee posting to another station</p>
+            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#0F172A' }}>Transfer & Promote Employee</h3>
+            <p style={{ margin: '4px 0 0 0', fontSize: '12.5px', color: '#64748B' }}>Reassign posting and set user designation role</p>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748B' }}>
             <X size={20} />
@@ -159,8 +214,12 @@ const WorkforceTransferModal = ({
             marginBottom: '24px',
             border: '1px solid #E2E8F0'
           }}>
-            <h4 style={{ margin: '0 0 12px 0', fontSize: '12px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Current Station Posting</h4>
+            <h4 style={{ margin: '0 0 12px 0', fontSize: '12px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Current Details</h4>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <div>
+                <span style={{ fontSize: '11px', color: '#64748B', display: 'block' }}>Current Role</span>
+                <span style={{ fontSize: '13.5px', fontWeight: 600, color: '#0F172A' }}>{ROLE_DISPLAY_NAMES[currentRole] || currentRole}</span>
+              </div>
               <div>
                 <span style={{ fontSize: '11px', color: '#64748B', display: 'block' }}>Current Station</span>
                 <span style={{ fontSize: '13.5px', fontWeight: 600, color: '#0F172A' }}>{currentStationName} {currentStationCode}</span>
@@ -179,22 +238,74 @@ const WorkforceTransferModal = ({
           {/* New Posting Selection */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px', marginBottom: '20px' }}>
             
-            {/* New Station Selection */}
+            {/* New Role Dropdown */}
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>New Station *</label>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>New Role / Promotion *</label>
               <select
-                name="newStationId"
-                value={formData.newStationId}
+                name="newRole"
+                value={formData.newRole}
                 onChange={handleInputChange}
                 required
                 style={{ width: '100%', padding: '10px 12px', fontSize: '13.5px', borderRadius: '8px', border: '1px solid #D7E3EF', outline: 'none', cursor: 'pointer' }}
               >
-                <option value="">Select New Station</option>
-                {stations.map(st => (
-                  <option key={st.id} value={st.id}>{st.station_name} ({st.station_code})</option>
+                {selectableRoles.map(role => (
+                  <option key={role} value={role}>{ROLE_DISPLAY_NAMES[role] || role}</option>
                 ))}
               </select>
             </div>
+
+            {/* New Station Selection (if not TI) */}
+            {!isNewRoleTi && (
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>New Station *</label>
+                <select
+                  name="newStationId"
+                  value={formData.newStationId}
+                  onChange={handleInputChange}
+                  required
+                  style={{ width: '100%', padding: '10px 12px', fontSize: '13.5px', borderRadius: '8px', border: '1px solid #D7E3EF', outline: 'none', cursor: 'pointer' }}
+                >
+                  <option value="">Select New Station</option>
+                  {stations.map(st => (
+                    <option key={st.id} value={st.id}>{st.station_name} ({st.station_code})</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* TI Area Selection (if promoted to TI) */}
+            {isNewRoleTi && (
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>
+                  TI Area (Select Monitored Stations) *
+                </label>
+                <div style={{
+                  border: '1px solid #D7E3EF',
+                  borderRadius: '8px',
+                  padding: '12px',
+                  maxHeight: '160px',
+                  overflowY: 'auto',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px'
+                }}>
+                  {stations.map(st => {
+                    const isChecked = formData.tiAreaStationIds.includes(st.id);
+                    return (
+                      <label key={st.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#334155', cursor: 'pointer' }}>
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => handleStationCheckboxChange(st.id)}
+                          style={{ cursor: 'pointer' }}
+                        />
+                        <span>{st.station_name} ({st.station_code})</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Reporting Hierarchy Auto Info */}
             <div style={{
@@ -206,7 +317,11 @@ const WorkforceTransferModal = ({
               color: '#78350F',
               lineHeight: '1.4'
             }}>
-              <strong>Reporting Assignment note:</strong> The new reporting Traffic Inspector (TI) and Assistant Operations Manager (AOM) will be dynamically mapped based on the assignments configured for the new station.
+              <strong>Reporting Hierarchy Assignment note:</strong> 
+              {isNewRoleTi 
+                ? ' Promoting to Traffic Inspector will replace the previous TI at each of the selected stations.'
+                : ' The new reporting Traffic Inspector (TI) and Assistant Operations Manager (AOM) will be dynamically mapped based on the assignments configured for the new station.'
+              }
             </div>
 
             {/* Effective Date */}
@@ -223,11 +338,11 @@ const WorkforceTransferModal = ({
 
             {/* Transfer Reason */}
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>Reason for Transfer *</label>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>Reason for Reassignment *</label>
               <textarea
                 name="reason"
                 rows={3}
-                placeholder="Enter formal reason for this transfer reassignment..."
+                placeholder="Enter formal reason for this reassignment / promotion..."
                 value={formData.reason}
                 onChange={handleInputChange}
                 required
@@ -282,10 +397,10 @@ const WorkforceTransferModal = ({
               {submitting ? (
                 <>
                   <Loader size={16} className="animate-spin" />
-                  Transferring...
+                  Saving...
                 </>
               ) : (
-                'Confirm Transfer'
+                'Confirm Reassignment'
               )}
             </button>
           </div>
