@@ -55,6 +55,7 @@ const CounselingPage = () => {
   const [retestHistory, setRetestHistory] = useState([]);
   const [scheduleLoading, setScheduleLoading] = useState(false);
   const [historyLogLoading, setHistoryLogLoading] = useState(false);
+  const [scheduleSearch, setScheduleSearch] = useState('');
 
   const refreshScheduledList = async () => {
     try {
@@ -490,7 +491,6 @@ const CounselingPage = () => {
       });
     };
 
-    const [scheduleSearch, setScheduleSearch] = useState('');
     const filteredEligibleOptions = eligibleCandidates.filter(c => 
       (c.fullName || '').toLowerCase().includes((scheduleSearch || '').toLowerCase()) ||
       (c.hrmsId || '').toLowerCase().includes((scheduleSearch || '').toLowerCase()) ||
