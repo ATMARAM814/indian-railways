@@ -400,12 +400,14 @@ async function updateUserService(
         existingUser.full_name,
 
       email:
-        updateData.email ??
-        existingUser.email,
+        updateData.email === ""
+          ? null
+          : (updateData.email ?? existingUser.email),
 
       phone:
-        updateData.phone ??
-        existingUser.phone,
+        updateData.phone === ""
+          ? null
+          : (updateData.phone ?? existingUser.phone),
 
       designation: normalizeDesignation(
         updateData.designation ??
