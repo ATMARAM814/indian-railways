@@ -14,6 +14,12 @@ async function runAutoMigration() {
     -- Add reporting_officer_id to profiles if it doesn't exist
     ALTER TABLE profiles ADD COLUMN IF NOT EXISTS reporting_officer_id UUID REFERENCES profiles(id);
 
+    -- Add PME and Refresher columns to profiles table if they don't exist
+    ALTER TABLE profiles ADD COLUMN IF NOT EXISTS pme_due DATE;
+    ALTER TABLE profiles ADD COLUMN IF NOT EXISTS pme_done DATE;
+    ALTER TABLE profiles ADD COLUMN IF NOT EXISTS ref_due DATE;
+    ALTER TABLE profiles ADD COLUMN IF NOT EXISTS ref_done DATE;
+
     -- Add operational detail columns if they don't exist
     ALTER TABLE assessments ADD COLUMN IF NOT EXISTS pme_status VARCHAR(50);
     ALTER TABLE assessments ADD COLUMN IF NOT EXISTS ref_status VARCHAR(50);
