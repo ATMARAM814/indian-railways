@@ -10,6 +10,8 @@ const WorkforceEditModal = ({
   roleCode
 }) => {
   const [formData, setFormData] = useState({
+    fullName: '',
+    hrmsId: '',
     phone: '',
     email: '',
     designation: '',
@@ -23,6 +25,8 @@ const WorkforceEditModal = ({
   useEffect(() => {
     if (isOpen && user) {
       setFormData({
+        fullName: user.full_name || '',
+        hrmsId: user.hrms_id || '',
         phone: user.phone || '',
         email: user.email || '',
         designation: user.designation || '',
@@ -120,30 +124,44 @@ const WorkforceEditModal = ({
           <div style={{
             backgroundColor: '#F8FAFC',
             borderRadius: '10px',
-            padding: '16px',
+            padding: '12px 16px',
             marginBottom: '20px',
             border: '1px solid #E2E8F0',
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: '12px'
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
           }}>
-            <div>
-              <span style={{ fontSize: '11px', fontWeight: 600, color: '#64748B', textTransform: 'uppercase' }}>Full Name</span>
-              <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#0F172A', marginTop: '4px' }}>{user.full_name}</div>
-            </div>
-            <div>
-              <span style={{ fontSize: '11px', fontWeight: 600, color: '#64748B', textTransform: 'uppercase' }}>HRMS ID</span>
-              <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#0F172A', marginTop: '4px', fontFamily: 'monospace' }}>{user.hrms_id}</div>
-            </div>
-            <div>
-              <span style={{ fontSize: '11px', fontWeight: 600, color: '#64748B', textTransform: 'uppercase' }}>Designated Role</span>
-              <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#1B365D', marginTop: '4px' }}>{user.role}</div>
-            </div>
+            <span style={{ fontSize: '13px', fontWeight: 600, color: '#64748B', textTransform: 'uppercase' }}>Designated Role</span>
+            <span style={{ fontSize: '13.5px', fontWeight: 700, color: '#1B365D', backgroundColor: '#E2E8F0', padding: '4px 8px', borderRadius: '6px' }}>{user.role}</span>
           </div>
 
           {/* Form Fields */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
             
+            {/* Full Name */}
+            <div>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>Full Name</label>
+              <input
+                type="text"
+                name="fullName"
+                value={formData.fullName}
+                onChange={handleInputChange}
+                style={{ width: '100%', padding: '10px 12px', fontSize: '13.5px', borderRadius: '8px', border: '1px solid #D7E3EF', outline: 'none' }}
+              />
+            </div>
+
+            {/* HRMS ID */}
+            <div>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>HRMS ID</label>
+              <input
+                type="text"
+                name="hrmsId"
+                value={formData.hrmsId}
+                onChange={handleInputChange}
+                style={{ width: '100%', padding: '10px 12px', fontSize: '13.5px', borderRadius: '8px', border: '1px solid #D7E3EF', outline: 'none', fontFamily: 'monospace' }}
+              />
+            </div>
+
             {/* Phone */}
             <div>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>Phone Number</label>
@@ -187,7 +205,8 @@ const WorkforceEditModal = ({
                 name="categoryCode"
                 value={formData.categoryCode}
                 onChange={handleInputChange}
-                style={{ width: '100%', padding: '10px 12px', fontSize: '13.5px', borderRadius: '8px', border: '1px solid #D7E3EF', outline: 'none', cursor: 'pointer' }}
+                disabled
+                style={{ width: '100%', padding: '10px 12px', fontSize: '13.5px', borderRadius: '8px', border: '1px solid #E2E8F0', outline: 'none', cursor: 'not-allowed', backgroundColor: '#F8FAFC', color: '#64748B' }}
               >
                 <option value="">No Category</option>
                 <option value="A">Category A</option>

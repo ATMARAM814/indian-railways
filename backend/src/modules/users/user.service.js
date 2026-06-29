@@ -415,6 +415,10 @@ async function updateUserService(
       status:
         updateData.status ??
         existingUser.status,
+
+      hrmsId:
+        updateData.hrmsId ??
+        existingUser.hrms_id,
     }
   );
 

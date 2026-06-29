@@ -285,29 +285,54 @@ async function updateUser(
   userId,
   userData
 ) {
-  const query = `
-    UPDATE profiles
-    SET
-      full_name = $1,
-      email = $2,
-      phone = $3,
-      designation = $4,
-      status = $5,
-      updated_at = now()
-    WHERE id = $6
-    RETURNING *;
-  `;
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
 
-  const result = await pool.query(query, [
-    userData.fullName,
-    userData.email,
-    userData.phone,
-    userData.designation,
-    userData.status,
-    userId,
-  ]);
+    const profileQuery = `
+      UPDATE profiles
+      SET
+        full_name = $1,
+        email = $2,
+        phone = $3,
+        designation = $4,
+        status = $5,
+        hrms_id = $6,
+        updated_at = now()
+      WHERE id = $7
+      RETURNING *;
+    `;
 
-  return result.rows[0];
+    const profileRes = await client.query(profileQuery, [
+      userData.fullName,
+      userData.email,
+      userData.phone,
+      userData.designation,
+      userData.status,
+      userData.hrmsId,
+      userId,
+    ]);
+
+    const credentialsQuery = `
+      UPDATE user_credentials
+      SET
+        hrms_id = $1
+      WHERE profile_id = $2;
+    `;
+
+    await client.query(credentialsQuery, [
+      userData.hrmsId,
+      userId,
+    ]);
+
+    await client.query("COMMIT");
+    return profileRes.rows[0];
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 async function deactivateUser(userId) {
