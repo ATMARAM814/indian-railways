@@ -715,7 +715,7 @@ async function getEvaluationDraftAnswers(assessmentId) {
 async function getRoleStatsForAssessor(assessorId, assessorRole, roleCode) {
   let scopeJoin = '';
   let scopeCondition = '';
-  const values = assessorRole === 'SUPER_ADMIN' ? [roleCode] : [roleCode, assessorId];
+  const values = [roleCode, assessorId];
 
   if (assessorRole === 'SM' || assessorRole === 'SS' || ['Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS'].includes(assessorRole) || ['Cabin Master', 'CABIN MASTER'].includes(assessorRole)) {
     scopeJoin = `LEFT JOIN staff_station_postings ssp ON ssp.profile_id = p.id AND ssp.is_current = true`;
