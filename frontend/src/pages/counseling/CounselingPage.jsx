@@ -2,8 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout';
-import { getCandidateCounselingData, saveCandidateCounselingData } from '../../api/counselingApi';
-import { ArrowLeft, User, ShieldAlert, CheckCircle, AlertCircle, Save, Loader2, MessageSquare } from 'lucide-react';
+import { getCandidateCounselingData, saveCandidateCounselingData, activateCandidateRetest } from '../../api/counselingApi';
+import { ArrowLeft, User, ShieldAlert, CheckCircle, AlertCircle, Save, Loader2, MessageSquare, Zap } from 'lucide-react';
 
 const CounselingPage = () => {
   const [searchParams] = useSearchParams();
@@ -15,6 +15,7 @@ const CounselingPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [activatingRetest, setActivatingRetest] = useState(false);
   const [feedback, setFeedback] = useState(null);
 
   useEffect(() => {
@@ -94,6 +95,46 @@ const CounselingPage = () => {
       });
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleActivateRetest = async () => {
+    setActivatingRetest(true);
+    setFeedback(null);
+    try {
+      const statusList = subjects.map(sub => ({
+        subjectId: sub.subjectId,
+        isCompleted: sub.isCompleted
+      }));
+      await saveCandidateCounselingData({
+        profileId: candidateId,
+        statusList
+      });
+
+      const res = await activateCandidateRetest(candidateId);
+      if (res.success) {
+        setFeedback({
+          type: 'success',
+          message: 'Retest successfully activated! The candidate can now attempt their test. This test will remain active for 1 week.'
+        });
+        const updated = await getCandidateCounselingData(candidateId);
+        if (updated.success) {
+          setSubjects(updated.data.subjects || []);
+        }
+      } else {
+        setFeedback({
+          type: 'error',
+          message: res.message || 'Failed to activate retest.'
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      setFeedback({
+        type: 'error',
+        message: err.response?.data?.message || err.message || 'Error occurred while activating retest.'
+      });
+    } finally {
+      setActivatingRetest(false);
     }
   };
 
@@ -202,6 +243,7 @@ const CounselingPage = () => {
 
   const categoryColor = candidate?.category === 'D' ? '#EF4444' : '#F59E0B';
   const categoryBg = candidate?.category === 'D' ? '#FEE2E2' : '#FEF3C7';
+  const allCompleted = subjects.length > 0 && subjects.every(sub => sub.isCompleted === true);
 
   return (
     <DashboardLayout>
@@ -467,7 +509,7 @@ const CounselingPage = () => {
           </button>
           <button
             onClick={handleSave}
-            disabled={submitting}
+            disabled={submitting || activatingRetest}
             style={{
               padding: '10px 24px',
               backgroundColor: '#10B981',
@@ -476,7 +518,7 @@ const CounselingPage = () => {
               borderRadius: '8px',
               fontSize: '14px',
               fontWeight: 600,
-              cursor: submitting ? 'not-allowed' : 'pointer',
+              cursor: (submitting || activatingRetest) ? 'not-allowed' : 'pointer',
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
@@ -484,10 +526,10 @@ const CounselingPage = () => {
               transition: 'background-color 0.2s'
             }}
             onMouseEnter={(e) => {
-              if (!submitting) e.currentTarget.style.backgroundColor = '#059669';
+              if (!submitting && !activatingRetest) e.currentTarget.style.backgroundColor = '#059669';
             }}
             onMouseLeave={(e) => {
-              if (!submitting) e.currentTarget.style.backgroundColor = '#10B981';
+              if (!submitting && !activatingRetest) e.currentTarget.style.backgroundColor = '#10B981';
             }}
           >
             {submitting ? (
@@ -499,6 +541,47 @@ const CounselingPage = () => {
               <>
                 <Save size={18} />
                 Save Counseling Log
+              </>
+            )}
+          </button>
+          <button
+            onClick={handleActivateRetest}
+            disabled={!allCompleted || activatingRetest || submitting}
+            style={{
+              padding: '10px 24px',
+              backgroundColor: allCompleted ? '#2563EB' : '#E2E8F0',
+              color: allCompleted ? '#FFFFFF' : '#94A3B8',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: 600,
+              cursor: (!allCompleted || activatingRetest || submitting) ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              boxShadow: allCompleted ? '0 4px 6px -1px rgba(37, 99, 235, 0.2)' : 'none',
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={(e) => {
+              if (allCompleted && !activatingRetest && !submitting) {
+                e.currentTarget.style.backgroundColor = '#1D4ED8';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (allCompleted && !activatingRetest && !submitting) {
+                e.currentTarget.style.backgroundColor = '#2563EB';
+              }
+            }}
+          >
+            {activatingRetest ? (
+              <>
+                <Loader2 className="animate-spin" size={18} />
+                Activating Retest...
+              </>
+            ) : (
+              <>
+                <Zap size={18} />
+                Activate Retest
               </>
             )}
           </button>

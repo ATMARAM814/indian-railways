@@ -111,7 +111,9 @@ async function getCandidateDetailsDb(profileId) {
       COALESCE(sc.category_code, CASE WHEN lca.percentage < 60 THEN 'D' WHEN lca.percentage >= 60 AND lca.percentage < 70 THEN 'C' ELSE NULL END) as "category",
       lca.percentage as "latestScore",
       s.station_name as "stationName",
-      s.station_code as "stationCode"
+      s.station_code as "stationCode",
+      s.id as "stationId",
+      s.division_id as "divisionId"
     FROM staff_station_postings ssp
     JOIN stations s ON s.id = ssp.station_id
     JOIN profiles p ON p.id = ssp.profile_id
@@ -192,9 +194,34 @@ async function upsertCounselingStatusDb({ profileId, subjectId, isCompleted, mar
   return result.rows[0];
 }
 
+async function getUserDivisionId(profileId) {
+  const query = `
+    SELECT division_id
+    FROM division_assignments
+    WHERE profile_id = $1 AND is_current = true
+    LIMIT 1;
+  `;
+  const result = await pool.query(query, [profileId]);
+  return result.rows[0]?.division_id || null;
+}
+
+async function getTiStations(profileId) {
+  const query = `
+    SELECT station_id
+    FROM station_assignments
+    WHERE profile_id = $1
+      AND assignment_type = 'TI_AREA'
+      AND assigned_to IS NULL;
+  `;
+  const result = await pool.query(query, [profileId]);
+  return result.rows.map((row) => row.station_id);
+}
+
 module.exports = {
   getCandidateDetailsDb,
   getCounselingSubjectsForRoleDb,
   getCandidateCounselingStatusesDb,
-  upsertCounselingStatusDb
+  upsertCounselingStatusDb,
+  getUserDivisionId,
+  getTiStations
 };

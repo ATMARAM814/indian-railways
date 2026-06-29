@@ -3,7 +3,8 @@ const { authenticate } = require("../../middleware/auth.middleware");
 const { authorize } = require("../../middleware/role.middleware");
 const {
   getCandidateCounselingController,
-  saveCandidateCounselingController
+  saveCandidateCounselingController,
+  activateRetestController
 } = require("./counseling.controller");
 
 const router = express.Router();
@@ -12,7 +13,7 @@ const router = express.Router();
 router.get(
   "/candidate/:profileId",
   authenticate,
-  authorize("TI", "SMS", "AOM", "SUPER_ADMIN", "Station Master Supervisor", "STATION MASTER SUPERVISOR", "SMS", "AOM Users"),
+  authorize("TI", "AOM", "SUPER_ADMIN", "AOM Users"),
   getCandidateCounselingController
 );
 
@@ -20,8 +21,16 @@ router.get(
 router.post(
   "/save",
   authenticate,
-  authorize("TI", "SMS", "AOM", "SUPER_ADMIN", "Station Master Supervisor", "STATION MASTER SUPERVISOR", "SMS", "AOM Users"),
+  authorize("TI", "AOM", "SUPER_ADMIN", "AOM Users"),
   saveCandidateCounselingController
+);
+
+// Activate candidate retest
+router.post(
+  "/activate-retest",
+  authenticate,
+  authorize("TI", "AOM", "SUPER_ADMIN", "AOM Users"),
+  activateRetestController
 );
 
 module.exports = router;

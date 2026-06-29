@@ -546,7 +546,7 @@ function App() {
             path="/counseling"
             element={
               <ProtectedRoute>
-                <RoleRoute allowedRoles={['TI', 'AOM', 'SUPER_ADMIN', 'SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR']}>
+                <RoleRoute allowedRoles={['TI', 'AOM', 'SUPER_ADMIN']}>
                   <CounselingPage />
                 </RoleRoute>
               </ProtectedRoute>
