@@ -697,12 +697,12 @@ async function createBulkAssessmentsService({
 }
 
 async function getPmeRefStatusService(userId) {
-  const records = await getPmeRefStatusRepository(userId);
+  const { records, profile } = await getPmeRefStatusRepository(userId);
 
   // PME filtering and computation
   const pmeHistory = [];
-  let pmeLastDate = null;
-  let pmeNextDueDate = null;
+  let pmeLastDate = profile.pme_done || null;
+  let pmeNextDueDate = profile.pme_due || null;
   let pmeCurrentStatus = null;
   let pmeTotalCompleted = 0;
   let pmePendingScheduled = 0;
@@ -710,8 +710,8 @@ async function getPmeRefStatusService(userId) {
 
   // REF filtering and computation
   const refHistory = [];
-  let refLastDate = null;
-  let refNextDueDate = null;
+  let refLastDate = profile.ref_done || null;
+  let refNextDueDate = profile.ref_due || null;
   let refCurrentStatus = null;
   let refTotalCompleted = 0;
   let refPendingScheduled = 0;
@@ -737,10 +737,12 @@ async function getPmeRefStatusService(userId) {
       
       if (row.status === 'completed' && row.approval_status === 'approved') {
         pmeTotalCompleted++;
+        if (!pmeCurrentStatus) {
+          pmeCurrentStatus = row.pme_status;
+        }
         if (!pmeLastDate) {
           pmeLastDate = row.evaluated_at || row.created_at;
           pmeNextDueDate = row.due_date;
-          pmeCurrentStatus = row.pme_status;
         }
       }
     }
@@ -755,13 +757,15 @@ async function getPmeRefStatusService(userId) {
         nextDueDate: row.due_date || '—',
         remarks: row.remarks || '—',
       });
-
+      
       if (row.status === 'completed' && row.approval_status === 'approved') {
         refTotalCompleted++;
+        if (!refCurrentStatus) {
+          refCurrentStatus = row.ref_status;
+        }
         if (!refLastDate) {
           refLastDate = row.evaluated_at || row.created_at;
           refNextDueDate = row.due_date;
-          refCurrentStatus = row.ref_status;
         }
       }
     }

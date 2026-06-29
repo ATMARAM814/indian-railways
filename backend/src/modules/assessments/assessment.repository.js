@@ -1414,7 +1414,7 @@ async function getBulkEligibleStaff(assessorId, assessorRole, roleCode) {
 }
 
 async function getPmeRefStatusRepository(userId) {
-  const query = `
+  const recordsQuery = `
     SELECT 
       a.id,
       a.status,
@@ -1433,8 +1433,20 @@ async function getPmeRefStatusRepository(userId) {
     WHERE a.assessed_user_id = $1
     ORDER BY a.created_at DESC;
   `;
-  const result = await pool.query(query, [userId]);
-  return result.rows;
+  const profileQuery = `
+    SELECT pme_due, pme_done, ref_due, ref_done
+    FROM profiles
+    WHERE id = $1;
+  `;
+  const [recordsRes, profileRes] = await Promise.all([
+    pool.query(recordsQuery, [userId]),
+    pool.query(profileQuery, [userId])
+  ]);
+
+  return {
+    records: recordsRes.rows,
+    profile: profileRes.rows[0] || {}
+  };
 }
 
 async function hasStationSupervisor(profileId) {
