@@ -663,6 +663,7 @@ const ApprovalsPage = () => {
                       <th style={{ verticalAlign: 'middle', textAlign: 'center' }}>Station</th>
                       <th style={{ verticalAlign: 'middle', textAlign: 'center' }}>Assessor</th>
                       <th style={{ verticalAlign: 'middle', textAlign: 'center' }}>Assessor Role</th>
+                      <th style={{ verticalAlign: 'middle', textAlign: 'center' }}>Assessment Type</th>
                       <th style={{ verticalAlign: 'middle', textAlign: 'center' }}>Total Score</th>
                       <th style={{ verticalAlign: 'middle', textAlign: 'center' }}>Submitted Date</th>
                       <th style={{ verticalAlign: 'middle', textAlign: 'center' }}>Action</th>
