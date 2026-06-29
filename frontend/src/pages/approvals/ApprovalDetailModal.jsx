@@ -410,7 +410,12 @@ const ApprovalDetailModal = ({ assessmentId, roleCode, userRole, onClose, onActi
                           cy="50" 
                           r="40" 
                           fill="none" 
-                          stroke={parseFloat(assessment.percentage) >= 50 ? 'var(--success)' : 'var(--error)'} 
+                          stroke={
+                            getCategoryBadgeClass(assessment.percentage, assessment.alcoholic_status) === 'cat-a' ? '#10B981' :
+                            getCategoryBadgeClass(assessment.percentage, assessment.alcoholic_status) === 'cat-b' ? '#3B82F6' :
+                            getCategoryBadgeClass(assessment.percentage, assessment.alcoholic_status) === 'cat-c' ? '#F59E0B' :
+                            '#EF4444'
+                          } 
                           strokeWidth="8" 
                           strokeDasharray={`${2 * Math.PI * 40}`} 
                           strokeDashoffset={`${2 * Math.PI * 40 * (1 - (parseFloat(assessment.percentage) || 0) / 100)}`}
@@ -443,16 +448,12 @@ const ApprovalDetailModal = ({ assessmentId, roleCode, userRole, onClose, onActi
                     </div>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', borderTop: '1px solid #F1F5F9', paddingTop: '16px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px', borderTop: '1px solid #F1F5F9', paddingTop: '16px' }}>
                     <div style={{ backgroundColor: '#F8FAFC', padding: '10px', borderRadius: '8px', textAlign: 'center' }}>
                       <span style={{ display: 'block', fontSize: '11px', color: '#64748B', fontWeight: 600, textTransform: 'uppercase', marginBottom: '4px' }}>Projected Category</span>
                       <span className={`category-tag ${getCategoryBadgeClass(assessment.percentage, assessment.alcoholic_status)}`} style={{ display: 'inline-block', fontSize: '13px', fontWeight: '700' }}>
                         Category {getCategoryCodeName(assessment.percentage, assessment.alcoholic_status)}
                       </span>
-                    </div>
-                    <div style={{ backgroundColor: '#F8FAFC', padding: '10px', borderRadius: '8px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-                      <span style={{ display: 'block', fontSize: '11px', color: '#64748B', fontWeight: 600, textTransform: 'uppercase', marginBottom: '4px' }}>Result Status</span>
-                      {getPassFailStatus(assessment.percentage)}
                     </div>
                   </div>
                 </div>

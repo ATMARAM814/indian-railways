@@ -268,7 +268,7 @@ async function getStationOverviewStatsDb(stationId) {
       -- high risk count
       COUNT(DISTINCT p.id) FILTER (
         WHERE sc.category_code = 'D' OR p.id IN (
-          SELECT assessed_user_id FROM assessments WHERE status = 'completed' AND percentage < 60
+          SELECT assessed_user_id FROM assessments WHERE status = 'completed' AND percentage <= 25
         )
       )::int as "highRiskStaff"
     FROM staff_station_postings ssp

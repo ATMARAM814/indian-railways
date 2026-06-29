@@ -842,7 +842,7 @@ async function getReportsSummaryDb(filters, scope) {
       (SELECT COUNT(DISTINCT id) FROM scoped_profiles WHERE category_code = 'D')::int as "categoryDEmployees",
       CASE
         WHEN COUNT(sa.id) FILTER (WHERE sa.status = 'completed') > 0
-        THEN (COUNT(sa.id) FILTER (WHERE sa.status = 'completed' AND sa.percentage >= 60)::float / COUNT(sa.id) FILTER (WHERE sa.status = 'completed')::float * 100)::numeric(10,2)
+        THEN (COUNT(sa.id) FILTER (WHERE sa.status = 'completed' AND sa.percentage >= 50)::float / COUNT(sa.id) FILTER (WHERE sa.status = 'completed')::float * 100)::numeric(10,2)
         ELSE 0
       END as "passRate",
       CASE
@@ -851,7 +851,7 @@ async function getReportsSummaryDb(filters, scope) {
         ELSE 0
       END as "safetyComplianceRate",
       (SELECT COUNT(DISTINCT id) FROM scoped_profiles WHERE category_code = 'D' OR id IN (
-         SELECT assessed_user_id FROM assessments WHERE status = 'completed' AND percentage < 60
+         SELECT assessed_user_id FROM assessments WHERE status = 'completed' AND percentage <= 25
       ))::int as "highRiskStaff",
       COUNT(DISTINCT sp.station_id)::int as "activeStations",
       COUNT(DISTINCT sa.assessment_cycle) FILTER (WHERE sa.assessment_cycle IS NOT NULL)::int as "assessmentCyclesCompleted"
@@ -1076,7 +1076,7 @@ async function getReportsHighRiskDb(filters, scope) {
     LEFT JOIN division_assignments da_aom ON da_aom.division_id = sp.division_id AND da_aom.is_current = true
     LEFT JOIN profiles aom ON aom.id = da_aom.profile_id
     
-    WHERE (sp.category_code = 'D' OR lca.percentage < 60)
+    WHERE (sp.category_code = 'D' OR lca.percentage <= 25)
     ORDER BY sp.full_name ASC;
   `;
   
@@ -1107,7 +1107,7 @@ async function getReportsStationsDb(filters, scope) {
       COUNT(DISTINCT p.id) FILTER (WHERE sc.category_code = 'C')::int as "categoryC",
       COUNT(DISTINCT p.id) FILTER (WHERE sc.category_code = 'D')::int as "categoryD",
       COUNT(DISTINCT p.id) FILTER (WHERE sc.category_code = 'D' OR p.id IN (
-        SELECT assessed_user_id FROM assessments WHERE status = 'completed' AND percentage < 60
+        SELECT assessed_user_id FROM assessments WHERE status = 'completed' AND percentage <= 25
       ))::int as "highRiskCount",
       COUNT(DISTINCT a.id) FILTER (WHERE a.approval_status = 'pending_approval')::int as "pendingApprovals"
     FROM stations s

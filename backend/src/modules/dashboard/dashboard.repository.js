@@ -1520,9 +1520,9 @@ async function getDashboardCategoryCandidatesDb({
   }
   
   if (category === 'C') {
-    conditions.push(`COALESCE(sc.category_code, CASE WHEN lca.percentage >= 60 AND lca.percentage < 70 THEN 'C' ELSE NULL END) = 'C'`);
+    conditions.push(`COALESCE(sc.category_code, CASE WHEN lca.percentage >= 26 AND lca.percentage < 50 THEN 'C' ELSE NULL END) = 'C'`);
   } else if (category === 'D') {
-    conditions.push(`COALESCE(sc.category_code, CASE WHEN lca.percentage < 60 THEN 'D' ELSE NULL END) = 'D'`);
+    conditions.push(`COALESCE(sc.category_code, CASE WHEN lca.percentage <= 25 OR lca.alcoholic_status = 'Alcoholic' THEN 'D' ELSE NULL END) = 'D'`);
   }
   
   if (search && search.trim()) {
