@@ -1540,7 +1540,7 @@ async function getDashboardCategoryCandidatesDb({
       p.id as "userId",
       p.full_name as "fullName",
       r.name as "role",
-      COALESCE(sc.category_code, CASE WHEN lca.percentage <= 25 THEN 'D' WHEN lca.percentage >= 26 AND lca.percentage < 50 THEN 'C' ELSE NULL END) as "category",
+      COALESCE(sc.category_code, CASE WHEN lca.alcoholic_status = 'Alcoholic' OR lca.percentage <= 25 THEN 'D' WHEN lca.percentage >= 26 AND lca.percentage < 50 THEN 'C' ELSE NULL END) as "category",
       lca.percentage as "latestScore",
       lca.evaluated_at as "lastAssessmentDate",
       s.station_name as "stationName",
@@ -1564,7 +1564,7 @@ async function getDashboardCategoryCandidatesDb({
     ) ec ON true
     LEFT JOIN staff_categories sc ON sc.id = ec.category_id
     LEFT JOIN LATERAL (
-      SELECT percentage, evaluated_at FROM assessments
+      SELECT percentage, evaluated_at, alcoholic_status FROM assessments
       WHERE assessed_user_id = p.id AND status = 'completed' AND approval_status = 'approved'
       ORDER BY created_at DESC
       LIMIT 1
