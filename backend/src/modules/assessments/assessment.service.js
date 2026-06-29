@@ -244,6 +244,7 @@ if (!assessment) {
   throw new Error("Assessment not found");
 }
 
+  const pool = require("../../config/database");
   const checkAuthRes = await pool.query(
     `SELECT 
        (
@@ -459,6 +460,7 @@ async function saveEvaluationDraftService(
     );
   }
 
+  const pool = require("../../config/database");
   const checkAuthRes = await pool.query(
     `SELECT 
        (
@@ -507,6 +509,7 @@ async function getEvaluationDraftService(
     throw new Error("Assessment not found");
   }
 
+  const pool = require("../../config/database");
   const checkAuthRes = await pool.query(
     `SELECT 
        (
