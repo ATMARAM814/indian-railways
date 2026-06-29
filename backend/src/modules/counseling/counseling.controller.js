@@ -93,8 +93,56 @@ async function activateRetestController(req, res) {
   }
 }
 
+async function getCounselingDirectoryController(req, res) {
+  try {
+    const assessorId = req.user.userId;
+    const assessorRole = req.user.role;
+
+    const data = await service.getCounselingDirectoryCandidatesService({ assessorId, assessorRole });
+    return res.status(200).json({
+      success: true,
+      data
+    });
+  } catch (error) {
+    const statusCode = error.message.includes("Access Denied") ? 403 : 500;
+    return res.status(statusCode).json({
+      success: false,
+      message: error.message
+    });
+  }
+}
+
+async function getCandidateCounselingHistoryController(req, res) {
+  try {
+    const { profileId } = req.params;
+    const assessorId = req.user.userId;
+    const assessorRole = req.user.role;
+
+    if (!profileId) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing candidate profileId."
+      });
+    }
+
+    const data = await service.getCandidateCounselingHistoryService({ profileId, assessorId, assessorRole });
+    return res.status(200).json({
+      success: true,
+      data
+    });
+  } catch (error) {
+    const statusCode = error.message.includes("Access Denied") ? 403 : 500;
+    return res.status(statusCode).json({
+      success: false,
+      message: error.message
+    });
+  }
+}
+
 module.exports = {
   getCandidateCounselingController,
   saveCandidateCounselingController,
-  activateRetestController
+  activateRetestController,
+  getCounselingDirectoryController,
+  getCandidateCounselingHistoryController
 };

@@ -17,7 +17,8 @@ import {
   FileCheck,
   User,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  GraduationCap
 } from 'lucide-react';
 
 const Sidebar = ({ isOpen, onClose }) => {
@@ -130,6 +131,7 @@ const Sidebar = ({ isOpen, onClose }) => {
     } else if (role === 'TI' || ['Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Station Master Supervisior', 'Station Master Supervisio'].includes(role)) {
       if (role === 'TI') {
         main.push({ name: 'Stations', path: '/stations', icon: <Building size={18} /> });
+        main.push({ name: 'Counselling', path: '/counseling', icon: <GraduationCap size={18} /> });
       }
       main.push({ name: 'My Assessments', path: '/my-assessment', icon: <ClipboardCheck size={18} /> });
       main.push({ name: 'Assessments', path: '/assessments', icon: <ClipboardCheck size={18} /> });
@@ -153,6 +155,7 @@ const Sidebar = ({ isOpen, onClose }) => {
       }
     } else if (role === 'AOM') {
       main.push({ name: 'Division', path: '/division', icon: <Building size={18} /> });
+      main.push({ name: 'Counselling', path: '/counseling', icon: <GraduationCap size={18} /> });
       main.push({ name: 'My Assessments', path: '/my-assessment', icon: <ClipboardCheck size={18} /> });
       main.push({ name: 'Assessments', path: '/assessments', icon: <ClipboardCheck size={18} /> });
       main.push({ name: 'Approvals', path: '/approvals', icon: <CheckSquare size={18} /> });
@@ -184,6 +187,7 @@ const Sidebar = ({ isOpen, onClose }) => {
       }
     } else if (role === 'SUPER_ADMIN') {
       main.push({ name: 'Division', path: '/division', icon: <Building size={18} /> });
+      main.push({ name: 'Counselling', path: '/counseling', icon: <GraduationCap size={18} /> });
       main.push({ name: 'Approvals', path: '/approvals', icon: <CheckSquare size={18} /> });
       main.push({ name: 'Reports', path: '/reports', icon: <FileText size={18} /> });
       main.push({ name: 'Audit Logs', path: '/audit-logs', icon: <History size={18} /> });

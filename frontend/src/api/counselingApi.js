@@ -15,3 +15,13 @@ export const activateCandidateRetest = async (profileId) => {
   const res = await apiClient.post('/counseling/activate-retest', { profileId });
   return res.data;
 };
+
+export const getCounselingDirectory = async () => {
+  const res = await apiClient.get('/counseling/directory');
+  return res.data;
+};
+
+export const getCandidateCounselingHistory = async (profileId) => {
+  const res = await apiClient.get(`/counseling/history/${profileId}`);
+  return res.data;
+};

@@ -2,8 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout';
-import { getCandidateCounselingData, saveCandidateCounselingData, activateCandidateRetest } from '../../api/counselingApi';
-import { ArrowLeft, User, ShieldAlert, CheckCircle, AlertCircle, Save, Loader2, MessageSquare, Zap } from 'lucide-react';
+import { getCandidateCounselingData, saveCandidateCounselingData, activateCandidateRetest, getCounselingDirectory, getCandidateCounselingHistory } from '../../api/counselingApi';
+import { ArrowLeft, User, ShieldAlert, CheckCircle, AlertCircle, Save, Loader2, MessageSquare, Zap, Search, Calendar, History } from 'lucide-react';
 
 const CounselingPage = () => {
   const [searchParams] = useSearchParams();
@@ -18,23 +18,53 @@ const CounselingPage = () => {
   const [activatingRetest, setActivatingRetest] = useState(false);
   const [feedback, setFeedback] = useState(null);
 
-  useEffect(() => {
-    if (!candidateId) {
-      setError("No candidate selected. Please navigate from the watchlist dashboard.");
-      setLoading(false);
-      return;
-    }
+  // Directory State
+  const [directoryCandidates, setDirectoryCandidates] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
 
+  // History Modal State
+  const [historyModalOpen, setHistoryModalOpen] = useState(false);
+  const [selectedCandidateHistory, setSelectedCandidateHistory] = useState(null);
+  const [historyList, setHistoryList] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
+  // Candidate history state (for checklist view)
+  const [candidateHistory, setCandidateHistory] = useState([]);
+
+  useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         setError(null);
-        const data = await getCandidateCounselingData(candidateId);
-        if (data.success) {
-          setCandidate(data.data.candidate);
-          setSubjects(data.data.subjects || []);
+        if (candidateId) {
+          // Fetch candidate checklist details
+          const data = await getCandidateCounselingData(candidateId);
+          if (data.success) {
+            setCandidate(data.data.candidate);
+            setSubjects(data.data.subjects || []);
+          } else {
+            setError(data.message || "Failed to load candidate counseling details.");
+          }
+
+          // Fetch candidate completed history
+          try {
+            const histRes = await getCandidateCounselingHistory(candidateId);
+            if (histRes.success) {
+              setCandidateHistory(histRes.data || []);
+            }
+          } catch (histErr) {
+            console.error("Error loading candidate history:", histErr);
+          }
         } else {
-          setError(data.message || "Failed to load candidate counseling details.");
+          // Fetch overall directory list
+          const res = await getCounselingDirectory();
+          if (res.success) {
+            setDirectoryCandidates(res.data.data || res.data || []);
+          } else {
+            setError(res.message || "Failed to load counseling directory.");
+          }
         }
       } catch (err) {
         console.error(err);
@@ -149,12 +179,563 @@ const CounselingPage = () => {
     return `${day}-${months[d.getMonth()]}-${d.getFullYear()} ${hours}:${minutes}`;
   };
 
+  const formatDateDateOnly = (dateStrOrDate) => {
+    if (!dateStrOrDate) return 'None';
+    const d = new Date(dateStrOrDate);
+    if (isNaN(d.getTime())) return dateStrOrDate;
+    const day = String(d.getDate()).padStart(2, '0');
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    return `${day}-${months[d.getMonth()]}-${d.getFullYear()}`;
+  };
+
+  const getNextDueDate = (candidate) => {
+    if (!candidate.prevCounselingDate) {
+      return { date: null, status: 'overdue', text: 'Immediate (Pending)' };
+    }
+    const prevDate = new Date(candidate.prevCounselingDate);
+    const monthsToAdd = candidate.category === 'D' ? 1 : 3;
+    const nextDate = new Date(prevDate.setMonth(prevDate.getMonth() + monthsToAdd));
+    
+    const today = new Date();
+    // Reset times to compare dates accurately
+    today.setHours(0,0,0,0);
+    const nextDateCompare = new Date(nextDate);
+    nextDateCompare.setHours(0,0,0,0);
+
+    const diffTime = nextDateCompare.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    let status = 'completed';
+    let statusText = `Scheduled (${formatDateDateOnly(nextDate)})`;
+    
+    if (diffDays < 0) {
+      status = 'overdue';
+      statusText = `Overdue (${Math.abs(diffDays)} days ago)`;
+    } else if (diffDays <= 7) {
+      status = 'due_soon';
+      statusText = `Due Soon (in ${diffDays} days)`;
+    }
+    
+    return { date: nextDate, status, text: statusText };
+  };
+
+  const handleOpenHistory = async (candidate) => {
+    setSelectedCandidateHistory(candidate);
+    setHistoryModalOpen(true);
+    setHistoryLoading(true);
+    try {
+      const res = await getCandidateCounselingHistory(candidate.userId);
+      if (res.success) {
+        setHistoryList(res.data || []);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <DashboardLayout>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60vh', gap: '16px' }}>
           <Loader2 className="animate-spin" size={32} style={{ color: '#0B2341' }} />
           <span style={{ fontSize: '14.5px', color: '#64748B', fontWeight: 600 }}>Loading counseling checklist...</span>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (!candidateId) {
+    const filteredCandidates = directoryCandidates.filter((cand) => {
+      const matchesSearch =
+        cand.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        cand.hrmsId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        cand.stationName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        cand.stationCode.toLowerCase().includes(searchQuery.toLowerCase());
+
+      const matchesCategory =
+        categoryFilter === 'all' || cand.category === categoryFilter;
+
+      const dueDateInfo = getNextDueDate(cand);
+      const matchesStatus =
+        statusFilter === 'all' || dueDateInfo.status === statusFilter;
+
+      return matchesSearch && matchesCategory && matchesStatus;
+    });
+
+    const totalCount = directoryCandidates.length;
+    const catCCount = directoryCandidates.filter(c => c.category === 'C').length;
+    const catDCount = directoryCandidates.filter(c => c.category === 'D').length;
+    const overdueCount = directoryCandidates.filter(c => getNextDueDate(c).status === 'overdue').length;
+
+    return (
+      <DashboardLayout>
+        <div style={{
+          padding: '24px 32px',
+          fontFamily: "'Poppins', 'Inter', sans-serif",
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '24px',
+          maxWidth: '1200px',
+          margin: '0 auto',
+          width: '100%'
+        }}>
+          {/* Header Row */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <h1 style={{ fontSize: '24px', fontWeight: 800, color: '#0B2341', margin: 0 }}>
+                Safety Counselling Directory
+              </h1>
+              <p style={{ fontSize: '13.5px', color: '#64748B', margin: '4px 0 0 0' }}>
+                Monitor and execute periodic counseling cycles for Category C and Category D safety staff.
+              </p>
+            </div>
+          </div>
+
+          {/* Stats Bar */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gap: '20px'
+          }}>
+            <div style={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: '16px',
+              border: '1px solid #D7E3EF',
+              padding: '20px',
+              boxShadow: '0 4px 6px -1px rgba(11, 35, 65, 0.05)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '4px'
+            }}>
+              <span style={{ fontSize: '12px', color: '#64748B', fontWeight: 600 }}>Total Monitored Staff</span>
+              <span style={{ fontSize: '28px', fontWeight: 800, color: '#0B2341' }}>{totalCount}</span>
+            </div>
+            <div style={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: '16px',
+              border: '1px solid #D7E3EF',
+              padding: '20px',
+              boxShadow: '0 4px 6px -1px rgba(11, 35, 65, 0.05)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '4px'
+            }}>
+              <span style={{ fontSize: '12px', color: '#64748B', fontWeight: 600 }}>Category C (Quarterly)</span>
+              <span style={{ fontSize: '28px', fontWeight: 800, color: '#F59E0B' }}>{catCCount}</span>
+            </div>
+            <div style={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: '16px',
+              border: '1px solid #D7E3EF',
+              padding: '20px',
+              boxShadow: '0 4px 6px -1px rgba(11, 35, 65, 0.05)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '4px'
+            }}>
+              <span style={{ fontSize: '12px', color: '#64748B', fontWeight: 600 }}>Category D (Monthly)</span>
+              <span style={{ fontSize: '28px', fontWeight: 800, color: '#EF4444' }}>{catDCount}</span>
+            </div>
+            <div style={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: '16px',
+              border: '1px solid #D7E3EF',
+              padding: '20px',
+              boxShadow: '0 4px 6px -1px rgba(11, 35, 65, 0.05)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '4px'
+            }}>
+              <span style={{ fontSize: '12px', color: '#64748B', fontWeight: 600 }}>Overdue Counselling</span>
+              <span style={{ fontSize: '28px', fontWeight: 800, color: overdueCount > 0 ? '#DC2626' : '#10B981' }}>{overdueCount}</span>
+            </div>
+          </div>
+
+          {/* Filter Bar */}
+          <div style={{
+            backgroundColor: '#FFFFFF',
+            borderRadius: '16px',
+            border: '1px solid #D7E3EF',
+            padding: '20px',
+            boxShadow: '0 4px 6px -1px rgba(11, 35, 65, 0.05)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '16px',
+            flexWrap: 'wrap'
+          }}>
+            <div style={{ flex: 1, minWidth: '280px', position: 'relative' }}>
+              <Search style={{
+                position: 'absolute',
+                left: '14px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                color: '#94A3B8'
+              }} size={18} />
+              <input
+                type="text"
+                placeholder="Search staff by Name, HRMS ID, or Station..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '10px 14px 10px 42px',
+                  borderRadius: '8px',
+                  border: '1px solid #CBD5E1',
+                  fontSize: '13.5px',
+                  outline: 'none',
+                  fontFamily: 'inherit',
+                  transition: 'all 0.2s'
+                }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+              <select
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+                style={{
+                  padding: '10px 14px',
+                  borderRadius: '8px',
+                  border: '1px solid #CBD5E1',
+                  fontSize: '13.5px',
+                  outline: 'none',
+                  backgroundColor: '#FFFFFF',
+                  cursor: 'pointer'
+                }}
+              >
+                <option value="all">All Categories</option>
+                <option value="C">Category C</option>
+                <option value="D">Category D</option>
+              </select>
+
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                style={{
+                  padding: '10px 14px',
+                  borderRadius: '8px',
+                  border: '1px solid #CBD5E1',
+                  fontSize: '13.5px',
+                  outline: 'none',
+                  backgroundColor: '#FFFFFF',
+                  cursor: 'pointer'
+                }}
+              >
+                <option value="all">All Statuses</option>
+                <option value="overdue">Overdue</option>
+                <option value="due_soon">Due Soon</option>
+                <option value="completed">Completed / Scheduled</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Directory Table */}
+          <div style={{
+            backgroundColor: '#FFFFFF',
+            borderRadius: '16px',
+            border: '1px solid #D7E3EF',
+            boxShadow: '0 4px 6px -1px rgba(11, 35, 65, 0.05)',
+            overflow: 'hidden'
+          }}>
+            <table style={{
+              width: '100%',
+              borderCollapse: 'collapse',
+              textAlign: 'left',
+              fontSize: '13.5px'
+            }}>
+              <thead>
+                <tr style={{
+                  backgroundColor: '#F8FAFC',
+                  borderBottom: '1px solid #E2E8F0',
+                  color: '#475569',
+                  fontWeight: 600
+                }}>
+                  <th style={{ padding: '16px 20px' }}>Staff Details</th>
+                  <th style={{ padding: '16px 20px' }}>Station</th>
+                  <th style={{ padding: '16px 20px' }}>Risk Category</th>
+                  <th style={{ padding: '16px 20px' }}>Previous Date</th>
+                  <th style={{ padding: '16px 20px' }}>Next Due Date</th>
+                  <th style={{ padding: '16px 20px' }}>Status</th>
+                  <th style={{ padding: '16px 20px', textAlign: 'right' }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredCandidates.map((cand) => {
+                  const dueDateInfo = getNextDueDate(cand);
+                  
+                  let badgeBg = '#E6FBF3';
+                  let badgeColor = '#059669';
+                  if (dueDateInfo.status === 'overdue') {
+                    badgeBg = '#FEE2E2';
+                    badgeColor = '#DC2626';
+                  } else if (dueDateInfo.status === 'due_soon') {
+                    badgeBg = '#FEF3C7';
+                    badgeColor = '#D97706';
+                  }
+
+                  const catColor = cand.category === 'D' ? '#EF4444' : '#F59E0B';
+                  const catBg = cand.category === 'D' ? '#FEE2E2' : '#FEF3C7';
+
+                  return (
+                    <tr
+                      key={cand.userId}
+                      style={{
+                        borderBottom: '1px solid #F1F5F9',
+                        transition: 'background-color 0.2s'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F8FAFC'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                    >
+                      <td style={{ padding: '16px 20px' }}>
+                        <div style={{ fontWeight: 700, color: '#0B2341' }}>{cand.fullName}</div>
+                        <div style={{ fontSize: '12px', color: '#64748B', marginTop: '2px' }}>
+                          HRMS ID: {cand.hrmsId} | {cand.role}
+                        </div>
+                      </td>
+                      <td style={{ padding: '16px 20px', fontWeight: 500, color: '#334155' }}>
+                        {cand.stationName} ({cand.stationCode})
+                      </td>
+                      <td style={{ padding: '16px 20px' }}>
+                        <span style={{
+                          padding: '3px 8px',
+                          borderRadius: '4px',
+                          fontSize: '11px',
+                          fontWeight: 700,
+                          backgroundColor: catBg,
+                          color: catColor
+                        }}>
+                          Category {cand.category}
+                        </span>
+                      </td>
+                      <td style={{ padding: '16px 20px', color: '#475569', fontWeight: 500 }}>
+                        {formatDateDateOnly(cand.prevCounselingDate)}
+                      </td>
+                      <td style={{ padding: '16px 20px', color: '#475569', fontWeight: 600 }}>
+                        {dueDateInfo.date ? formatDateDateOnly(dueDateInfo.date) : 'Immediate'}
+                      </td>
+                      <td style={{ padding: '16px 20px' }}>
+                        <span style={{
+                          padding: '4px 10px',
+                          borderRadius: '20px',
+                          fontSize: '11.5px',
+                          fontWeight: 700,
+                          backgroundColor: badgeBg,
+                          color: badgeColor
+                        }}>
+                          {dueDateInfo.status.toUpperCase().replace('_', ' ')}
+                        </span>
+                      </td>
+                      <td style={{ padding: '16px 20px', textAlign: 'right' }}>
+                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                          <button
+                            onClick={() => handleOpenHistory(cand)}
+                            style={{
+                              padding: '6px 12px',
+                              backgroundColor: '#FFFFFF',
+                              border: '1px solid #CBD5E1',
+                              borderRadius: '6px',
+                              fontSize: '12px',
+                              fontWeight: 600,
+                              color: '#475569',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              transition: 'all 0.2s'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F1F5F9'}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FFFFFF'}
+                          >
+                            History ({cand.historyCount})
+                          </button>
+                          <button
+                            onClick={() => navigate(`/counseling?candidateId=${cand.userId}`)}
+                            style={{
+                              padding: '6px 14px',
+                              backgroundColor: '#3B82F6',
+                              border: 'none',
+                              borderRadius: '6px',
+                              fontSize: '12px',
+                              fontWeight: 700,
+                              color: '#FFFFFF',
+                              cursor: 'pointer',
+                              boxShadow: '0 2px 4px rgba(59, 130, 246, 0.2)',
+                              transition: 'all 0.2s'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#2563EB'}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#3B82F6'}
+                          >
+                            Counsel
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+
+                {filteredCandidates.length === 0 && (
+                  <tr>
+                    <td colSpan="7" style={{ padding: '40px', textAlign: 'center', color: '#94A3B8' }}>
+                      No safety candidates found matching filters.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* History Modal Portal */}
+          {historyModalOpen && selectedCandidateHistory && (
+            <div style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(15, 23, 42, 0.4)',
+              backdropFilter: 'blur(4px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1000
+            }}>
+              <div style={{
+                backgroundColor: '#FFFFFF',
+                borderRadius: '16px',
+                width: '90%',
+                maxWidth: '600px',
+                maxHeight: '80vh',
+                boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+                display: 'flex',
+                flexDirection: 'column',
+                border: '1px solid #D7E3EF'
+              }}>
+                <div style={{
+                  padding: '20px 24px',
+                  borderBottom: '1px solid #E2E8F0',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  backgroundColor: '#F8FAFC',
+                  borderTopLeftRadius: '16px',
+                  borderTopRightRadius: '16px'
+                }}>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 800, color: '#0B2341' }}>
+                      Counseling & Retest History Log
+                    </h3>
+                    <p style={{ margin: '4px 0 0 0', fontSize: '12.5px', color: '#64748B' }}>
+                      {selectedCandidateHistory.fullName} ({selectedCandidateHistory.hrmsId})
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setHistoryModalOpen(false);
+                      setSelectedCandidateHistory(null);
+                      setHistoryList([]);
+                    }}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      fontSize: '22px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      color: '#64748B',
+                      outline: 'none'
+                    }}
+                  >
+                    &times;
+                  </button>
+                </div>
+
+                <div style={{ padding: '24px', overflowY: 'auto', flex: 1 }}>
+                  {historyLoading ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '160px', gap: '12px' }}>
+                      <Loader2 className="animate-spin" size={24} style={{ color: '#0B2341' }} />
+                      <span style={{ fontSize: '13px', color: '#64748B' }}>Loading records...</span>
+                    </div>
+                  ) : historyList.length === 0 ? (
+                    <div style={{ padding: '32px', textAlign: 'center', color: '#94A3B8', fontSize: '13.5px' }}>
+                      No counseling history found.
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                      {historyList.map((log, index) => (
+                        <div
+                          key={log.id}
+                          style={{
+                            border: '1px solid #E2E8F0',
+                            borderRadius: '12px',
+                            padding: '16px',
+                            backgroundColor: '#F8FAFC'
+                          }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
+                            <span style={{ fontSize: '13.5px', fontWeight: 700, color: '#334155' }}>
+                              Cycle Completed #{historyList.length - index}
+                            </span>
+                            <span style={{ fontSize: '12px', color: '#64748B', fontWeight: 500 }}>
+                              Completed: {formatDate(log.completedAt)}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: '13px', color: '#475569', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <span>
+                              <strong>Counseled By:</strong> {log.completedByName || 'N/A'}
+                            </span>
+                            <span>
+                              <strong>Post-Retest Score:</strong>{' '}
+                              {log.retestScore !== null ? (
+                                <span style={{
+                                  fontWeight: 700,
+                                  color: Number(log.retestScore) >= 50 ? '#10B981' : '#EF4444'
+                                }}>
+                                  {parseFloat(log.retestScore).toFixed(1)}%
+                                </span>
+                              ) : (
+                                <span style={{ color: '#F59E0B', fontWeight: 600 }}>Retest Pending</span>
+                              )}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div style={{
+                  padding: '16px 24px',
+                  borderTop: '1px solid #E2E8F0',
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  backgroundColor: '#F8FAFC',
+                  borderBottomLeftRadius: '16px',
+                  borderBottomRightRadius: '16px'
+                }}>
+                  <button
+                    onClick={() => {
+                      setHistoryModalOpen(false);
+                      setSelectedCandidateHistory(null);
+                      setHistoryList([]);
+                    }}
+                    style={{
+                      padding: '8px 18px',
+                      backgroundColor: '#64748B',
+                      color: '#FFFFFF',
+                      border: 'none',
+                      borderRadius: '6px',
+                      fontSize: '12.5px',
+                      fontWeight: 600,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </DashboardLayout>
     );
@@ -486,6 +1067,64 @@ const CounselingPage = () => {
             )}
           </div>
         </div>
+
+        {/* Past Counseling Records Log */}
+        {candidateHistory.length > 0 && (
+          <div style={{
+            backgroundColor: '#FFFFFF',
+            borderRadius: '16px',
+            border: '1px solid #D7E3EF',
+            padding: '24px',
+            boxShadow: '0 4px 6px -1px rgba(11, 35, 65, 0.05)'
+          }}>
+            <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#0B2341', margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <History size={18} style={{ color: '#0B2341' }} />
+              Past Completed Counseling Sessions History
+            </h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {candidateHistory.map((log, index) => (
+                <div
+                  key={log.id}
+                  style={{
+                    border: '1px solid #E2E8F0',
+                    borderRadius: '10px',
+                    padding: '14px 16px',
+                    backgroundColor: '#F8FAFC',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    flexWrap: 'wrap',
+                    gap: '12px'
+                  }}
+                >
+                  <div>
+                    <div style={{ fontWeight: 700, color: '#334155', fontSize: '13.5px' }}>
+                      Session #{candidateHistory.length - index}
+                    </div>
+                    <div style={{ fontSize: '12.5px', color: '#64748B', marginTop: '2px' }}>
+                      Conducted by: <strong>{log.completedByName || 'N/A'}</strong> on {formatDate(log.completedAt)}
+                    </div>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: '12.5px', color: '#475569', fontWeight: 500 }}>
+                      Retest Result Score:{' '}
+                      {log.retestScore !== null ? (
+                        <strong style={{
+                          color: Number(log.retestScore) >= 50 ? '#10B981' : '#EF4444',
+                          marginLeft: '4px'
+                        }}>
+                          {parseFloat(log.retestScore).toFixed(1)}%
+                        </strong>
+                      ) : (
+                        <strong style={{ color: '#F59E0B', marginLeft: '4px' }}>Retest Pending</strong>
+                      )}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Action Button Row */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>

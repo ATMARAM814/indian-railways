@@ -4,10 +4,28 @@ const { authorize } = require("../../middleware/role.middleware");
 const {
   getCandidateCounselingController,
   saveCandidateCounselingController,
-  activateRetestController
+  activateRetestController,
+  getCounselingDirectoryController,
+  getCandidateCounselingHistoryController
 } = require("./counseling.controller");
 
 const router = express.Router();
+
+// Get overall counseling directory
+router.get(
+  "/directory",
+  authenticate,
+  authorize("TI", "AOM", "SUPER_ADMIN", "AOM Users"),
+  getCounselingDirectoryController
+);
+
+// Get candidate counseling history logs
+router.get(
+  "/history/:profileId",
+  authenticate,
+  authorize("TI", "AOM", "SUPER_ADMIN", "AOM Users"),
+  getCandidateCounselingHistoryController
+);
 
 // Get candidate profile and counseling topics checklist
 router.get(

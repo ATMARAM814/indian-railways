@@ -124,11 +124,43 @@ async function activateRetestService({ profileId, assessorId, assessorRole }) {
     instructionsRemarks: 'Retest activated after completing counseling guidance checklist.'
   });
 
+  // Log to counseling history and clear active statuses
+  await db.insertCounselingHistoryDb({
+    profileId,
+    completedBy: assessorId,
+    assessmentId: assessment.id
+  });
+  await db.clearCandidateCounselingStatusesDb(profileId);
+
   return { success: true, assessmentId: assessment.id };
+}
+
+async function getCounselingDirectoryCandidatesService({ assessorId, assessorRole }) {
+  const validRoles = ["TI", "AOM", "SUPER_ADMIN", "AOM Users"];
+  const roleUpper = (assessorRole || "").toUpperCase();
+  const isAuthorizedRole = validRoles.includes(roleUpper) || 
+    roleUpper.includes("AOM") || 
+    roleUpper.includes("SUPER_ADMIN") || 
+    roleUpper.includes("TI");
+
+  if (!isAuthorizedRole) {
+    throw new Error("Access Denied: You do not have permission to view counseling directory.");
+  }
+
+  return await db.getCounselingDirectoryCandidatesDb({ assessorId, assessorRole });
+}
+
+async function getCandidateCounselingHistoryService({ profileId, assessorId, assessorRole }) {
+  const candidate = await db.getCandidateDetailsDb(profileId);
+  await verifyAssessorAccess(candidate, assessorId, assessorRole);
+
+  return await db.getCandidateCounselingHistoryDb(profileId);
 }
 
 module.exports = {
   getCandidateCounselingData,
   saveCandidateCounselingData,
-  activateRetestService
+  activateRetestService,
+  getCounselingDirectoryCandidatesService,
+  getCandidateCounselingHistoryService
 };
