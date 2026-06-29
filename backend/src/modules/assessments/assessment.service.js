@@ -51,7 +51,7 @@ async function createAssessment({
   );
   const reportingOfficerId = checkReportingRes.rows[0]?.reporting_officer_id;
 
-  if (reportingOfficerId !== assessorUserId) {
+  if (reportingOfficerId !== assessorUserId && assessmentType !== 'Retest' && assessmentCycle !== 'Retest after Counseling') {
     validateAssessmentHierarchy(
       assessorRoleCode,
       assessedRoleCode,
@@ -59,7 +59,7 @@ async function createAssessment({
     );
   }
 
-  if (assessorRoleCode === "TI" && assessedRoleCode !== "TM") {
+  if (assessmentType !== 'Retest' && assessmentCycle !== 'Retest after Counseling' && assessorRoleCode === "TI" && assessedRoleCode !== "TM") {
     const hasSms = await hasStationSupervisor(assessedUserId);
     if (hasSms) {
       throw new Error(
