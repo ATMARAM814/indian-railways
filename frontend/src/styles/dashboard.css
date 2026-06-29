@@ -288,6 +288,15 @@
   box-shadow: 0 12px 24px rgba(11, 35, 65, 0.1);
 }
 
+.stat-card.non-clickable {
+  cursor: default;
+}
+
+.stat-card.non-clickable:hover {
+  transform: none;
+  box-shadow: 0 1px 3px rgba(11, 35, 65, 0.05);
+}
+
 .stat-card-header {
   display: flex;
   justify-content: space-between;

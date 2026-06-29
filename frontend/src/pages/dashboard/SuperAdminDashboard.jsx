@@ -363,6 +363,7 @@ const SuperAdminDashboard = () => {
             icon={<ClipboardCheck size={20} />}
             type="success"
             trend="System-wide assessment count"
+            clickable={false}
           />
         </div>
 

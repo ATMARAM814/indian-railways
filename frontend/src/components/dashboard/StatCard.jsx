@@ -3,7 +3,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
-const StatCard = ({ title, value, icon, trend, type = 'normal', link }) => {
+const StatCard = ({ title, value, icon, trend, type = 'normal', link, clickable = true }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -74,7 +74,7 @@ const StatCard = ({ title, value, icon, trend, type = 'normal', link }) => {
   };
 
   return (
-    <div className={`stat-card ${type}`} onClick={handleClick}>
+    <div className={`stat-card ${type} ${!clickable ? 'non-clickable' : ''}`} onClick={clickable ? handleClick : undefined}>
       <div className="stat-card-header">
         <span className="stat-card-title">{title}</span>
         <div className={`stat-card-icon-container ${type}`}>
