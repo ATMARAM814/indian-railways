@@ -16,7 +16,11 @@ const WorkforceEditModal = ({
     email: '',
     designation: '',
     stationId: '',
-    categoryCode: ''
+    categoryCode: '',
+    pmeDue: '',
+    pmeDone: '',
+    refDue: '',
+    refDone: ''
   });
 
   const [error, setError] = useState(null);
@@ -31,7 +35,11 @@ const WorkforceEditModal = ({
         email: user.email || '',
         designation: user.designation || '',
         stationId: user.station_id || user.stationId || '',
-        categoryCode: user.category_code || user.categoryCode || ''
+        categoryCode: user.category_code || user.categoryCode || '',
+        pmeDue: user.pme_due ? user.pme_due.substring(0, 10) : '',
+        pmeDone: user.pme_done ? user.pme_done.substring(0, 10) : '',
+        refDue: user.ref_due ? user.ref_due.substring(0, 10) : '',
+        refDone: user.ref_done ? user.ref_done.substring(0, 10) : ''
       });
       setError(null);
     }
@@ -214,6 +222,54 @@ const WorkforceEditModal = ({
                 <option value="C">Category C</option>
                 <option value="D">Category D</option>
               </select>
+            </div>
+
+            {/* PME Due Date */}
+            <div>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>PME Due Date</label>
+              <input
+                type="date"
+                name="pmeDue"
+                value={formData.pmeDue}
+                onChange={handleInputChange}
+                style={{ width: '100%', padding: '10px 12px', fontSize: '13.5px', borderRadius: '8px', border: '1px solid #D7E3EF', outline: 'none' }}
+              />
+            </div>
+
+            {/* PME Done Date */}
+            <div>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>PME Done Date</label>
+              <input
+                type="date"
+                name="pmeDone"
+                value={formData.pmeDone}
+                onChange={handleInputChange}
+                style={{ width: '100%', padding: '10px 12px', fontSize: '13.5px', borderRadius: '8px', border: '1px solid #D7E3EF', outline: 'none' }}
+              />
+            </div>
+
+            {/* REF Due Date */}
+            <div>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>REF Due Date</label>
+              <input
+                type="date"
+                name="refDue"
+                value={formData.refDue}
+                onChange={handleInputChange}
+                style={{ width: '100%', padding: '10px 12px', fontSize: '13.5px', borderRadius: '8px', border: '1px solid #D7E3EF', outline: 'none' }}
+              />
+            </div>
+
+            {/* REF Done Date */}
+            <div>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>REF Done Date</label>
+              <input
+                type="date"
+                name="refDone"
+                value={formData.refDone}
+                onChange={handleInputChange}
+                style={{ width: '100%', padding: '10px 12px', fontSize: '13.5px', borderRadius: '8px', border: '1px solid #D7E3EF', outline: 'none' }}
+              />
             </div>
 
           </div>

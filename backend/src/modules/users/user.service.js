@@ -421,6 +421,26 @@ async function updateUserService(
       hrmsId:
         updateData.hrmsId ??
         existingUser.hrms_id,
+
+      pmeDue:
+        updateData.pmeDue === ""
+          ? null
+          : (updateData.pmeDue ?? existingUser.pme_due),
+
+      pmeDone:
+        updateData.pmeDone === ""
+          ? null
+          : (updateData.pmeDone ?? existingUser.pme_done),
+
+      refDue:
+        updateData.refDue === ""
+          ? null
+          : (updateData.refDue ?? existingUser.ref_due),
+
+      refDone:
+        updateData.refDone === ""
+          ? null
+          : (updateData.refDone ?? existingUser.ref_done),
     }
   );
 

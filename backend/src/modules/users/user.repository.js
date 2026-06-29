@@ -298,8 +298,12 @@ async function updateUser(
         designation = $4,
         status = $5,
         hrms_id = $6,
+        pme_due = $7,
+        pme_done = $8,
+        ref_due = $9,
+        ref_done = $10,
         updated_at = now()
-      WHERE id = $7
+      WHERE id = $11
       RETURNING *;
     `;
 
@@ -310,6 +314,10 @@ async function updateUser(
       userData.designation,
       userData.status,
       userData.hrmsId,
+      userData.pmeDue || null,
+      userData.pmeDone || null,
+      userData.refDue || null,
+      userData.refDone || null,
       userId,
     ]);
 
@@ -667,6 +675,10 @@ async function getUserById(userId) {
       p.status,
       p.created_at,
       p.updated_at,
+      p.pme_due,
+      p.pme_done,
+      p.ref_due,
+      p.ref_done,
       r.name as role
     FROM profiles p
     JOIN roles r
