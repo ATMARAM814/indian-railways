@@ -25,3 +25,28 @@ export const getCandidateCounselingHistory = async (profileId) => {
   const res = await apiClient.get(`/counseling/history/${profileId}`);
   return res.data;
 };
+
+export const getEligibleCandidatesForScheduling = async () => {
+  const res = await apiClient.get('/counseling/schedule/eligible-candidates');
+  return res.data;
+};
+
+export const scheduleCounseling = async (profileId) => {
+  const res = await apiClient.post('/counseling/schedule', { profileId });
+  return res.data;
+};
+
+export const getScheduledCounselingList = async () => {
+  const res = await apiClient.get('/counseling/schedule/list');
+  return res.data;
+};
+
+export const cancelScheduledCounseling = async (scheduleId) => {
+  const res = await apiClient.post(`/counseling/schedule/cancel/${scheduleId}`);
+  return res.data;
+};
+
+export const getRetestHistory = async () => {
+  const res = await apiClient.get('/counseling/history-retests');
+  return res.data;
+};
