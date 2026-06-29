@@ -385,10 +385,10 @@ const CounselingPage = () => {
         if (cand.category !== category) return false;
         
         const matchesSearch =
-          cand.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          cand.hrmsId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          cand.stationName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          cand.stationCode.toLowerCase().includes(searchQuery.toLowerCase());
+          (cand.fullName || '').toLowerCase().includes((searchQuery || '').toLowerCase()) ||
+          (cand.hrmsId || '').toLowerCase().includes((searchQuery || '').toLowerCase()) ||
+          (cand.stationName || '').toLowerCase().includes((searchQuery || '').toLowerCase()) ||
+          (cand.stationCode || '').toLowerCase().includes((searchQuery || '').toLowerCase());
 
         const dueDateInfo = getNextDueDate(cand);
         const matchesStatus =
@@ -400,21 +400,21 @@ const CounselingPage = () => {
 
     const getFilteredHistory = () => {
       return retestHistory.filter((row) => {
-        const term = searchQuery.toLowerCase();
-        const nameMatch = row.fullName.toLowerCase().includes(term);
-        const hrmsMatch = row.hrmsId.toLowerCase().includes(term);
-        const stationNameMatch = row.stationName.toLowerCase().includes(term);
-        const stationCodeMatch = row.stationCode.toLowerCase().includes(term);
+        const term = (searchQuery || '').toLowerCase();
+        const nameMatch = (row.fullName || '').toLowerCase().includes(term);
+        const hrmsMatch = (row.hrmsId || '').toLowerCase().includes(term);
+        const stationNameMatch = (row.stationName || '').toLowerCase().includes(term);
+        const stationCodeMatch = (row.stationCode || '').toLowerCase().includes(term);
         return nameMatch || hrmsMatch || stationNameMatch || stationCodeMatch;
       });
     };
 
     const [scheduleSearch, setScheduleSearch] = useState('');
     const filteredEligibleOptions = eligibleCandidates.filter(c => 
-      c.fullName.toLowerCase().includes(scheduleSearch.toLowerCase()) ||
-      c.hrmsId.toLowerCase().includes(scheduleSearch.toLowerCase()) ||
-      c.role.toLowerCase().includes(scheduleSearch.toLowerCase()) ||
-      c.stationName.toLowerCase().includes(scheduleSearch.toLowerCase())
+      (c.fullName || '').toLowerCase().includes((scheduleSearch || '').toLowerCase()) ||
+      (c.hrmsId || '').toLowerCase().includes((scheduleSearch || '').toLowerCase()) ||
+      (c.role || '').toLowerCase().includes((scheduleSearch || '').toLowerCase()) ||
+      (c.stationName || '').toLowerCase().includes((scheduleSearch || '').toLowerCase())
     );
 
     const catCCount = directoryCandidates.filter(c => c.category === 'C').length;
