@@ -22,6 +22,9 @@ const { globalErrorHandler } = require("./middleware/error.middleware");
 
 const app = express();
 
+// Trust reverse proxy (Vercel, Railway load balancers) for accurate rate limiting IP detection
+app.set("trust proxy", 1);
+
 // 1. Register Helmet for Security Headers
 app.use(helmet());
 
