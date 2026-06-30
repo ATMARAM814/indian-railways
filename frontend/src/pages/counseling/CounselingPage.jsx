@@ -141,10 +141,9 @@ const CounselingPage = () => {
             setCandidateHistory(histRes.data || []);
           }
         } else {
-          // Fetch overall directory list, eligible, scheduled, history in parallel
-          const [res, eligRes, schedRes, histRetestRes] = await Promise.all([
+          // Fetch overall directory list, scheduled, history in parallel (eligible candidates loaded lazily in separate useEffect)
+          const [res, schedRes, histRetestRes] = await Promise.all([
             getCounselingDirectory().catch(err => { console.error(err); return { success: false }; }),
-            getEligibleCandidatesForScheduling().catch(err => { console.error(err); return { success: false }; }),
             getScheduledCounselingList().catch(err => { console.error(err); return { success: false }; }),
             getRetestHistory().catch(err => { console.error(err); return { success: false }; })
           ]);
@@ -153,10 +152,6 @@ const CounselingPage = () => {
             setDirectoryCandidates(res.data.data || res.data || []);
           } else if (res) {
             setError(res.message || "Failed to load counseling directory.");
-          }
-
-          if (eligRes && eligRes.success) {
-            setEligibleCandidates(eligRes.data || []);
           }
 
           if (schedRes && schedRes.success) {
@@ -177,6 +172,32 @@ const CounselingPage = () => {
 
     fetchData();
   }, [candidateId]);
+
+  // Lazy load eligible candidates with backend filters when the schedule tab is active
+  useEffect(() => {
+    if (candidateId || currentTab !== 'schedule') return;
+
+    const fetchEligible = async () => {
+      setScheduleLoading(true);
+      try {
+        const res = await getEligibleCandidatesForScheduling({
+          search: scheduleNameSearch,
+          station: scheduleStationSearch
+        });
+        if (res.success) {
+          setEligibleCandidates(res.data || []);
+        }
+      } catch (err) {
+        console.error("Failed to load eligible candidates", err);
+      } finally {
+        setScheduleLoading(false);
+      }
+    };
+
+    // Debounce to prevent overloading database with every keystroke
+    const timer = setTimeout(fetchEligible, 250);
+    return () => clearTimeout(timer);
+  }, [currentTab, scheduleNameSearch, scheduleStationSearch, candidateId]);
 
   const handleToggle = (subjectId, isCompleted) => {
     setSubjects(prev =>
@@ -518,14 +539,7 @@ const CounselingPage = () => {
       });
     };
 
-    const filteredEligibleOptions = eligibleCandidates.filter(c => {
-      const matchesName = (c.fullName || '').toLowerCase().includes(scheduleNameSearch.toLowerCase()) ||
-                          (c.hrmsId || '').toLowerCase().includes(scheduleNameSearch.toLowerCase()) ||
-                          (c.role || '').toLowerCase().includes(scheduleNameSearch.toLowerCase());
-      const matchesStation = (c.stationName || '').toLowerCase().includes(scheduleStationSearch.toLowerCase()) ||
-                             (c.stationCode || '').toLowerCase().includes(scheduleStationSearch.toLowerCase());
-      return matchesName && matchesStation;
-    });
+    const filteredEligibleOptions = eligibleCandidates;
 
     const catCCount = directoryCandidates.filter(c => c.category === 'C').length;
     const catDCount = directoryCandidates.filter(c => c.category === 'D').length;

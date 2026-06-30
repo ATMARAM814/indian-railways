@@ -26,8 +26,8 @@ export const getCandidateCounselingHistory = async (profileId) => {
   return res.data;
 };
 
-export const getEligibleCandidatesForScheduling = async () => {
-  const res = await apiClient.get('/counseling/schedule/eligible-candidates');
+export const getEligibleCandidatesForScheduling = async (params = {}) => {
+  const res = await apiClient.get('/counseling/schedule/eligible-candidates', { params });
   return res.data;
 };
 

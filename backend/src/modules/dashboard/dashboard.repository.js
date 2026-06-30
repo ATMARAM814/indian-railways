@@ -526,72 +526,10 @@ async function getTiStationCategoryDistribution(stationIds) {
 
 async function getAomSummary(divisionId) {
   // Returns summary counters:
-  // totalStations, totalPM, totalSM, totalTM, totalSS, totalTI, pendingApprovals, averageDivisionScore, highRiskStaff
+  // totalStations, pendingApprovals, averageDivisionScore, highRiskStaff
   const query = `
     SELECT
       (SELECT COUNT(*)::int FROM stations WHERE division_id = $1) as total_stations,
-      (
-        SELECT COUNT(DISTINCT p.id)::int
-        FROM staff_station_postings ssp
-        JOIN stations s ON s.id = ssp.station_id
-        JOIN profiles p ON p.id = ssp.profile_id
-        JOIN roles r ON r.id = p.role_id
-        WHERE s.division_id = $1 AND ssp.is_current = true AND r.name = 'PM'
-      ) as total_pm,
-      (
-        SELECT COUNT(DISTINCT p.id)::int
-        FROM staff_station_postings ssp
-        JOIN stations s ON s.id = ssp.station_id
-        JOIN profiles p ON p.id = ssp.profile_id
-        JOIN roles r ON r.id = p.role_id
-        WHERE s.division_id = $1 AND ssp.is_current = true AND r.name = 'SM'
-      ) as total_sm,
-      (
-        SELECT COUNT(DISTINCT p.id)::int
-        FROM staff_station_postings ssp
-        JOIN stations s ON s.id = ssp.station_id
-        JOIN profiles p ON p.id = ssp.profile_id
-        JOIN roles r ON r.id = p.role_id
-        WHERE s.division_id = $1 AND ssp.is_current = true AND r.name = 'TM'
-      ) as total_tm,
-      (
-        SELECT COUNT(DISTINCT p.id)::int
-        FROM staff_station_postings ssp
-        JOIN stations s ON s.id = ssp.station_id
-        JOIN profiles p ON p.id = ssp.profile_id
-        JOIN roles r ON r.id = p.role_id
-        WHERE s.division_id = $1 AND ssp.is_current = true AND r.name = 'SS'
-      ) as total_ss,
-      (
-        SELECT COUNT(DISTINCT p.id)::int
-        FROM staff_station_postings ssp
-        JOIN stations s ON s.id = ssp.station_id
-        JOIN profiles p ON p.id = ssp.profile_id
-        JOIN roles r ON r.id = p.role_id
-        WHERE s.division_id = $1 AND ssp.is_current = true AND r.name IN ('Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Station Master Supervisior', 'Station Master Supervisio')
-      ) as total_sm_supervisors,
-      (
-        SELECT COUNT(DISTINCT p.id)::int
-        FROM staff_station_postings ssp
-        JOIN stations s ON s.id = ssp.station_id
-        JOIN profiles p ON p.id = ssp.profile_id
-        JOIN roles r ON r.id = p.role_id
-        WHERE s.division_id = $1 AND ssp.is_current = true AND r.name IN ('Cabin Master', 'CABIN MASTER')
-      ) as total_tnc,
-      (
-        SELECT COUNT(DISTINCT p.id)::int
-        FROM staff_station_postings ssp
-        JOIN stations s ON s.id = ssp.station_id
-        JOIN profiles p ON p.id = ssp.profile_id
-        JOIN roles r ON r.id = p.role_id
-        WHERE s.division_id = $1 AND ssp.is_current = true AND r.name IN ('Shunting Master', 'SHUNTING MASTER', 'SHM')
-      ) as total_shunting_masters,
-      (
-        SELECT COUNT(DISTINCT sa.profile_id)::int
-        FROM station_assignments sa
-        JOIN stations s ON s.id = sa.station_id
-        WHERE s.division_id = $1 AND sa.assignment_type = 'TI_AREA' AND sa.assigned_to IS NULL
-      ) as total_ti,
       (
         SELECT COUNT(*)::int
         FROM assessments a
@@ -606,7 +544,7 @@ async function getAomSummary(divisionId) {
           )
       ) as pending_approvals,
       (
-        SELECT AVG(a.percentage)::numeric(10,2)
+        SELECT COALESCE(AVG(a.percentage)::numeric(10,2), 0)
         FROM assessments a
         WHERE a.status = 'completed'
           AND a.assessed_user_id IN (
@@ -782,60 +720,6 @@ async function getSuperAdminSummary() {
     SELECT
       (SELECT COUNT(*)::int FROM divisions) as total_divisions,
       (SELECT COUNT(*)::int FROM stations) as total_stations,
-      (
-        SELECT COUNT(DISTINCT p.id)::int
-        FROM profiles p
-        JOIN roles r ON r.id = p.role_id
-        WHERE r.name = 'AOM' AND p.status = 'active'
-      ) as total_aom,
-      (
-        SELECT COUNT(DISTINCT p.id)::int
-        FROM profiles p
-        JOIN roles r ON r.id = p.role_id
-        WHERE r.name = 'TI' AND p.status = 'active'
-      ) as total_ti,
-      (
-        SELECT COUNT(DISTINCT p.id)::int
-        FROM profiles p
-        JOIN roles r ON r.id = p.role_id
-        WHERE r.name = 'SM' AND p.status = 'active'
-      ) as total_sm,
-      (
-        SELECT COUNT(DISTINCT p.id)::int
-        FROM profiles p
-        JOIN roles r ON r.id = p.role_id
-        WHERE r.name = 'TM' AND p.status = 'active'
-      ) as total_tm,
-      (
-        SELECT COUNT(DISTINCT p.id)::int
-        FROM profiles p
-        JOIN roles r ON r.id = p.role_id
-        WHERE r.name = 'SS' AND p.status = 'active'
-      ) as total_ss,
-      (
-        SELECT COUNT(DISTINCT p.id)::int
-        FROM profiles p
-        JOIN roles r ON r.id = p.role_id
-        WHERE r.name IN ('Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Station Master Supervisior', 'Station Master Supervisio') AND p.status = 'active'
-      ) as total_sm_supervisors,
-      (
-        SELECT COUNT(DISTINCT p.id)::int
-        FROM profiles p
-        JOIN roles r ON r.id = p.role_id
-        WHERE r.name IN ('Cabin Master', 'CABIN MASTER') AND p.status = 'active'
-      ) as total_tnc,
-      (
-        SELECT COUNT(DISTINCT p.id)::int
-        FROM profiles p
-        JOIN roles r ON r.id = p.role_id
-        WHERE r.name IN ('Shunting Master', 'SHUNTING MASTER', 'SHM') AND p.status = 'active'
-      ) as total_shunting_masters,
-      (
-        SELECT COUNT(DISTINCT p.id)::int
-        FROM profiles p
-        JOIN roles r ON r.id = p.role_id
-        WHERE r.name = 'PM' AND p.status = 'active'
-      ) as total_pm,
       (
         SELECT COUNT(*)::int
         FROM assessments
@@ -1587,6 +1471,316 @@ async function getDashboardCategoryCandidatesDb({
   return result.rows;
 }
 
+// ==========================================
+// OPTIMIZED COMBINED STATS & AGGREGATE QUERIES
+// ==========================================
+
+async function getSuperAdminStationStats() {
+  const query = `
+    SELECT
+      s.station_name as "stationName",
+      s.station_code as "stationCode",
+      COUNT(DISTINCT a.id) FILTER (WHERE a.status = 'completed')::int as completed,
+      COUNT(DISTINCT a.id) FILTER (WHERE a.status IN ('created', 'mcq_submitted'))::int as pending,
+      COALESCE(AVG(a.percentage)::numeric(10,2), 0) as "averageScore",
+      COUNT(DISTINCT p.id) FILTER (WHERE sc.category_code = 'A')::int as "categoryA",
+      COUNT(DISTINCT p.id) FILTER (WHERE sc.category_code = 'B')::int as "categoryB",
+      COUNT(DISTINCT p.id) FILTER (WHERE sc.category_code = 'C')::int as "categoryC",
+      COUNT(DISTINCT p.id) FILTER (WHERE sc.category_code = 'D')::int as "categoryD"
+    FROM stations s
+    LEFT JOIN staff_station_postings ssp ON ssp.station_id = s.id AND ssp.is_current = true
+    LEFT JOIN profiles p ON p.id = ssp.profile_id
+    LEFT JOIN LATERAL (
+      SELECT category_id FROM employee_categories ec_inner
+      WHERE ec_inner.profile_id = p.id
+      ORDER BY ec_inner.created_at DESC
+      LIMIT 1
+    ) ec ON true
+    LEFT JOIN staff_categories sc ON sc.id = ec.category_id
+    LEFT JOIN assessments a ON a.assessed_user_id = ssp.profile_id
+    GROUP BY s.id, s.station_name, s.station_code
+    ORDER BY s.station_code;
+  `;
+  const result = await pool.query(query);
+  return result.rows;
+}
+
+async function getAomStationStats(divisionId) {
+  const query = `
+    SELECT
+      s.station_name as "stationName",
+      s.station_code as "stationCode",
+      COUNT(DISTINCT a.id) FILTER (WHERE a.status = 'completed')::int as completed,
+      COUNT(DISTINCT a.id) FILTER (WHERE a.status IN ('created', 'mcq_submitted'))::int as pending,
+      COALESCE(AVG(a.percentage)::numeric(10,2), 0) as "averageScore",
+      COUNT(DISTINCT p.id) FILTER (WHERE sc.category_code = 'A')::int as "categoryA",
+      COUNT(DISTINCT p.id) FILTER (WHERE sc.category_code = 'B')::int as "categoryB",
+      COUNT(DISTINCT p.id) FILTER (WHERE sc.category_code = 'C')::int as "categoryC",
+      COUNT(DISTINCT p.id) FILTER (WHERE sc.category_code = 'D')::int as "categoryD"
+    FROM stations s
+    LEFT JOIN staff_station_postings ssp ON ssp.station_id = s.id AND ssp.is_current = true
+    LEFT JOIN profiles p ON p.id = ssp.profile_id
+    LEFT JOIN LATERAL (
+      SELECT category_id FROM employee_categories ec_inner
+      WHERE ec_inner.profile_id = p.id
+      ORDER BY ec_inner.created_at DESC
+      LIMIT 1
+    ) ec ON true
+    LEFT JOIN staff_categories sc ON sc.id = ec.category_id
+    LEFT JOIN assessments a ON a.assessed_user_id = ssp.profile_id
+    WHERE s.division_id = $1
+    GROUP BY s.id, s.station_name, s.station_code
+    ORDER BY s.station_code;
+  `;
+  const result = await pool.query(query, [divisionId]);
+  return result.rows;
+}
+
+async function getTiStationStats(stationIds) {
+  const query = `
+    SELECT
+      s.station_name as "stationName",
+      s.station_code as "stationCode",
+      COUNT(DISTINCT a.id) FILTER (WHERE a.status = 'completed')::int as completed,
+      COUNT(DISTINCT a.id) FILTER (WHERE a.status IN ('created', 'mcq_submitted'))::int as pending,
+      COALESCE(AVG(a.percentage)::numeric(10,2), 0) as "averageScore",
+      COUNT(DISTINCT p.id) FILTER (WHERE sc.category_code = 'A')::int as "categoryA",
+      COUNT(DISTINCT p.id) FILTER (WHERE sc.category_code = 'B')::int as "categoryB",
+      COUNT(DISTINCT p.id) FILTER (WHERE sc.category_code = 'C')::int as "categoryC",
+      COUNT(DISTINCT p.id) FILTER (WHERE sc.category_code = 'D')::int as "categoryD"
+    FROM stations s
+    LEFT JOIN staff_station_postings ssp ON ssp.station_id = s.id AND ssp.is_current = true
+    LEFT JOIN profiles p ON p.id = ssp.profile_id
+    LEFT JOIN LATERAL (
+      SELECT category_id FROM employee_categories ec_inner
+      WHERE ec_inner.profile_id = p.id
+      ORDER BY ec_inner.created_at DESC
+      LIMIT 1
+    ) ec ON true
+    LEFT JOIN staff_categories sc ON sc.id = ec.category_id
+    LEFT JOIN assessments a ON a.assessed_user_id = ssp.profile_id
+    WHERE s.id = ANY($1)
+    GROUP BY s.id, s.station_name, s.station_code
+    ORDER BY s.station_code;
+  `;
+  const result = await pool.query(query, [stationIds]);
+  return result.rows;
+}
+
+function buildScopeQuery(baseQuery, scope) {
+  let whereClause = "";
+  const params = [];
+  
+  if (scope && scope.type === 'division') {
+    whereClause = `
+      AND a.assessed_user_id IN (
+        SELECT ssp.profile_id
+        FROM staff_station_postings ssp
+        JOIN stations s ON s.id = ssp.station_id
+        WHERE s.division_id = $1 AND ssp.is_current = true
+      )
+    `;
+    params.push(scope.value);
+  } else if (scope && scope.type === 'stations') {
+    whereClause = `
+      AND a.assessed_user_id IN (
+        SELECT ssp.profile_id
+        FROM staff_station_postings ssp
+        WHERE ssp.station_id = ANY($1) AND ssp.is_current = true
+      )
+    `;
+    params.push(scope.value);
+  } else if (scope && scope.type === 'station') {
+    whereClause = `
+      AND a.assessed_user_id IN (
+        SELECT ssp.profile_id
+        FROM staff_station_postings ssp
+        WHERE ssp.station_id = $1 AND ssp.is_current = true
+      )
+    `;
+    params.push(scope.value);
+  }
+  
+  const sql = baseQuery.split("__SCOPE_FILTER__").join(whereClause);
+  return { sql, params };
+}
+
+async function getMonthlyCompletionTrendDb(scope) {
+  const baseQuery = `
+    WITH created_stats AS (
+      SELECT TO_CHAR(created_at, 'YYYY-MM') as month, COUNT(*)::int as count
+      FROM assessments a
+      WHERE created_at IS NOT NULL __SCOPE_FILTER__
+      GROUP BY month
+    ),
+    completed_stats AS (
+      SELECT TO_CHAR(evaluated_at, 'YYYY-MM') as month, COUNT(*)::int as count
+      FROM assessments a
+      WHERE status = 'completed' AND evaluated_at IS NOT NULL __SCOPE_FILTER__
+      GROUP BY month
+    ),
+    approved_stats AS (
+      SELECT TO_CHAR(approved_at, 'YYYY-MM') as month, COUNT(*)::int as count
+      FROM assessments a
+      WHERE approval_status = 'approved' AND approved_at IS NOT NULL __SCOPE_FILTER__
+      GROUP BY month
+    )
+    SELECT 
+      COALESCE(c.month, comp.month, app.month) as month,
+      COALESCE(c.count, 0) as "createdCount",
+      COALESCE(comp.count, 0) as "completedCount",
+      COALESCE(app.count, 0) as "approvedCount"
+    FROM created_stats c
+    FULL OUTER JOIN completed_stats comp ON comp.month = c.month
+    FULL OUTER JOIN approved_stats app ON app.month = COALESCE(c.month, comp.month)
+    ORDER BY month;
+  `;
+  const { sql, params } = buildScopeQuery(baseQuery, scope);
+  const result = await pool.query(sql, params);
+  return result.rows;
+}
+
+async function getAssessmentPipelineDb(scope) {
+  const baseQuerySummary = `
+    SELECT 
+      COUNT(*) FILTER (WHERE approval_status = 'approved')::int as approved,
+      COUNT(*) FILTER (WHERE approval_status = 'pending_approval')::int as pending,
+      COUNT(*) FILTER (WHERE approval_status = 'rejected')::int as rejected
+    FROM assessments a
+    WHERE 1=1 __SCOPE_FILTER__;
+  `;
+  const baseQueryMonthly = `
+    WITH approved_stats AS (
+      SELECT TO_CHAR(approved_at, 'YYYY-MM') as month, COUNT(*)::int as count
+      FROM assessments a
+      WHERE approval_status = 'approved' AND approved_at IS NOT NULL __SCOPE_FILTER__
+      GROUP BY month
+    ),
+    pending_stats AS (
+      SELECT TO_CHAR(evaluated_at, 'YYYY-MM') as month, COUNT(*)::int as count
+      FROM assessments a
+      WHERE approval_status = 'pending_approval' AND evaluated_at IS NOT NULL __SCOPE_FILTER__
+      GROUP BY month
+    ),
+    rejected_stats AS (
+      SELECT TO_CHAR(rejected_at, 'YYYY-MM') as month, COUNT(*)::int as count
+      FROM assessments a
+      WHERE approval_status = 'rejected' AND rejected_at IS NOT NULL __SCOPE_FILTER__
+      GROUP BY month
+    )
+    SELECT 
+      COALESCE(a.month, p.month, r.month) as month,
+      COALESCE(a.count, 0) as approved,
+      COALESCE(p.count, 0) as pending,
+      COALESCE(r.count, 0) as rejected
+    FROM approved_stats a
+    FULL OUTER JOIN pending_stats p ON p.month = a.month
+    FULL OUTER JOIN rejected_stats r ON r.month = COALESCE(a.month, p.month)
+    ORDER BY month;
+  `;
+  
+  const qSummary = buildScopeQuery(baseQuerySummary, scope);
+  const qMonthly = buildScopeQuery(baseQueryMonthly, scope);
+  
+  const [resSummary, resMonthly] = await Promise.all([
+    pool.query(qSummary.sql, qSummary.params),
+    pool.query(qMonthly.sql, qMonthly.params)
+  ]);
+  
+  return {
+    summary: {
+      approved: resSummary.rows[0]?.approved || 0,
+      pending: resSummary.rows[0]?.pending || 0,
+      rejected: resSummary.rows[0]?.rejected || 0,
+      overdue: 0
+    },
+    monthly: resMonthly.rows
+  };
+}
+
+async function getApprovalTrendDb(scope) {
+  const baseQuery = `
+    WITH approved_stats AS (
+      SELECT TO_CHAR(approved_at, 'YYYY-MM') as month, COUNT(*)::int as count
+      FROM assessments a
+      WHERE approval_status = 'approved' AND approved_at IS NOT NULL __SCOPE_FILTER__
+      GROUP BY month
+    ),
+    rejected_stats AS (
+      SELECT TO_CHAR(rejected_at, 'YYYY-MM') as month, COUNT(*)::int as count
+      FROM assessments a
+      WHERE approval_status = 'rejected' AND rejected_at IS NOT NULL __SCOPE_FILTER__
+      GROUP BY month
+    ),
+    modified_stats AS (
+      SELECT TO_CHAR(modified_at, 'YYYY-MM') as month, COUNT(*)::int as count
+      FROM assessments a
+      WHERE modified_at IS NOT NULL __SCOPE_FILTER__
+      GROUP BY month
+    )
+    SELECT 
+      COALESCE(a.month, r.month, m.month) as month,
+      COALESCE(a.count, 0) as "approvedCount",
+      COALESCE(r.count, 0) as "rejectedCount",
+      COALESCE(m.count, 0) as "modifiedCount"
+    FROM approved_stats a
+    FULL OUTER JOIN rejected_stats r ON r.month = a.month
+    FULL OUTER JOIN modified_stats m ON m.month = COALESCE(a.month, r.month)
+    ORDER BY month;
+  `;
+  const { sql, params } = buildScopeQuery(baseQuery, scope);
+  const result = await pool.query(sql, params);
+  return result.rows;
+}
+
+async function getPerformanceTrendDb(scope) {
+  const baseQuery = `
+    SELECT 
+      TO_CHAR(evaluated_at, 'YYYY-MM') as month,
+      ROUND(AVG(percentage), 2)::numeric as "averageScore"
+    FROM assessments a
+    WHERE status = 'completed' AND evaluated_at IS NOT NULL AND percentage IS NOT NULL __SCOPE_FILTER__
+    GROUP BY month
+    ORDER BY month;
+  `;
+  const { sql, params } = buildScopeQuery(baseQuery, scope);
+  const result = await pool.query(sql, params);
+  return result.rows;
+}
+
+async function getSafetyComplianceDb(scope) {
+  const baseQuery = `
+    SELECT
+      COUNT(*) FILTER (WHERE status = 'completed')::int as completed_count,
+      COUNT(*) FILTER (WHERE status IN ('created', 'mcq_submitted'))::int as pending_count
+    FROM assessments a
+    WHERE 1=1 __SCOPE_FILTER__;
+  `;
+  const { sql, params } = buildScopeQuery(baseQuery, scope);
+  const result = await pool.query(sql, params);
+  return result.rows[0] || { completed_count: 0, pending_count: 0 };
+}
+
+async function getTiAverageSectionScoreDb(stationIds) {
+  const query = `
+    WITH user_averages AS (
+      SELECT assessed_user_id, AVG(percentage) as avg_score
+      FROM assessments a
+      WHERE a.status = 'completed' AND a.percentage IS NOT NULL
+        AND a.assessed_user_id IN (
+          SELECT ssp.profile_id
+          FROM staff_station_postings ssp
+          WHERE ssp.station_id = ANY($1::uuid[]) AND ssp.is_current = true
+        )
+      GROUP BY assessed_user_id
+    )
+    SELECT COALESCE(ROUND(AVG(avg_score)), 0)::int as average_section_score
+    FROM user_averages;
+  `;
+  const result = await pool.query(query, [stationIds]);
+  return result.rows[0]?.average_section_score || 0;
+}
+
 module.exports = {
   getSmStation,
   getTiStations,
@@ -1638,4 +1832,15 @@ module.exports = {
   getSuperAdminWorkforceActivity,
   getSuperAdminHighRiskStaff,
   getDashboardCategoryCandidatesDb,
+
+  // Optimized combined stats & aggregates
+  getSuperAdminStationStats,
+  getAomStationStats,
+  getTiStationStats,
+  getMonthlyCompletionTrendDb,
+  getAssessmentPipelineDb,
+  getApprovalTrendDb,
+  getPerformanceTrendDb,
+  getSafetyComplianceDb,
+  getTiAverageSectionScoreDb,
 };

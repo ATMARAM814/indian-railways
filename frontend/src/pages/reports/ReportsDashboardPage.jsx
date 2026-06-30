@@ -21,6 +21,9 @@ const ReportsDashboardPage = () => {
   const { user } = useAuth();
   const {
     loading,
+    summaryLoading,
+    performanceLoading,
+    tableLoading,
     error,
     summary,
     performance,
@@ -237,13 +240,17 @@ const ReportsDashboardPage = () => {
     }
   };
 
-  // Trigger loads on mount & filter change
+  // 1. Fetch global KPI summary and performance trends (only on filter change)
   useEffect(() => {
     if (user) {
       fetchSummary(filters);
       fetchPerformance(filters);
-      
-      // Load active tab's specific data
+    }
+  }, [user, filters, fetchSummary, fetchPerformance]);
+
+  // 2. Fetch active tab data (on filter or activeTab change)
+  useEffect(() => {
+    if (user) {
       if (activeTab === 'workforce') {
         fetchWorkforcePerformance(filters, 1);
       } else if (activeTab === 'high-risk') {
@@ -254,7 +261,7 @@ const ReportsDashboardPage = () => {
         fetchCycles(filters);
       }
     }
-  }, [user, filters, activeTab, fetchSummary, fetchPerformance, fetchWorkforcePerformance, fetchHighRisk, fetchStations, fetchCycles]);
+  }, [user, filters, activeTab, fetchWorkforcePerformance, fetchHighRisk, fetchStations, fetchCycles]);
 
   const handleApplyFilters = useCallback((newFilters) => {
     setFilters((prevFilters) => {
@@ -332,7 +339,7 @@ const ReportsDashboardPage = () => {
         )}
 
         {/* KPI Stats Cards */}
-        {loading && !summary ? (
+        {summaryLoading && !summary ? (
           <KpiCardsSkeleton />
         ) : (
           <ReportKpiCards 
@@ -381,7 +388,7 @@ const ReportsDashboardPage = () => {
         )}
 
         {/* Performance Trends Charts */}
-        {loading && !performance ? (
+        {performanceLoading && !performance ? (
           <ChartsSkeleton />
         ) : (
           <PerformanceCharts performance={performance} />
@@ -423,7 +430,7 @@ const ReportsDashboardPage = () => {
 
         {/* Detailed Datatables depending on active tab */}
         <div style={{ minHeight: '300px' }}>
-          {loading ? (
+          {tableLoading ? (
             <TableSkeleton />
           ) : (
             <>

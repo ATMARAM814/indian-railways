@@ -485,6 +485,27 @@ function makeScoreSafetyTrend(assessments, currentSafetyPercent) {
   });
 }
 
+function makeScoreSafetyTrendFromPerformance(performanceTrend, currentSafetyPercent) {
+  const months = [];
+  const d = new Date();
+  for (let i = 5; i >= 0; i--) {
+    const temp = new Date(d.getFullYear(), d.getMonth() - i, 1);
+    const year = temp.getFullYear();
+    const month = String(temp.getMonth() + 1).padStart(2, "0");
+    months.push({ key: `${year}-${month}`, label: yyyyMmToMonthName(`${year}-${month}`) });
+  }
+
+  return months.map((m) => {
+    const ptRow = performanceTrend.find(r => r.month === m.key);
+    const avg = ptRow ? Number(ptRow.averageScore) : 0;
+    return {
+      month: m.label,
+      averageScore: avg,
+      safetyPercent: currentSafetyPercent,
+    };
+  });
+}
+
 async function getSmDashboardService(profileId) {
   const station = await db.getSmStation(profileId);
   if (!station) {
@@ -648,45 +669,27 @@ async function getTiDashboardService(profileId) {
 
   const [
     summaryData,
-    stationProgress,
-    stationAvgScore,
+    stationStats,
     roleWiseData,
     categoryData,
-    assessments,
-    stationCategoryDist
+    averageSectionScore,
+    monthlyTrend,
+    pipelineData,
+    approvalTrendData,
+    performanceTrendData,
+    safetyCompliance
   ] = await Promise.all([
     db.getTiSummary(stationIds, profileId),
-    db.getTiStationProgress(stationIds),
-    db.getTiStationAvgScore(stationIds),
+    db.getTiStationStats(stationIds),
     db.getTiRoleDistribution(stationIds),
     db.getTiCategoryDistribution(stationIds),
-    db.getTiAssessments(stationIds),
-    db.getTiStationCategoryDistribution(stationIds)
+    db.getTiAverageSectionScoreDb(stationIds),
+    db.getMonthlyCompletionTrendDb({ type: 'stations', value: stationIds }),
+    db.getAssessmentPipelineDb({ type: 'stations', value: stationIds }),
+    db.getApprovalTrendDb({ type: 'stations', value: stationIds }),
+    db.getPerformanceTrendDb({ type: 'stations', value: stationIds }),
+    db.getSafetyComplianceDb({ type: 'stations', value: stationIds })
   ]);
-
-  // Calculate overall average score of assessments in this TI's section
-  // Formula: average score per person, divided by total persons who have completed assessments
-  const userScoresMap = {};
-  assessments.forEach((a) => {
-    if (a.status === "completed" && a.percentage !== null && a.assessed_user_id) {
-      if (!userScoresMap[a.assessed_user_id]) {
-        userScoresMap[a.assessed_user_id] = { sum: 0, count: 0 };
-      }
-      userScoresMap[a.assessed_user_id].sum += Number(a.percentage);
-      userScoresMap[a.assessed_user_id].count++;
-    }
-  });
-
-  let sumOfUserAverages = 0;
-  const uniqueUsersCount = Object.keys(userScoresMap).length;
-  Object.keys(userScoresMap).forEach((userId) => {
-    const userAvg = userScoresMap[userId].sum / userScoresMap[userId].count;
-    sumOfUserAverages += userAvg;
-  });
-
-  const averageSectionScore = uniqueUsersCount > 0
-    ? Math.round(sumOfUserAverages / uniqueUsersCount)
-    : 0;
 
   const totalEmployees = roleWiseData.reduce((sum, row) => sum + (row.count || 0), 0);
 
@@ -703,14 +706,14 @@ async function getTiDashboardService(profileId) {
     totalEmployees,
   };
 
-  const stationWiseEvaluationProgress = stationProgress.map((row) => ({
+  const stationWiseEvaluationProgress = stationStats.map((row) => ({
     stationName: row.stationName,
     stationCode: row.stationCode,
     completed: row.completed || 0,
     pending: row.pending || 0,
   }));
 
-  const stationWiseAverageScore = stationAvgScore.map((row) => ({
+  const stationWiseAverageScore = stationStats.map((row) => ({
     stationName: row.stationName,
     stationCode: row.stationCode,
     averageScore: row.averageScore !== null ? Number(row.averageScore) : 0,
@@ -720,19 +723,28 @@ async function getTiDashboardService(profileId) {
     (item) => ["PM", "SM", "TM", "STATION MASTER SUPERVISOR", "CABIN MASTER", "SHUNTING MASTER"].includes(item.role)
   );
   const categoryDistribution = fillCategoryDistribution(categoryData);
-  const assessmentPipeline = makeAssessmentPipeline(assessments);
-  const approvalTrend = makeApprovalTrend(assessments);
 
-  // compliance computation
-  let completedCount = 0;
-  let pendingCount = 0;
-  assessments.forEach((a) => {
-    if (a.status === "completed") completedCount++;
-    else if (a.status === "created" || a.status === "mcq_submitted") pendingCount++;
-  });
-  const safetyComplianceAnalytics = makeSafetyCompliance(completedCount, pendingCount);
+  const assessmentPipeline = {
+    summary: pipelineData.summary,
+    monthly: pipelineData.monthly.map(row => ({
+      month: yyyyMmToMonthName(row.month),
+      approved: Number(row.approved),
+      pending: Number(row.pending),
+      rejected: Number(row.rejected),
+      overdue: 0,
+    }))
+  };
 
-  const stationCategoryDistribution = stationCategoryDist.map((row) => ({
+  const approvalTrend = approvalTrendData.map(row => ({
+    month: yyyyMmToMonthName(row.month),
+    approvedCount: Number(row.approvedCount),
+    rejectedCount: Number(row.rejectedCount),
+    modifiedCount: Number(row.modifiedCount),
+  }));
+
+  const safetyComplianceAnalytics = makeSafetyCompliance(safetyCompliance.completed_count, safetyCompliance.pending_count);
+
+  const stationCategoryDistribution = stationStats.map((row) => ({
     stationName: row.stationName,
     categoryA: row.categoryA || 0,
     categoryB: row.categoryB || 0,
@@ -740,14 +752,19 @@ async function getTiDashboardService(profileId) {
     categoryD: row.categoryD || 0,
   }));
 
-  const monthlyAssessmentCompletionTrend = makeMonthlyCompletionTrend(assessments);
+  const monthlyAssessmentCompletionTrend = monthlyTrend.map(row => ({
+    month: yyyyMmToMonthName(row.month),
+    createdCount: Number(row.createdCount),
+    completedCount: Number(row.completedCount),
+    approvedCount: Number(row.approvedCount),
+  }));
 
   // Calculate current safety percent for the entire section (Cat A + B vs total categorized pointsmen)
   let totalA = 0;
   let totalB = 0;
   let totalC = 0;
   let totalD = 0;
-  stationCategoryDist.forEach((row) => {
+  stationStats.forEach((row) => {
     totalA += row.categoryA || 0;
     totalB += row.categoryB || 0;
     totalC += row.categoryC || 0;
@@ -759,7 +776,7 @@ async function getTiDashboardService(profileId) {
     ? Math.round((totalSafe / totalCategorized) * 100)
     : 100;
 
-  const scoreSafetyTrend = makeScoreSafetyTrend(assessments, currentSafetyPercent);
+  const scoreSafetyTrend = makeScoreSafetyTrendFromPerformance(performanceTrendData, currentSafetyPercent);
 
   return {
     summary,
@@ -815,55 +832,73 @@ async function getAomDashboardService(profileId) {
 
   const [
     summaryData,
-    stationProgress,
-    stationAvgScore,
+    stationStats,
     roleWiseData,
     categoryData,
     tiPerformance,
-    stationCategoryDist,
-    assessments
+    monthlyTrend,
+    pipelineData,
+    approvalTrendData,
+    performanceTrendData,
+    safetyCompliance
   ] = await Promise.all([
     db.getAomSummary(divisionId),
-    db.getAomStationProgress(divisionId),
-    db.getAomStationAvgScore(divisionId),
+    db.getAomStationStats(divisionId),
     db.getAomRoleDistribution(divisionId),
     db.getAomCategoryDistribution(divisionId),
     db.getAomTiPerformance(divisionId),
-    db.getAomStationCategoryDistribution(divisionId),
-    db.getAomAssessments(divisionId)
+    db.getMonthlyCompletionTrendDb({ type: 'division', value: divisionId }),
+    db.getAssessmentPipelineDb({ type: 'division', value: divisionId }),
+    db.getApprovalTrendDb({ type: 'division', value: divisionId }),
+    db.getPerformanceTrendDb({ type: 'division', value: divisionId }),
+    db.getSafetyComplianceDb({ type: 'division', value: divisionId })
   ]);
 
-  const completedApprovals = assessments.filter(a => a.approval_status === 'approved').length;
-
-  const totalEmployees = roleWiseData.reduce((sum, row) => sum + (row.count || 0), 0);
+  // Extract AOM & TI role counts from roleWiseData
+  const roleCounts = {};
+  if (Array.isArray(roleWiseData)) {
+    roleWiseData.forEach(r => {
+      let name = (r.role || "").toUpperCase().trim();
+      if (name === "POINTSMAN" || name === "POINTSMEN") name = "PM";
+      else if (name === "STATION MASTER" || name === "STATION MASTERS") name = "SM";
+      else if (name === "TRAIN MANAGER" || name === "TRAIN MANAGERS") name = "TM";
+      else if (name === "TRAFFIC INSPECTOR" || name === "TRAFFIC INSPECTORS") name = "TI";
+      else if (name === "SMS" || name === "STATION MASTER SUPERVISOR" || name === "STATION MASTER SUPERVISIOR" || name === "STATION MASTER SUPERVISIO") name = "SMS";
+      else if (name === "SHM" || name === "SHUNTING MASTER" || name === "SHUNTING_MASTER") name = "SHM";
+      else if (name === "CM" || name === "CABIN MASTER" || name === "CABIN_MASTER") name = "CM";
+      else if (name === "SS" || name === "STATION MASTER INCHARGE" || name === "STATION_MASTER_INCHARGE" || name === "SM INCHARGE") name = "SS";
+      else if (name === "AOM") name = "AOM";
+      roleCounts[name] = (roleCounts[name] || 0) + (r.count || 0);
+    });
+  }
 
   const summary = {
     totalStations: summaryData.total_stations || 0,
-    totalPM: summaryData.total_pm || 0,
-    totalSM: summaryData.total_sm || 0,
-    totalTM: summaryData.total_tm || 0,
-    totalSMSupervisors: summaryData.total_sm_supervisors || 0,
-    totalTNC: summaryData.total_tnc || 0,
-    totalShuntingMasters: summaryData.total_shunting_masters || 0,
-    totalSS: summaryData.total_ss || 0,
-    totalTI: summaryData.total_ti || 0,
+    totalPM: roleCounts['PM'] || 0,
+    totalSM: roleCounts['SM'] || 0,
+    totalTM: roleCounts['TM'] || 0,
+    totalSMSupervisors: roleCounts['SMS'] || 0,
+    totalTNC: roleCounts['CM'] || 0,
+    totalShuntingMasters: roleCounts['SHM'] || 0,
+    totalSS: roleCounts['SS'] || 0,
+    totalTI: roleCounts['TI'] || 0,
     pendingApprovals: summaryData.pending_approvals || 0,
-    completedApprovals,
+    completedApprovals: pipelineData.summary.approved || 0,
     averageDivisionScore: summaryData.average_division_score
       ? Number(summaryData.average_division_score)
       : 0,
     highRiskStaff: summaryData.high_risk_staff || 0,
-    totalEmployees,
+    totalEmployees: roleWiseData.reduce((sum, row) => sum + (row.count || 0), 0),
   };
 
-  const stationWiseEvaluationProgress = stationProgress.map((row) => ({
+  const stationWiseEvaluationProgress = stationStats.map((row) => ({
     stationName: row.stationName,
     stationCode: row.stationCode,
     completed: row.completed || 0,
     pending: row.pending || 0,
   }));
 
-  const stationWiseAverageScore = stationAvgScore.map((row) => ({
+  const stationWiseAverageScore = stationStats.map((row) => ({
     stationName: row.stationName,
     stationCode: row.stationCode,
     averageScore: row.averageScore !== null ? Number(row.averageScore) : 0,
@@ -875,25 +910,38 @@ async function getAomDashboardService(profileId) {
     tiItem.count = summary.totalTI;
   }
   const categoryDistribution = fillCategoryDistribution(categoryData);
-  const assessmentPipeline = makeAssessmentPipeline(assessments);
-  const approvalTrend = makeApprovalTrend(assessments);
-  const divisionPerformanceTrend = makePerformanceTrend(assessments);
+  
+  const assessmentPipeline = {
+    summary: pipelineData.summary,
+    monthly: pipelineData.monthly.map(row => ({
+      month: yyyyMmToMonthName(row.month),
+      approved: Number(row.approved),
+      pending: Number(row.pending),
+      rejected: Number(row.rejected),
+      overdue: 0,
+    }))
+  };
 
-  // compliance computation
-  let completedCount = 0;
-  let pendingCount = 0;
-  assessments.forEach((a) => {
-    if (a.status === "completed") completedCount++;
-    else if (a.status === "created" || a.status === "mcq_submitted") pendingCount++;
-  });
-  const safetyComplianceAnalytics = makeSafetyCompliance(completedCount, pendingCount);
+  const approvalTrend = approvalTrendData.map(row => ({
+    month: yyyyMmToMonthName(row.month),
+    approvedCount: Number(row.approvedCount),
+    rejectedCount: Number(row.rejectedCount),
+    modifiedCount: Number(row.modifiedCount),
+  }));
+
+  const divisionPerformanceTrend = performanceTrendData.map(row => ({
+    month: yyyyMmToMonthName(row.month),
+    averageScore: Number(row.averageScore),
+  }));
+
+  const safetyComplianceAnalytics = makeSafetyCompliance(safetyCompliance.completed_count, safetyCompliance.pending_count);
 
   const tiPerformanceComparison = tiPerformance.map((row) => ({
     tiName: row.tiName,
     averageScore: row.averageScore !== null ? Number(row.averageScore) : 0,
   }));
 
-  const stationCategoryDistribution = stationCategoryDist.map((row) => ({
+  const stationCategoryDistribution = stationStats.map((row) => ({
     stationName: row.stationName,
     stationCode: row.stationCode,
     categoryA: row.categoryA || 0,
@@ -902,7 +950,12 @@ async function getAomDashboardService(profileId) {
     categoryD: row.categoryD || 0,
   }));
 
-  const monthlyAssessmentCompletionTrend = makeMonthlyCompletionTrend(assessments);
+  const monthlyAssessmentCompletionTrend = monthlyTrend.map(row => ({
+    month: yyyyMmToMonthName(row.month),
+    createdCount: Number(row.createdCount),
+    completedCount: Number(row.completedCount),
+    approvedCount: Number(row.approvedCount),
+  }));
 
   return {
     summary,
@@ -925,61 +978,74 @@ async function getAomDashboardService(profileId) {
 async function getSuperAdminDashboardService() {
   const [
     summaryData,
-    stationProgress,
-    stationAvgScore,
+    stationStats,
     roleWiseData,
     categoryData,
     tiPerformance,
-    stationCategoryDist,
-    assessments
+    monthlyTrend,
+    pipelineData,
+    approvalTrendData,
+    performanceTrendData,
+    safetyCompliance
   ] = await Promise.all([
     db.getSuperAdminSummary(),
-    db.getSuperAdminStationProgress(),
-    db.getSuperAdminStationAvgScore(),
+    db.getSuperAdminStationStats(),
     db.getSuperAdminRoleDistribution(),
     db.getSuperAdminCategoryDistribution(),
     db.getSuperAdminTiPerformance(),
-    db.getSuperAdminStationCategoryDistribution(),
-    db.getSuperAdminAssessments()
+    db.getMonthlyCompletionTrendDb({ type: 'all' }),
+    db.getAssessmentPipelineDb({ type: 'all' }),
+    db.getApprovalTrendDb({ type: 'all' }),
+    db.getPerformanceTrendDb({ type: 'all' }),
+    db.getSafetyComplianceDb({ type: 'all' })
   ]);
 
-  const totalEmployees =
-    (summaryData.total_aom || 0) +
-    (summaryData.total_ti || 0) +
-    (summaryData.total_sm || 0) +
-    (summaryData.total_tm || 0) +
-    (summaryData.total_sm_supervisors || 0) +
-    (summaryData.total_tnc || 0) +
-    (summaryData.total_shunting_masters || 0) +
-    (summaryData.total_ss || 0) +
-    (summaryData.total_pm || 0);
+  // Extract role counts from roleWiseData
+  const roleCounts = {};
+  if (Array.isArray(roleWiseData)) {
+    roleWiseData.forEach(r => {
+      let name = (r.role || "").toUpperCase().trim();
+      if (name === "POINTSMAN" || name === "POINTSMEN") name = "PM";
+      else if (name === "STATION MASTER" || name === "STATION MASTERS") name = "SM";
+      else if (name === "TRAIN MANAGER" || name === "TRAIN MANAGERS") name = "TM";
+      else if (name === "TRAFFIC INSPECTOR" || name === "TRAFFIC INSPECTORS") name = "TI";
+      else if (name === "SMS" || name === "STATION MASTER SUPERVISOR" || name === "STATION MASTER SUPERVISIOR" || name === "STATION MASTER SUPERVISIO") name = "SMS";
+      else if (name === "SHM" || name === "SHUNTING MASTER" || name === "SHUNTING_MASTER") name = "SHM";
+      else if (name === "CM" || name === "CABIN MASTER" || name === "CABIN_MASTER") name = "CM";
+      else if (name === "SS" || name === "STATION MASTER INCHARGE" || name === "STATION_MASTER_INCHARGE" || name === "SM INCHARGE") name = "SS";
+      else if (name === "AOM") name = "AOM";
+      roleCounts[name] = (roleCounts[name] || 0) + (r.count || 0);
+    });
+  }
+
+  const totalEmployees = roleWiseData.reduce((sum, row) => sum + (row.count || 0), 0);
 
   const summary = {
     totalDivisions: summaryData.total_divisions || 0,
     totalStations: summaryData.total_stations || 0,
-    totalAOM: summaryData.total_aom || 0,
-    totalTI: summaryData.total_ti || 0,
-    totalSM: summaryData.total_sm || 0,
-    totalTM: summaryData.total_tm || 0,
-    totalSMSupervisors: summaryData.total_sm_supervisors || 0,
-    totalTNC: summaryData.total_tnc || 0,
-    totalShuntingMasters: summaryData.total_shunting_masters || 0,
-    totalSS: summaryData.total_ss || 0,
-    totalPM: summaryData.total_pm || 0,
+    totalAOM: roleCounts['AOM'] || 0,
+    totalTI: roleCounts['TI'] || 0,
+    totalSM: roleCounts['SM'] || 0,
+    totalTM: roleCounts['TM'] || 0,
+    totalSMSupervisors: roleCounts['SMS'] || 0,
+    totalTNC: roleCounts['CM'] || 0,
+    totalShuntingMasters: roleCounts['SHM'] || 0,
+    totalSS: roleCounts['SS'] || 0,
+    totalPM: roleCounts['PM'] || 0,
     totalAssessments: summaryData.total_assessments || 0,
     pendingApprovals: summaryData.pending_approvals || 0,
     highRiskStaff: summaryData.high_risk_staff || 0,
     totalEmployees,
   };
 
-  const stationWiseEvaluationProgress = stationProgress.map((row) => ({
+  const stationWiseEvaluationProgress = stationStats.map((row) => ({
     stationName: row.stationName,
     stationCode: row.stationCode,
     completed: row.completed || 0,
     pending: row.pending || 0,
   }));
 
-  const stationWiseAverageScore = stationAvgScore.map((row) => ({
+  const stationWiseAverageScore = stationStats.map((row) => ({
     stationName: row.stationName,
     stationCode: row.stationCode,
     averageScore: row.averageScore !== null ? Number(row.averageScore) : 0,
@@ -993,25 +1059,38 @@ async function getSuperAdminDashboardService() {
     count: summary.totalAOM || 0,
   });
   const categoryDistribution = fillCategoryDistribution(categoryData);
-  const assessmentPipeline = makeAssessmentPipeline(assessments);
-  const approvalTrend = makeApprovalTrend(assessments);
-  const divisionPerformanceTrend = makePerformanceTrend(assessments);
 
-  // compliance computation
-  let completedCount = 0;
-  let pendingCount = 0;
-  assessments.forEach((a) => {
-    if (a.status === "completed") completedCount++;
-    else if (a.status === "created" || a.status === "mcq_submitted") pendingCount++;
-  });
-  const safetyComplianceAnalytics = makeSafetyCompliance(completedCount, pendingCount);
+  const assessmentPipeline = {
+    summary: pipelineData.summary,
+    monthly: pipelineData.monthly.map(row => ({
+      month: yyyyMmToMonthName(row.month),
+      approved: Number(row.approved),
+      pending: Number(row.pending),
+      rejected: Number(row.rejected),
+      overdue: 0,
+    }))
+  };
+
+  const approvalTrend = approvalTrendData.map(row => ({
+    month: yyyyMmToMonthName(row.month),
+    approvedCount: Number(row.approvedCount),
+    rejectedCount: Number(row.rejectedCount),
+    modifiedCount: Number(row.modifiedCount),
+  }));
+
+  const divisionPerformanceTrend = performanceTrendData.map(row => ({
+    month: yyyyMmToMonthName(row.month),
+    averageScore: Number(row.averageScore),
+  }));
+
+  const safetyComplianceAnalytics = makeSafetyCompliance(safetyCompliance.completed_count, safetyCompliance.pending_count);
 
   const tiPerformanceComparison = tiPerformance.map((row) => ({
     tiName: row.tiName,
     averageScore: row.averageScore !== null ? Number(row.averageScore) : 0,
   }));
 
-  const stationCategoryDistribution = stationCategoryDist.map((row) => ({
+  const stationCategoryDistribution = stationStats.map((row) => ({
     stationName: row.stationName,
     stationCode: row.stationCode,
     categoryA: row.categoryA || 0,
@@ -1020,7 +1099,12 @@ async function getSuperAdminDashboardService() {
     categoryD: row.categoryD || 0,
   }));
 
-  const monthlyAssessmentCompletionTrend = makeMonthlyCompletionTrend(assessments);
+  const monthlyAssessmentCompletionTrend = monthlyTrend.map(row => ({
+    month: yyyyMmToMonthName(row.month),
+    createdCount: Number(row.createdCount),
+    completedCount: Number(row.completedCount),
+    approvedCount: Number(row.approvedCount),
+  }));
 
   return {
     summary,

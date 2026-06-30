@@ -132,7 +132,12 @@ async function getUsers(filters = {}) {
       ON ssp.profile_id = p.id
       AND ssp.is_current = true
     LEFT JOIN stations s ON s.id = ssp.station_id
-    LEFT JOIN employee_categories ec ON ec.profile_id = p.id
+    LEFT JOIN LATERAL (
+      SELECT category_id FROM employee_categories ec_inner
+      WHERE ec_inner.profile_id = p.id
+      ORDER BY ec_inner.created_at DESC
+      LIMIT 1
+    ) ec ON true
     LEFT JOIN staff_categories sc ON sc.id = ec.category_id
     LEFT JOIN LATERAL (
       SELECT a.percentage
@@ -521,7 +526,12 @@ async function countUsers(filters = {}) {
       ON ssp.profile_id = p.id
       AND ssp.is_current = true
     LEFT JOIN stations s ON s.id = ssp.station_id
-    LEFT JOIN employee_categories ec ON ec.profile_id = p.id
+    LEFT JOIN LATERAL (
+      SELECT category_id FROM employee_categories ec_inner
+      WHERE ec_inner.profile_id = p.id
+      ORDER BY ec_inner.created_at DESC
+      LIMIT 1
+    ) ec ON true
     LEFT JOIN staff_categories sc ON sc.id = ec.category_id
     LEFT JOIN LATERAL (
       SELECT a.percentage

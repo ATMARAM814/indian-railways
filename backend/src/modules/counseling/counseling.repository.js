@@ -365,7 +365,7 @@ async function clearCandidateCounselingStatusesDb(profileId) {
   );
 }
 
-async function getEligibleCandidatesForSchedulingDb({ assessorId, assessorRole }) {
+async function getEligibleCandidatesForSchedulingDb({ assessorId, assessorRole, search, station }) {
   const roleUpper = (assessorRole || "").toUpperCase();
   let scopeCondition = "";
   let queryParams = [];
@@ -385,6 +385,21 @@ async function getEligibleCandidatesForSchedulingDb({ assessorId, assessorRole }
     queryParams = [divisionId];
   }
 
+  let filterConditions = "";
+  
+  if (search && search.trim()) {
+    queryParams.push(`%${search.trim().toLowerCase()}%`);
+    filterConditions += ` AND (LOWER(p.full_name) LIKE $${queryParams.length} OR LOWER(p.hrms_id) LIKE $${queryParams.length})`;
+  }
+  
+  if (station && station.trim()) {
+    queryParams.push(`%${station.trim().toLowerCase()}%`);
+    filterConditions += ` AND (LOWER(s.station_name) LIKE $${queryParams.length} OR LOWER(s.station_code) LIKE $${queryParams.length})`;
+  }
+
+  queryParams.push(assessorId);
+  const assessorIdIndex = queryParams.length;
+
   const query = `
     SELECT 
       p.id as "userId",
@@ -398,12 +413,13 @@ async function getEligibleCandidatesForSchedulingDb({ assessorId, assessorRole }
     JOIN profiles p ON p.id = ssp.profile_id
     JOIN roles r ON r.id = p.role_id
     WHERE ssp.is_current = true
-      AND p.id != $${queryParams.length + 1}
+      AND p.id != $${assessorIdIndex}
       ${scopeCondition}
-    ORDER BY p.full_name ASC;
+      ${filterConditions}
+    ORDER BY p.full_name ASC
+    LIMIT 50;
   `;
   
-  queryParams.push(assessorId);
   const result = await pool.query(query, queryParams);
   return result.rows;
 }

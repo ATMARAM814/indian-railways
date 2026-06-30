@@ -10,7 +10,9 @@ import {
 } from '../services/reports.service';
 
 export const useReports = () => {
-  const [loading, setLoading] = useState(false);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [performanceLoading, setPerformanceLoading] = useState(false);
+  const [tableLoading, setTableLoading] = useState(false);
   const [error, setError] = useState(null);
 
   // Individual dataset states
@@ -25,8 +27,10 @@ export const useReports = () => {
   const [workforceList, setWorkforceList] = useState([]);
   const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 10, totalPages: 1 });
 
+  const loading = summaryLoading || performanceLoading || tableLoading;
+
   const fetchSummary = useCallback(async (filters = {}) => {
-    setLoading(true);
+    setSummaryLoading(true);
     setError(null);
     try {
       const res = await getReportsSummary(filters);
@@ -38,12 +42,12 @@ export const useReports = () => {
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Error fetching summary');
     } finally {
-      setLoading(false);
+      setSummaryLoading(false);
     }
   }, []);
 
   const fetchPerformance = useCallback(async (filters = {}) => {
-    setLoading(true);
+    setPerformanceLoading(true);
     setError(null);
     try {
       const res = await getReportsPerformance(filters);
@@ -55,12 +59,12 @@ export const useReports = () => {
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Error fetching performance metrics');
     } finally {
-      setLoading(false);
+      setPerformanceLoading(false);
     }
   }, []);
 
   const fetchHighRisk = useCallback(async (filters = {}) => {
-    setLoading(true);
+    setTableLoading(true);
     setError(null);
     try {
       const res = await getReportsHighRisk(filters);
@@ -72,12 +76,12 @@ export const useReports = () => {
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Error fetching high risk staff');
     } finally {
-      setLoading(false);
+      setTableLoading(false);
     }
   }, []);
 
   const fetchStations = useCallback(async (filters = {}) => {
-    setLoading(true);
+    setTableLoading(true);
     setError(null);
     try {
       const res = await getReportsStations(filters);
@@ -89,12 +93,12 @@ export const useReports = () => {
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Error fetching stations');
     } finally {
-      setLoading(false);
+      setTableLoading(false);
     }
   }, []);
 
   const fetchCycles = useCallback(async (filters = {}) => {
-    setLoading(true);
+    setTableLoading(true);
     setError(null);
     try {
       const res = await getReportsCycles(filters);
@@ -106,12 +110,12 @@ export const useReports = () => {
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Error fetching cycles');
     } finally {
-      setLoading(false);
+      setTableLoading(false);
     }
   }, []);
 
   const fetchEmployee = useCallback(async (employeeId) => {
-    setLoading(true);
+    setTableLoading(true);
     setError(null);
     try {
       const res = await getEmployeeReport(employeeId);
@@ -123,12 +127,12 @@ export const useReports = () => {
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Error fetching employee report');
     } finally {
-      setLoading(false);
+      setTableLoading(false);
     }
   }, []);
 
   const fetchWorkforcePerformance = useCallback(async (filters = {}, page = 1) => {
-    setLoading(true);
+    setTableLoading(true);
     setError(null);
     try {
       const res = await getStaffPerformanceReport({
@@ -145,12 +149,15 @@ export const useReports = () => {
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Error fetching workforce list');
     } finally {
-      setLoading(false);
+      setTableLoading(false);
     }
   }, []);
 
   return {
     loading,
+    summaryLoading,
+    performanceLoading,
+    tableLoading,
     error,
     summary,
     performance,

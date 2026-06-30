@@ -169,7 +169,7 @@ async function getCandidateCounselingHistoryService({ profileId, assessorId, ass
   return await db.getCandidateCounselingHistoryDb(profileId);
 }
 
-async function getEligibleCandidatesForScheduling({ assessorId, assessorRole }) {
+async function getEligibleCandidatesForScheduling({ assessorId, assessorRole, search, station }) {
   const validRoles = ["TI", "AOM", "SUPER_ADMIN", "AOM Users"];
   const roleUpper = (assessorRole || "").toUpperCase();
   const isAuthorizedRole = validRoles.includes(roleUpper) || 
@@ -181,7 +181,7 @@ async function getEligibleCandidatesForScheduling({ assessorId, assessorRole }) 
     throw new Error("Access Denied: You do not have permission to view eligible candidates.");
   }
 
-  return await db.getEligibleCandidatesForSchedulingDb({ assessorId, assessorRole });
+  return await db.getEligibleCandidatesForSchedulingDb({ assessorId, assessorRole, search, station });
 }
 
 async function scheduleCounseling({ profileId, scheduledBy, assessorRole }) {

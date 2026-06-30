@@ -11,6 +11,38 @@ import {
   resetWorkforceUserPassword,
 } from '../services/workforce.service';
 
+// Module-level cache for dropdowns to prevent redundant API calls during page transitions
+let cachedStationsPromise = null;
+let cachedDivisionsPromise = null;
+
+const getCachedStations = () => {
+  if (!cachedStationsPromise) {
+    cachedStationsPromise = getStationsList().then(res => {
+      if (res.success) return res.data;
+      cachedStationsPromise = null;
+      return [];
+    }).catch(() => {
+      cachedStationsPromise = null;
+      return [];
+    });
+  }
+  return cachedStationsPromise;
+};
+
+const getCachedDivisions = () => {
+  if (!cachedDivisionsPromise) {
+    cachedDivisionsPromise = getDivisionsList().then(res => {
+      if (res.success) return res.data;
+      cachedDivisionsPromise = null;
+      return [];
+    }).catch(() => {
+      cachedDivisionsPromise = null;
+      return [];
+    });
+  }
+  return cachedDivisionsPromise;
+};
+
 export const useWorkforce = (roleCode) => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -21,17 +53,17 @@ export const useWorkforce = (roleCode) => {
   const [divisions, setDivisions] = useState([]);
   const [dropdownsLoading, setDropdownsLoading] = useState(false);
 
-  // Load stations & divisions on mount
+  // Load stations & divisions on mount (utilizing caching)
   useEffect(() => {
     const loadDropdownData = async () => {
       setDropdownsLoading(true);
       try {
-        const [stationsRes, divisionsRes] = await Promise.all([
-          getStationsList().catch(() => ({ success: false, data: [] })),
-          getDivisionsList().catch(() => ({ success: false, data: [] })),
+        const [stationsData, divisionsData] = await Promise.all([
+          getCachedStations(),
+          getCachedDivisions(),
         ]);
-        if (stationsRes.success) setStations(stationsRes.data);
-        if (divisionsRes.success) setDivisions(divisionsRes.data);
+        setStations(stationsData);
+        setDivisions(divisionsData);
       } catch (err) {
         console.error('Failed to load filter dropdowns', err);
       } finally {

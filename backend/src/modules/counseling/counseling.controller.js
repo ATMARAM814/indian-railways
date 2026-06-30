@@ -143,8 +143,9 @@ async function getEligibleCandidatesForSchedulingController(req, res) {
   try {
     const assessorId = req.user.userId;
     const assessorRole = req.user.role;
+    const { search, station } = req.query;
 
-    const data = await service.getEligibleCandidatesForScheduling({ assessorId, assessorRole });
+    const data = await service.getEligibleCandidatesForScheduling({ assessorId, assessorRole, search, station });
     return res.status(200).json({
       success: true,
       data
