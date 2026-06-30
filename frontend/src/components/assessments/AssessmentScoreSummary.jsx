@@ -36,14 +36,22 @@ export const AssessmentScoreSummary = ({
 
   const activeAlcoholicStatus = alcoholicStatus || assessment?.alcoholic_status || '';
 
+  const parsedAlertnessScore = isCompleted && assessment?.alertness_score !== undefined && assessment?.alertness_score !== null
+    ? Number(assessment.alertness_score)
+    : 25;
+
   let categoryCode = 'D';
   let categoryName = 'Category D (High Risk)';
   let categoryClass = 'cat-d';
 
-  if (activeAlcoholicStatus === 'Alcoholic') {
+  if (activeAlcoholicStatus === 'Alcoholic' || percentage <= 25) {
     categoryCode = 'D';
     categoryName = 'Category D (High Risk)';
     categoryClass = 'cat-d';
+  } else if (parsedMcqScore < 15 || parsedAlertnessScore < 15) {
+    categoryCode = 'C';
+    categoryName = 'Category C (Medium Risk)';
+    categoryClass = 'cat-c';
   } else {
     if (percentage >= 80) {
       categoryCode = 'A';

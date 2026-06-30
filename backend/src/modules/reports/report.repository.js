@@ -851,7 +851,7 @@ async function getReportsSummaryDb(filters, scope) {
         ELSE 0
       END as "safetyComplianceRate",
       (SELECT COUNT(DISTINCT id) FROM scoped_profiles WHERE category_code = 'D' OR id IN (
-         SELECT assessed_user_id FROM assessments WHERE status = 'completed' AND percentage <= 25
+         SELECT assessed_user_id FROM assessments WHERE status = 'completed' AND (percentage <= 25 OR alcoholic_status = 'Alcoholic')
       ))::int as "highRiskStaff",
       COUNT(DISTINCT sp.station_id)::int as "activeStations",
       COUNT(DISTINCT sa.assessment_cycle) FILTER (WHERE sa.assessment_cycle IS NOT NULL)::int as "assessmentCyclesCompleted"
@@ -1037,7 +1037,7 @@ async function getReportsHighRiskDb(filters, scope) {
     ),
     latest_completed_assessments AS (
       SELECT DISTINCT ON (assessed_user_id) 
-        id, assessed_user_id, percentage, assessor_user_id, evaluated_at, approval_status
+        id, assessed_user_id, percentage, assessor_user_id, evaluated_at, approval_status, alcoholic_status
       FROM assessments
       WHERE status = 'completed'
       ORDER BY assessed_user_id, created_at DESC
@@ -1076,7 +1076,7 @@ async function getReportsHighRiskDb(filters, scope) {
     LEFT JOIN division_assignments da_aom ON da_aom.division_id = sp.division_id AND da_aom.is_current = true
     LEFT JOIN profiles aom ON aom.id = da_aom.profile_id
     
-    WHERE (sp.category_code = 'D' OR lca.percentage <= 25)
+    WHERE (sp.category_code = 'D' OR lca.percentage <= 25 OR lca.alcoholic_status = 'Alcoholic')
     ORDER BY sp.full_name ASC;
   `;
   
@@ -1107,7 +1107,7 @@ async function getReportsStationsDb(filters, scope) {
       COUNT(DISTINCT p.id) FILTER (WHERE sc.category_code = 'C')::int as "categoryC",
       COUNT(DISTINCT p.id) FILTER (WHERE sc.category_code = 'D')::int as "categoryD",
       COUNT(DISTINCT p.id) FILTER (WHERE sc.category_code = 'D' OR p.id IN (
-        SELECT assessed_user_id FROM assessments WHERE status = 'completed' AND percentage <= 25
+        SELECT assessed_user_id FROM assessments WHERE status = 'completed' AND (percentage <= 25 OR alcoholic_status = 'Alcoholic')
       ))::int as "highRiskCount",
       COUNT(DISTINCT a.id) FILTER (WHERE a.approval_status = 'pending_approval')::int as "pendingApprovals"
     FROM stations s

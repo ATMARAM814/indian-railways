@@ -243,18 +243,26 @@ const ApprovalDetailModal = ({ assessmentId, roleCode, userRole, onClose, onActi
     );
   };
 
-  const getCategoryBadgeClass = (percentage, alcoholicStatus) => {
-    if (alcoholicStatus === 'Alcoholic') return 'cat-d';
+  const getCategoryBadgeClass = (percentage, alcoholicStatus, mcqScore, alertnessScore) => {
     const pct = parseFloat(percentage || 0);
+    const mcq = parseFloat(mcqScore || 0);
+    const alertness = parseFloat(alertnessScore || 0);
+
+    if (alcoholicStatus === 'Alcoholic' || pct <= 25) return 'cat-d';
+    if (mcq < 15 || alertness < 15) return 'cat-c';
     if (pct >= 80) return 'cat-a';
     if (pct >= 50) return 'cat-b';
     if (pct >= 26) return 'cat-c';
     return 'cat-d';
   };
 
-  const getCategoryCodeName = (percentage, alcoholicStatus) => {
-    if (alcoholicStatus === 'Alcoholic') return 'D (High Risk)';
+  const getCategoryCodeName = (percentage, alcoholicStatus, mcqScore, alertnessScore) => {
     const pct = parseFloat(percentage || 0);
+    const mcq = parseFloat(mcqScore || 0);
+    const alertness = parseFloat(alertnessScore || 0);
+
+    if (alcoholicStatus === 'Alcoholic' || pct <= 25) return 'D (High Risk)';
+    if (mcq < 15 || alertness < 15) return 'C (Medium Risk)';
     if (pct >= 80) return 'A (Low Risk)';
     if (pct >= 50) return 'B (Medium Risk)';
     if (pct >= 26) return 'C (Medium Risk)';
@@ -411,9 +419,9 @@ const ApprovalDetailModal = ({ assessmentId, roleCode, userRole, onClose, onActi
                           r="40" 
                           fill="none" 
                           stroke={
-                            getCategoryBadgeClass(assessment.percentage, assessment.alcoholic_status) === 'cat-a' ? '#10B981' :
-                            getCategoryBadgeClass(assessment.percentage, assessment.alcoholic_status) === 'cat-b' ? '#3B82F6' :
-                            getCategoryBadgeClass(assessment.percentage, assessment.alcoholic_status) === 'cat-c' ? '#F59E0B' :
+                            getCategoryBadgeClass(assessment.percentage, assessment.alcoholic_status, assessment.mcq_score, assessment.alertness_score) === 'cat-a' ? '#10B981' :
+                            getCategoryBadgeClass(assessment.percentage, assessment.alcoholic_status, assessment.mcq_score, assessment.alertness_score) === 'cat-b' ? '#3B82F6' :
+                            getCategoryBadgeClass(assessment.percentage, assessment.alcoholic_status, assessment.mcq_score, assessment.alertness_score) === 'cat-c' ? '#F59E0B' :
                             '#EF4444'
                           } 
                           strokeWidth="8" 
@@ -451,8 +459,8 @@ const ApprovalDetailModal = ({ assessmentId, roleCode, userRole, onClose, onActi
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px', borderTop: '1px solid #F1F5F9', paddingTop: '16px' }}>
                     <div style={{ backgroundColor: '#F8FAFC', padding: '10px', borderRadius: '8px', textAlign: 'center' }}>
                       <span style={{ display: 'block', fontSize: '11px', color: '#64748B', fontWeight: 600, textTransform: 'uppercase', marginBottom: '4px' }}>Projected Category</span>
-                      <span className={`category-tag ${getCategoryBadgeClass(assessment.percentage, assessment.alcoholic_status)}`} style={{ display: 'inline-block', fontSize: '13px', fontWeight: '700' }}>
-                        Category {getCategoryCodeName(assessment.percentage, assessment.alcoholic_status)}
+                      <span className={`category-tag ${getCategoryBadgeClass(assessment.percentage, assessment.alcoholic_status, assessment.mcq_score, assessment.alertness_score)}`} style={{ display: 'inline-block', fontSize: '13px', fontWeight: '700' }}>
+                        Category {getCategoryCodeName(assessment.percentage, assessment.alcoholic_status, assessment.mcq_score, assessment.alertness_score)}
                       </span>
                     </div>
                   </div>

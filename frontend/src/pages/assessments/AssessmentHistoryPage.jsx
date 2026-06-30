@@ -409,8 +409,12 @@ export const AssessmentHistoryPage = () => {
                     const isApproved = row.approval_status === 'approved';
                     const scoreVal = parseFloat(row.percentage || 0);
                     const getRowCategory = (r) => {
-                      if (r.alcoholic_status === 'Alcoholic') return 'D';
                       const pctVal = parseFloat(r.percentage || 0);
+                      const mcq = parseFloat(r.mcq_score || 0);
+                      const alertness = parseFloat(r.alertness_score || 0);
+
+                      if (r.alcoholic_status === 'Alcoholic' || pctVal <= 25) return 'D';
+                      if (mcq < 15 || alertness < 15) return 'C';
                       if (pctVal >= 80) return 'A';
                       if (pctVal >= 50) return 'B';
                       if (pctVal >= 26) return 'C';

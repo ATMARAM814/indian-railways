@@ -26,9 +26,13 @@ export const useMyAssessment = () => {
   const [questionsReview, setQuestionsReview] = useState([]);
 
   // Resolve Category letter from percentage score
-  const resolveCategory = (percentage, alcoholicStatus) => {
-    if (alcoholicStatus === 'Alcoholic') return 'D';
+  const resolveCategory = (percentage, alcoholicStatus, mcqScore, alertnessScore) => {
     const pct = parseFloat(percentage || 0);
+    const mcq = parseFloat(mcqScore || 0);
+    const alertness = parseFloat(alertnessScore || 0);
+
+    if (alcoholicStatus === 'Alcoholic' || pct <= 25) return 'D';
+    if (mcq < 15 || alertness < 15) return 'C';
     if (pct >= 80) return 'A';
     if (pct >= 50) return 'B';
     if (pct >= 26) return 'C';
@@ -59,7 +63,7 @@ export const useMyAssessment = () => {
         latestScore = parseFloat(evaluatedHistory[0].percentage || 0);
         const totalPct = evaluatedHistory.reduce((acc, curr) => acc + parseFloat(curr.percentage || 0), 0);
         averageScore = parseFloat((totalPct / total).toFixed(1));
-        currentCategory = resolveCategory(latestScore, evaluatedHistory[0].alcoholic_status);
+        currentCategory = resolveCategory(latestScore, evaluatedHistory[0].alcoholic_status, evaluatedHistory[0].mcq_score, evaluatedHistory[0].alertness_score);
       }
       
       setStats({
