@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 
 const CounselingPage = () => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const candidateId = searchParams.get('candidateId');
 
@@ -32,9 +32,22 @@ const CounselingPage = () => {
   const [activatingRetest, setActivatingRetest] = useState(false);
   const [feedback, setFeedback] = useState(null);
 
+  // Sync state with URL search params
+  const updateUrlParams = (updates) => {
+    const nextParams = new URLSearchParams(searchParams);
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value) {
+        nextParams.set(key, value);
+      } else {
+        nextParams.delete(key);
+      }
+    });
+    setSearchParams(nextParams, { replace: true });
+  };
+
   // Directory State
   const [directoryCandidates, setDirectoryCandidates] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('searchQuery') || '');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
 
@@ -48,14 +61,40 @@ const CounselingPage = () => {
   const [candidateHistory, setCandidateHistory] = useState([]);
 
   // New Counseling Control Centre Tabs: 'landing', 'schedule', 'categoryC', 'categoryD', 'history'
-  const [currentTab, setCurrentTab] = useState('landing');
+  const [currentTab, setCurrentTab] = useState(searchParams.get('tab') || 'landing');
   const [eligibleCandidates, setEligibleCandidates] = useState([]);
   const [scheduledList, setScheduledList] = useState([]);
   const [retestHistory, setRetestHistory] = useState([]);
   const [scheduleLoading, setScheduleLoading] = useState(false);
   const [historyLogLoading, setHistoryLogLoading] = useState(false);
-  const [scheduleNameSearch, setScheduleNameSearch] = useState('');
-  const [scheduleStationSearch, setScheduleStationSearch] = useState('');
+  const [scheduleNameSearch, setScheduleNameSearch] = useState(searchParams.get('scheduleNameSearch') || '');
+  const [scheduleStationSearch, setScheduleStationSearch] = useState(searchParams.get('scheduleStationSearch') || '');
+
+  const handleTabChange = (tab) => {
+    setCurrentTab(tab);
+    updateUrlParams({ tab });
+  };
+
+  const handleSearchQueryChange = (q) => {
+    setSearchQuery(q);
+    updateUrlParams({ searchQuery: q });
+  };
+
+  const handleScheduleNameChange = (name) => {
+    setScheduleNameSearch(name);
+    updateUrlParams({ scheduleNameSearch: name });
+  };
+
+  const handleScheduleStationChange = (station) => {
+    setScheduleStationSearch(station);
+    updateUrlParams({ scheduleStationSearch: station });
+  };
+
+  const handleGoBack = () => {
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete('candidateId');
+    setSearchParams(nextParams);
+  };
 
   const refreshScheduledList = async () => {
     try {
@@ -85,61 +124,47 @@ const CounselingPage = () => {
         setLoading(true);
         setError(null);
         if (candidateId) {
-          // Fetch candidate checklist details
-          const data = await getCandidateCounselingData(candidateId);
-          if (data.success) {
+          // Fetch candidate checklist details and completed history in parallel
+          const [data, histRes] = await Promise.all([
+            getCandidateCounselingData(candidateId).catch(err => { console.error(err); return { success: false }; }),
+            getCandidateCounselingHistory(candidateId).catch(err => { console.error(err); return { success: false }; })
+          ]);
+
+          if (data && data.success) {
             setCandidate(data.data.candidate);
             setSubjects(data.data.subjects || []);
-          } else {
+          } else if (data) {
             setError(data.message || "Failed to load candidate counseling details.");
           }
 
-          // Fetch candidate completed history
-          try {
-            const histRes = await getCandidateCounselingHistory(candidateId);
-            if (histRes.success) {
-              setCandidateHistory(histRes.data || []);
-            }
-          } catch (histErr) {
-            console.error("Error loading candidate history:", histErr);
+          if (histRes && histRes.success) {
+            setCandidateHistory(histRes.data || []);
           }
         } else {
-          // Fetch overall directory list
-          const res = await getCounselingDirectory();
-          if (res.success) {
+          // Fetch overall directory list, eligible, scheduled, history in parallel
+          const [res, eligRes, schedRes, histRetestRes] = await Promise.all([
+            getCounselingDirectory().catch(err => { console.error(err); return { success: false }; }),
+            getEligibleCandidatesForScheduling().catch(err => { console.error(err); return { success: false }; }),
+            getScheduledCounselingList().catch(err => { console.error(err); return { success: false }; }),
+            getRetestHistory().catch(err => { console.error(err); return { success: false }; })
+          ]);
+
+          if (res && res.success) {
             setDirectoryCandidates(res.data.data || res.data || []);
-          } else {
+          } else if (res) {
             setError(res.message || "Failed to load counseling directory.");
           }
 
-          // Fetch eligible candidates for scheduling
-          try {
-            const eligRes = await getEligibleCandidatesForScheduling();
-            if (eligRes.success) {
-              setEligibleCandidates(eligRes.data || []);
-            }
-          } catch (eligErr) {
-            console.error("Failed to load eligible candidates", eligErr);
+          if (eligRes && eligRes.success) {
+            setEligibleCandidates(eligRes.data || []);
           }
 
-          // Fetch scheduled counseling list
-          try {
-            const schedRes = await getScheduledCounselingList();
-            if (schedRes.success) {
-              setScheduledList(schedRes.data || []);
-            }
-          } catch (schedErr) {
-            console.error("Failed to load scheduled counseling list", schedErr);
+          if (schedRes && schedRes.success) {
+            setScheduledList(schedRes.data || []);
           }
 
-          // Fetch completed retests history
-          try {
-            const histRetestRes = await getRetestHistory();
-            if (histRetestRes.success) {
-              setRetestHistory(histRetestRes.data || []);
-            }
-          } catch (histRetestErr) {
-            console.error("Failed to load retest history", histRetestErr);
+          if (histRetestRes && histRetestRes.success) {
+            setRetestHistory(histRetestRes.data || []);
           }
         }
       } catch (err) {
@@ -338,7 +363,7 @@ const CounselingPage = () => {
           {/* Header Row */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <button
-              onClick={() => navigate('/counseling')}
+              onClick={handleGoBack}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -382,7 +407,7 @@ const CounselingPage = () => {
             <h3 style={{ margin: '0 0 8px 0', fontSize: '16px', fontWeight: 700 }}>Connection Error</h3>
             <p style={{ margin: 0, fontSize: '13.5px' }}>{error}</p>
             <button
-              onClick={() => navigate('/counseling')}
+              onClick={handleGoBack}
               style={{
                 marginTop: '16px',
                 padding: '8px 16px',
@@ -532,8 +557,8 @@ const CounselingPage = () => {
             {currentTab !== 'landing' && (
               <button
                 onClick={() => {
-                  setCurrentTab('landing');
-                  setSearchQuery('');
+                  handleTabChange('landing');
+                  handleSearchQueryChange('');
                   setStatusFilter('all');
                 }}
                 style={{
@@ -589,7 +614,7 @@ const CounselingPage = () => {
             }}>
               {/* Card 1: Schedule Counselling */}
               <div 
-                onClick={() => setCurrentTab('schedule')}
+                onClick={() => handleTabChange('schedule')}
                 style={{
                   backgroundColor: '#FFFFFF',
                   borderRadius: '12px',
@@ -638,7 +663,7 @@ const CounselingPage = () => {
 
               {/* Card 2: Category C Watchlist */}
               <div 
-                onClick={() => setCurrentTab('categoryC')}
+                onClick={() => handleTabChange('categoryC')}
                 style={{
                   backgroundColor: '#FFFFFF',
                   borderRadius: '12px',
@@ -687,7 +712,7 @@ const CounselingPage = () => {
 
               {/* Card 3: Category D Watchlist */}
               <div 
-                onClick={() => setCurrentTab('categoryD')}
+                onClick={() => handleTabChange('categoryD')}
                 style={{
                   backgroundColor: '#FFFFFF',
                   borderRadius: '12px',
@@ -736,7 +761,7 @@ const CounselingPage = () => {
 
               {/* Card 4: Retest History Log */}
               <div 
-                onClick={() => setCurrentTab('history')}
+                onClick={() => handleTabChange('history')}
                 style={{
                   backgroundColor: '#FFFFFF',
                   borderRadius: '12px',
@@ -827,7 +852,7 @@ const CounselingPage = () => {
                       type="text"
                       placeholder="Search by Name / HRMS ID..."
                       value={scheduleNameSearch}
-                      onChange={(e) => setScheduleNameSearch(e.target.value)}
+                      onChange={(e) => handleScheduleNameChange(e.target.value)}
                       style={{
                         width: '100%',
                         padding: '8px 12px 8px 36px',
@@ -853,7 +878,7 @@ const CounselingPage = () => {
                       type="text"
                       placeholder="Search by Station Name / Station Code..."
                       value={scheduleStationSearch}
-                      onChange={(e) => setScheduleStationSearch(e.target.value)}
+                      onChange={(e) => handleScheduleStationChange(e.target.value)}
                       style={{
                         width: '100%',
                         padding: '8px 12px 8px 36px',
@@ -1058,7 +1083,11 @@ const CounselingPage = () => {
                                 Cancel
                               </button>
                               <button
-                                onClick={() => navigate(`/counseling?candidateId=${cand.userId}`)}
+                                onClick={() => {
+                                  const nextParams = new URLSearchParams(searchParams);
+                                  nextParams.set('candidateId', cand.userId);
+                                  setSearchParams(nextParams);
+                                }}
                                 style={{
                                   padding: '6px 14px',
                                   backgroundColor: '#3B82F6',
@@ -1122,7 +1151,7 @@ const CounselingPage = () => {
                     type="text"
                     placeholder="Search staff by Name, HRMS ID, or Station..."
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={(e) => handleSearchQueryChange(e.target.value)}
                     style={{
                       width: '100%',
                       padding: '10px 14px 10px 42px',
@@ -1278,7 +1307,11 @@ const CounselingPage = () => {
                                 History ({cand.historyCount})
                               </button>
                               <button
-                                onClick={() => navigate(`/counseling?candidateId=${cand.userId}`)}
+                                onClick={() => {
+                                  const nextParams = new URLSearchParams(searchParams);
+                                  nextParams.set('candidateId', cand.userId);
+                                  setSearchParams(nextParams);
+                                }}
                                 style={{
                                   padding: '6px 14px',
                                   backgroundColor: '#3B82F6',
@@ -1342,7 +1375,7 @@ const CounselingPage = () => {
                     type="text"
                     placeholder="Search history logs by employee name, HRMS, or station..."
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={(e) => handleSearchQueryChange(e.target.value)}
                     style={{
                       width: '100%',
                       padding: '10px 14px 10px 42px',
@@ -1432,7 +1465,11 @@ const CounselingPage = () => {
                           </td>
                           <td style={{ padding: '16px 20px', textAlign: 'right' }}>
                             <button
-                              onClick={() => navigate(`/assessments/${row.role}/${row.assessmentId}/view?from=counseling`)}
+                              onClick={() => {
+                                const nextParams = new URLSearchParams(searchParams);
+                                nextParams.set('from', 'counseling');
+                                navigate(`/assessments/${row.role}/${row.assessmentId}/view?${nextParams.toString()}`);
+                              }}
                               style={{
                                 padding: '6px 14px',
                                 backgroundColor: '#0B2341',
@@ -1644,7 +1681,7 @@ const CounselingPage = () => {
         {/* Header Row */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <button
-            onClick={() => navigate('/counseling')}
+            onClick={handleGoBack}
             style={{
               display: 'flex',
               alignItems: 'center',

@@ -63,6 +63,13 @@ async function runAutoMigration() {
       CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_active_counseling_schedule 
       ON manual_counseling_schedules (profile_id) 
       WHERE status = 'scheduled';
+
+      CREATE INDEX IF NOT EXISTS idx_assessments_assessed_user_id ON assessments(assessed_user_id);
+      CREATE INDEX IF NOT EXISTS idx_staff_counseling_history_profile_id ON staff_counseling_history(profile_id);
+      CREATE INDEX IF NOT EXISTS idx_employee_categories_profile_id ON employee_categories(profile_id);
+      CREATE INDEX IF NOT EXISTS idx_staff_station_postings_profile_id ON staff_station_postings(profile_id);
+      CREATE INDEX IF NOT EXISTS idx_station_assignments_profile_id ON station_assignments(profile_id);
+      CREATE INDEX IF NOT EXISTS idx_division_assignments_profile_id ON division_assignments(profile_id);
     `);
 
     // 3. Seed subjects if empty

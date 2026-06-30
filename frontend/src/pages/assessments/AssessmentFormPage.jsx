@@ -246,7 +246,9 @@ const AssessmentFormPage = () => {
           <button
             onClick={() => {
               if (fromSource === 'counseling') {
-                navigate('/counseling');
+                const backParams = new URLSearchParams(searchParams);
+                backParams.delete('from');
+                navigate(`/counseling?${backParams.toString()}`);
               } else if (assessmentResult && assessmentResult.assessed_user_id) {
                 navigate(`/assessments/${roleCode}/${assessmentResult.assessed_user_id}/history`);
               } else {
@@ -432,7 +434,9 @@ const AssessmentFormPage = () => {
                 onSubmitFinal={onSubmit}
                 onCancel={() => {
                   if (fromSource === 'counseling') {
-                    navigate('/counseling');
+                    const backParams = new URLSearchParams(searchParams);
+                    backParams.delete('from');
+                    navigate(`/counseling?${backParams.toString()}`);
                   } else if (assessmentResult && assessmentResult.assessed_user_id) {
                     navigate(`/assessments/${roleCode}/${assessmentResult.assessed_user_id}/history`);
                   } else {
