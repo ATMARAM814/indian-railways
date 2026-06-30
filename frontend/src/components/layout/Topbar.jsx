@@ -67,9 +67,15 @@ const Topbar = ({ onToggleSidebar }) => {
         <LanguageSwitcher theme="light" />
         <div className="topbar-divider"></div>
         <div className="topbar-user">
-          <Link to="/profile" className="user-avatar" title={fullName} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            {initials}
-          </Link>
+          {user.role === 'AOM' || user.role === 'SUPER_ADMIN' ? (
+            <div className="user-avatar" title={fullName} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              {initials}
+            </div>
+          ) : (
+            <Link to="/profile" className="user-avatar" title={fullName} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              {initials}
+            </Link>
+          )}
         </div>
       </div>
     </header>

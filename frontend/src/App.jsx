@@ -233,7 +233,9 @@ function App() {
             path="/profile"
             element={
               <ProtectedRoute>
-                <MyProfilePage />
+                <RoleRoute allowedRoles={['PM', 'SM', 'TM', 'SS', 'SMS', 'STATION MASTER SUPERVISOR', 'Station Master Supervisor', 'Station Master Supervisior', 'Station Master Supervisio', 'Cabin Master', 'CABIN MASTER', 'SHM', 'SHUNTING MASTER', 'Shunting Master', 'TI']}>
+                  <MyProfilePage />
+                </RoleRoute>
               </ProtectedRoute>
             }
           />

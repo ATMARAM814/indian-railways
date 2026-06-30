@@ -224,7 +224,9 @@ const Sidebar = ({ isOpen, onClose }) => {
     if (role !== 'SUPER_ADMIN') {
       main.push({ name: 'PME & REF Status', path: '/pme-ref-status', icon: <FileCheck size={18} /> });
     }
-    main.push({ name: 'My Profile', path: '/profile', icon: <User size={18} /> });
+    if (role !== 'SUPER_ADMIN' && role !== 'AOM') {
+      main.push({ name: 'My Profile', path: '/profile', icon: <User size={18} /> });
+    }
 
     return { main, workforce };
   };
@@ -385,10 +387,17 @@ const Sidebar = ({ isOpen, onClose }) => {
         </nav>
 
         <div className="sidebar-footer">
-          <Link to="/profile" className="sidebar-user-info" style={{ display: 'flex', flexDirection: 'column', textDecoration: 'none', cursor: 'pointer' }}>
-            <span className="sidebar-username">{user.fullName || user.full_name || 'Railway Staff'}</span>
-            <span className="sidebar-role-badge">{role === 'SS' ? 'SM Incharge' : role.replace('_', ' ')}</span>
-          </Link>
+          {role === 'AOM' || role === 'SUPER_ADMIN' ? (
+            <div className="sidebar-user-info" style={{ display: 'flex', flexDirection: 'column', textDecoration: 'none' }}>
+              <span className="sidebar-username">{user.fullName || user.full_name || 'Railway Staff'}</span>
+              <span className="sidebar-role-badge">{role === 'SS' ? 'SM Incharge' : role.replace('_', ' ')}</span>
+            </div>
+          ) : (
+            <Link to="/profile" className="sidebar-user-info" style={{ display: 'flex', flexDirection: 'column', textDecoration: 'none', cursor: 'pointer' }}>
+              <span className="sidebar-username">{user.fullName || user.full_name || 'Railway Staff'}</span>
+              <span className="sidebar-role-badge">{role === 'SS' ? 'SM Incharge' : role.replace('_', ' ')}</span>
+            </Link>
+          )}
 
           <button className="sidebar-logout-btn" onClick={logout}>
             <LogOut size={16} />
