@@ -239,8 +239,8 @@ const Sidebar = ({ isOpen, onClose }) => {
     <>
       {isOpen && <div className="sidebar-overlay" onClick={onClose} />}
       <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
-        <div className="sidebar-logo">
-          <div className="sidebar-logo-block">IR</div>
+        <div className="sidebar-logo" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <img src="/logo.png" alt="Logo" style={{ width: '32px', height: '32px', objectFit: 'contain' }} />
           <span className="sidebar-logo-text">RES Portal</span>
         </div>
 

@@ -44,8 +44,8 @@ const ForgotPassword = () => {
   return (
     <div className="auth-container">
       <div className="auth-card">
-        <div className="logo-container">
-          <div className="ir-logo-block">IR</div>
+        <div className="logo-container" style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+          <img src="/logo.png" alt="IR Logo" style={{ width: '64px', height: '64px', objectFit: 'contain' }} />
         </div>
 
         <div className="auth-header">
