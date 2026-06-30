@@ -13,6 +13,7 @@ import LoadingState from '../dashboard/LoadingState';
 import ErrorState from '../dashboard/ErrorState';
 import { useWorkforce } from '../../hooks/useWorkforce';
 import { useAuth } from '../../context/AuthContext';
+import { TableSkeleton } from '../reports/ReportSkeletons';
 
 const WorkforcePageLayout = ({
   roleCode,
@@ -184,9 +185,7 @@ const WorkforcePageLayout = ({
 
         {/* Content Area (States: Loading, Error, Empty, or Table) */}
         {loading ? (
-          <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #D7E3EF', borderRadius: '12px', padding: '64px', display: 'flex', justifyContent: 'center' }}>
-            <LoadingState message="Loading workforce registry data..." />
-          </div>
+          <TableSkeleton />
         ) : error ? (
           <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #D7E3EF', borderRadius: '12px', padding: '64px' }}>
             <ErrorState title="Failed to Load Data" message={error} />

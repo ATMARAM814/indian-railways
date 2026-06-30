@@ -6,6 +6,7 @@ import DashboardLayout from '../../components/layout/DashboardLayout';
 import { AssessmentSummaryStrip } from '../../components/assessments/AssessmentSummaryStrip';
 import { AssessmentRoleCard } from '../../components/assessments/AssessmentRoleCard';
 import { CardSkeleton } from '../../components/assessments/AssessmentSkeletons';
+import { TableSkeleton } from '../../components/reports/ReportSkeletons';
 import { AssessmentStatusBadge } from '../../components/assessments/AssessmentStatusBadge';
 import apiClient from '../../api/apiClient';
 import { ClipboardList, Calendar, Award, ChevronRight, Eye, Info, Clock } from 'lucide-react';
@@ -85,7 +86,7 @@ const AssessmentsLandingPage = () => {
         {user.role === 'PM' && (
           <div className="table-responsive" style={{ padding: '16px' }}>
             {myResultsLoading ? (
-              <div className="py-12 text-center text-slate-400">Loading your safety records...</div>
+              <TableSkeleton />
             ) : myResults.length === 0 ? (
               <div className="py-12 text-center text-slate-400">No completed assessments recorded in the system.</div>
             ) : (

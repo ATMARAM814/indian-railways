@@ -74,11 +74,16 @@ const TIDashboard = () => {
     setLoading(true);
     setError(null);
     try {
-      const [res, catCRes, catDRes] = await Promise.all([
+      const fetches = [
         getTiDashboardData(),
         getDashboardCategoryCandidates({ category: 'C', limit: 5 }),
         getDashboardCategoryCandidates({ category: 'D', limit: 5 })
-      ]);
+      ];
+      if (user?.id) {
+        fetches.push(getWorkforceDetails(user.id).catch(err => { console.error(err); return { success: false }; }));
+      }
+      const [res, catCRes, catDRes, profileRes] = await Promise.all(fetches);
+
       if (res.success) {
         setData(res.data);
         console.log(`[FRONTEND UI TIDashboard] Logged-in TI HRMS ID: ${user?.hrmsId || user?.hrms_id || 'N/A'}`);
@@ -98,15 +103,12 @@ const TIDashboard = () => {
         setCategoryDWatchlist(catDRes.data || []);
       }
 
-      if (user?.id) {
-        const profileRes = await getWorkforceDetails(user.id);
-        if (profileRes.success && profileRes.data?.trend) {
-          const mappedTrend = profileRes.data.trend.map((t, idx) => ({
-            date: t.date ? formatDate(t.date) : `Eval ${idx + 1}`,
-            Score: Number(t.score || 0)
-          }));
-          setPersonalTrend(mappedTrend);
-        }
+      if (profileRes && profileRes.success && profileRes.data?.trend) {
+        const mappedTrend = profileRes.data.trend.map((t, idx) => ({
+          date: t.date ? formatDate(t.date) : `Eval ${idx + 1}`,
+          Score: Number(t.score || 0)
+        }));
+        setPersonalTrend(mappedTrend);
       }
     } catch (err) {
       console.error(err);

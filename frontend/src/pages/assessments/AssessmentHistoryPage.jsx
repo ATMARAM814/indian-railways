@@ -24,6 +24,7 @@ import {
   Info
 } from 'lucide-react';
 import '../../styles/assessments.css';
+import { TableSkeleton } from '../../components/reports/ReportSkeletons';
 
 export const AssessmentHistoryPage = () => {
   const { roleCode, employeeId } = useParams();
@@ -382,7 +383,7 @@ export const AssessmentHistoryPage = () => {
           </div>
 
           {historyLoading ? (
-            <div style={{ padding: '48px', textAlign: 'center', color: '#64748B', fontWeight: 500 }}>Loading assessment history...</div>
+            <TableSkeleton />
           ) : historyError ? (
             <div style={{ padding: '48px', textAlign: 'center', color: '#EF4444', fontWeight: 500 }}>{historyError}</div>
           ) : history.length === 0 ? (

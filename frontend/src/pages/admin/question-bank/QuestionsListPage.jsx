@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import DashboardLayout from '../../../components/layout/DashboardLayout';
 import LoadingState from '../../../components/dashboard/LoadingState';
 import ErrorState from '../../../components/dashboard/ErrorState';
+import { TableSkeleton } from '../../../components/reports/ReportSkeletons';
 import DrillDownPagination from '../../../components/dashboard/DrillDownPagination';
 import EditQuestionModal from '../../../components/question-bank/EditQuestionModal';
 import DeleteQuestionModal from '../../../components/question-bank/DeleteQuestionModal';
@@ -265,9 +266,7 @@ const QuestionsListPage = () => {
 
         {/* Content Area */}
         {loading ? (
-          <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #D7E3EF', borderRadius: '12px', padding: '64px', display: 'flex', justifyContent: 'center' }}>
-            <LoadingState message="Loading question pool data..." />
-          </div>
+          <TableSkeleton />
         ) : error ? (
           <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #D7E3EF', borderRadius: '12px', padding: '64px' }}>
             <ErrorState title="Failed to Load Data" message={error} />

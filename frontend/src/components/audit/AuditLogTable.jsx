@@ -51,11 +51,18 @@ const AuditLogTable = ({ records = [], loading = false }) => {
           </thead>
           <tbody>
             {loading ? (
-              <tr>
-                <td colSpan="8" style={{ textAlign: 'center', color: '#64748B', padding: '48px', fontSize: '14px' }}>
-                  Loading audit logs...
-                </td>
-              </tr>
+              Array.from({ length: 5 }).map((_, i) => (
+                <tr key={i} className="animate-pulse">
+                  <td style={{ padding: '16px 24px' }}><div style={{ height: '14px', backgroundColor: '#E2E8F0', borderRadius: '4px', width: '120px' }}></div></td>
+                  <td style={{ padding: '16px 24px' }}><div style={{ height: '20px', backgroundColor: '#E2E8F0', borderRadius: '4px', width: '60px' }}></div></td>
+                  <td style={{ padding: '16px 24px' }}><div style={{ height: '20px', backgroundColor: '#E2E8F0', borderRadius: '4px', width: '80px' }}></div></td>
+                  <td style={{ padding: '16px 24px' }}><div style={{ height: '14px', backgroundColor: '#E2E8F0', borderRadius: '4px', width: '100px' }}></div></td>
+                  <td style={{ padding: '16px 24px' }}><div style={{ height: '14px', backgroundColor: '#E2E8F0', borderRadius: '4px', width: '100px' }}></div></td>
+                  <td style={{ padding: '16px 24px' }}><div style={{ height: '14px', backgroundColor: '#E2E8F0', borderRadius: '4px', width: '90px' }}></div></td>
+                  <td style={{ padding: '16px 24px' }}><div style={{ height: '14px', backgroundColor: '#E2E8F0', borderRadius: '4px', width: '150px' }}></div></td>
+                  <td style={{ padding: '16px 24px', textAlign: 'center' }}><div style={{ height: '24px', backgroundColor: '#CBD5E1', borderRadius: '4px', width: '40px', margin: '0 auto' }}></div></td>
+                </tr>
+              ))
             ) : records.length === 0 ? (
               <tr>
                 <td colSpan="8" style={{ textAlign: 'center', color: '#64748B', padding: '48px', fontSize: '14px' }}>
