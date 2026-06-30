@@ -798,7 +798,7 @@ async function getUserProfileDetails(userId) {
       FROM staff_station_postings ssp
       JOIN profiles p ON p.id = ssp.profile_id
       JOIN roles r ON r.id = p.role_id
-      WHERE ssp.station_id = $1 AND ssp.is_current = true AND r.name = 'Station Master Supervisor'
+      WHERE ssp.station_id = $1 AND ssp.is_current = true AND r.name = 'SMS'
       LIMIT 1;
     `;
     const smsRes = await pool.query(smsQuery, [stationId]);
