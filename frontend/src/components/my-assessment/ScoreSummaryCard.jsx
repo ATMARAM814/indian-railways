@@ -7,7 +7,7 @@ const ScoreSummaryCard = ({ assessment, resolveCategory }) => {
   if (!assessment) return null;
 
   const pct   = parseFloat(assessment.percentage || 0);
-  const category = resolveCategory(pct, assessment.alcoholic_status);
+  const category = resolveCategory(pct, assessment.alcoholic_status, assessment.mcq_score, assessment.alertness_score);
 
   const catConfig = {
     A: { color: '#10B981', label: 'Cat A — Outstanding',  desc: 'Highly competent to execute safety-critical railway operations.', bg: 'linear-gradient(135deg,#ECFDF5,#D1FAE5)', border: '#86EFAC' },

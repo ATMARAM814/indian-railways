@@ -38,7 +38,7 @@ const AssessmentScorecardPage = () => {
 
   const percentage = parseFloat(scorecardDetails?.percentage || 0);
   const isEvaluated = scorecardDetails?.status === 'completed' || scorecardDetails?.status === 'approved' || scorecardDetails?.approval_status === 'approved';
-  const category = isEvaluated ? resolveCategory(percentage, scorecardDetails?.alcoholic_status) : 'Pending';
+  const category = isEvaluated ? resolveCategory(percentage, scorecardDetails?.alcoholic_status, scorecardDetails?.mcq_score, scorecardDetails?.alertness_score) : 'Pending';
 
   const getCategoryName = (cat) => {
     switch (cat) {
