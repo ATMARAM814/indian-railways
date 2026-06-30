@@ -15,7 +15,7 @@ import {
   getRetestHistory
 } from '../../api/counselingApi';
 import { 
-  ArrowLeft, User, ShieldAlert, CheckCircle, AlertCircle, Save, Loader2, MessageSquare, Zap, Search, Calendar, History,
+  ArrowLeft, ArrowRight, User, ShieldAlert, CheckCircle, AlertCircle, Save, Loader2, MessageSquare, Zap, Search, Calendar, History,
   Clock, AlertTriangle, UserCheck, Eye, Trash2, ChevronRight, X
 } from 'lucide-react';
 
@@ -541,20 +541,54 @@ const CounselingPage = () => {
           width: '100%'
         }}>
           {/* Header Row */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <h1 style={{ fontSize: '24px', fontWeight: 800, color: '#0B2341', margin: 0 }}>
-                Counselling Control Centre
-              </h1>
-              <p style={{ fontSize: '13.5px', color: '#64748B', margin: '4px 0 0 0' }}>
-                {currentTab === 'landing' && 'Manage category-based safety counselling, manually schedule sessions, and view completed retest outcomes.'}
-                {currentTab === 'schedule' && 'Manually schedule safety counselling for any candidate under your scope.'}
-                {currentTab === 'categoryC' && 'Quarterly Safety Counselling Watchlist (Category C / Medium Risk Staff)'}
-                {currentTab === 'categoryD' && 'Monthly Safety Counselling Watchlist (Category D / High Risk Staff)'}
-                {currentTab === 'history' && 'Logs and scorecard histories of all completed safety counselling cycles.'}
-              </p>
+          {currentTab === 'landing' ? (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                <div style={{
+                  width: '72px',
+                  height: '72px',
+                  borderRadius: '50%',
+                  backgroundColor: '#F0F5FF',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  border: '1px solid #E5EBF2'
+                }}>
+                  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#2B5CE6" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                    {/* Chat bubble at top left */}
+                    <path d="M13 3H5a2 2 0 0 0-2 2v8l3-3h7a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z" />
+                    {/* Lines in chat bubble */}
+                    <path d="M6 6h4" />
+                    <path d="M6 9h2" />
+                    {/* User at bottom right */}
+                    <circle cx="17" cy="13" r="3" />
+                    <path d="M12 21c0-2.5 2-4.5 5-4.5s5 2 5 4.5" />
+                  </svg>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <h1 style={{ fontSize: '26px', fontWeight: 800, color: '#0B2341', margin: 0 }}>
+                    Counselling Control Centre
+                  </h1>
+                  <p style={{ fontSize: '14px', color: '#64748B', margin: '4px 0 0 0', lineHeight: '1.5' }}>
+                    Manage category-based safety counselling, manually schedule sessions, and view completed retest outcomes.
+                  </p>
+                </div>
+              </div>
             </div>
-            {currentTab !== 'landing' && (
+          ) : (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <h1 style={{ fontSize: '24px', fontWeight: 800, color: '#0B2341', margin: 0 }}>
+                  Counselling Control Centre
+                </h1>
+                <p style={{ fontSize: '13.5px', color: '#64748B', margin: '4px 0 0 0' }}>
+                  {currentTab === 'schedule' && 'Manually schedule safety counselling for any candidate under your scope.'}
+                  {currentTab === 'categoryC' && 'Quarterly Safety Counselling Watchlist (Category C / Medium Risk Staff)'}
+                  {currentTab === 'categoryD' && 'Monthly Safety Counselling Watchlist (Category D / High Risk Staff)'}
+                  {currentTab === 'history' && 'Logs and scorecard histories of all completed safety counselling cycles.'}
+                </p>
+              </div>
               <button
                 onClick={() => {
                   handleTabChange('landing');
@@ -581,8 +615,8 @@ const CounselingPage = () => {
                 <ArrowLeft size={16} />
                 Back to Control Centre
               </button>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Feedback Messages */}
           {feedback && (
@@ -608,7 +642,7 @@ const CounselingPage = () => {
           {currentTab === 'landing' && (
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
               gap: '24px',
               marginTop: '8px'
             }}>
@@ -617,47 +651,75 @@ const CounselingPage = () => {
                 onClick={() => handleTabChange('schedule')}
                 style={{
                   backgroundColor: '#FFFFFF',
-                  borderRadius: '12px',
+                  borderRadius: '16px',
                   border: '1px solid #E2E8F0',
                   borderLeft: '4px solid #2B5CE6',
-                  padding: '24px',
                   display: 'flex',
-                  alignItems: 'flex-start',
+                  flexDirection: 'column',
                   justifyContent: 'space-between',
                   cursor: 'pointer',
                   boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
                   transition: 'transform 0.2s, box-shadow 0.2s',
+                  overflow: 'hidden',
+                  height: '100%',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.08)';
+                  e.currentTarget.style.transform = 'translateY(-4px)';
+                  e.currentTarget.style.boxShadow = '0 12px 20px -8px rgba(0, 0, 0, 0.15)';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'translateY(0)';
                   e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.05)';
                 }}
               >
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
-                  <span style={{ fontSize: '15px', fontWeight: 700, color: '#0B2341' }}>Schedule Counselling</span>
-                  <span style={{ fontSize: '11.5px', color: '#64748B', lineHeight: '1.4' }}>
-                    Manually schedule a counselling session for any employee.
-                  </span>
-                  <span style={{ fontSize: '20px', fontWeight: 800, color: '#1E293B', marginTop: '4px' }}>
-                    {scheduledList.length} Active
-                  </span>
+                <div style={{ padding: '28px 24px 32px 24px', display: 'flex', flexDirection: 'column', gap: '20px', flex: 1 }}>
+                  <div style={{
+                    backgroundColor: '#EFF6FF',
+                    borderRadius: '50%',
+                    width: '44px',
+                    height: '44px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#2B5CE6',
+                    flexShrink: 0
+                  }}>
+                    <Calendar size={20} />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <h3 style={{ fontSize: '17px', fontWeight: 700, color: '#0B2341', margin: 0 }}>Schedule Counselling</h3>
+                    <p style={{ fontSize: '13px', color: '#64748B', margin: 0, lineHeight: '1.5' }}>
+                      Manually schedule a counselling session for any employee.
+                    </p>
+                  </div>
                 </div>
                 <div style={{
-                  backgroundColor: '#EFF6FF',
-                  borderRadius: '50%',
-                  width: '40px',
-                  height: '40px',
+                  backgroundColor: '#F0F5FF',
+                  padding: '18px 24px',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#2B5CE6',
-                  flexShrink: 0
+                  justifyContent: 'space-between',
+                  borderTop: '1px solid #F1F5F9'
                 }}>
-                  <Calendar size={18} />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                    <span style={{ fontSize: '28px', fontWeight: 800, color: '#2B5CE6', lineHeight: '1.1' }}>
+                      {scheduledList.length}
+                    </span>
+                    <span style={{ fontSize: '12px', fontWeight: 600, color: '#475569' }}>Active Sessions</span>
+                  </div>
+                  <div style={{
+                    backgroundColor: '#FFFFFF',
+                    borderRadius: '50%',
+                    width: '36px',
+                    height: '36px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#2B5CE6',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+                  }}>
+                    <ArrowRight size={18} />
+                  </div>
                 </div>
               </div>
 
@@ -666,47 +728,75 @@ const CounselingPage = () => {
                 onClick={() => handleTabChange('categoryC')}
                 style={{
                   backgroundColor: '#FFFFFF',
-                  borderRadius: '12px',
+                  borderRadius: '16px',
                   border: '1px solid #E2E8F0',
                   borderLeft: '4px solid #F59E0B',
-                  padding: '24px',
                   display: 'flex',
-                  alignItems: 'flex-start',
+                  flexDirection: 'column',
                   justifyContent: 'space-between',
                   cursor: 'pointer',
                   boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
                   transition: 'transform 0.2s, box-shadow 0.2s',
+                  overflow: 'hidden',
+                  height: '100%',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.08)';
+                  e.currentTarget.style.transform = 'translateY(-4px)';
+                  e.currentTarget.style.boxShadow = '0 12px 20px -8px rgba(0, 0, 0, 0.15)';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'translateY(0)';
                   e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.05)';
                 }}
               >
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
-                  <span style={{ fontSize: '15px', fontWeight: 700, color: '#0B2341' }}>Category C Watchlist</span>
-                  <span style={{ fontSize: '11.5px', color: '#64748B', lineHeight: '1.4' }}>
-                    Medium risk safety staff. Requires quarterly counselling.
-                  </span>
-                  <span style={{ fontSize: '20px', fontWeight: 800, color: '#1E293B', marginTop: '4px' }}>
-                    {catCCount} Flagged
-                  </span>
+                <div style={{ padding: '28px 24px 32px 24px', display: 'flex', flexDirection: 'column', gap: '20px', flex: 1 }}>
+                  <div style={{
+                    backgroundColor: '#FEF3C7',
+                    borderRadius: '50%',
+                    width: '44px',
+                    height: '44px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#D97706',
+                    flexShrink: 0
+                  }}>
+                    <AlertTriangle size={20} />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <h3 style={{ fontSize: '17px', fontWeight: 700, color: '#0B2341', margin: 0 }}>Category C Watchlist</h3>
+                    <p style={{ fontSize: '13px', color: '#64748B', margin: 0, lineHeight: '1.5' }}>
+                      Medium risk safety staff. Requires quarterly counselling.
+                    </p>
+                  </div>
                 </div>
                 <div style={{
-                  backgroundColor: '#FEF3C7',
-                  borderRadius: '50%',
-                  width: '40px',
-                  height: '40px',
+                  backgroundColor: '#FFFBEB',
+                  padding: '18px 24px',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#D97706',
-                  flexShrink: 0
+                  justifyContent: 'space-between',
+                  borderTop: '1px solid #F1F5F9'
                 }}>
-                  <AlertTriangle size={18} />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                    <span style={{ fontSize: '28px', fontWeight: 800, color: '#D97706', lineHeight: '1.1' }}>
+                      {catCCount}
+                    </span>
+                    <span style={{ fontSize: '12px', fontWeight: 600, color: '#475569' }}>Flagged Staff</span>
+                  </div>
+                  <div style={{
+                    backgroundColor: '#FFFFFF',
+                    borderRadius: '50%',
+                    width: '36px',
+                    height: '36px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#D97706',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+                  }}>
+                    <ArrowRight size={18} />
+                  </div>
                 </div>
               </div>
 
@@ -715,96 +805,152 @@ const CounselingPage = () => {
                 onClick={() => handleTabChange('categoryD')}
                 style={{
                   backgroundColor: '#FFFFFF',
-                  borderRadius: '12px',
+                  borderRadius: '16px',
                   border: '1px solid #E2E8F0',
                   borderLeft: '4px solid #EF4444',
-                  padding: '24px',
                   display: 'flex',
-                  alignItems: 'flex-start',
+                  flexDirection: 'column',
                   justifyContent: 'space-between',
                   cursor: 'pointer',
                   boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
                   transition: 'transform 0.2s, box-shadow 0.2s',
+                  overflow: 'hidden',
+                  height: '100%',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.08)';
+                  e.currentTarget.style.transform = 'translateY(-4px)';
+                  e.currentTarget.style.boxShadow = '0 12px 20px -8px rgba(0, 0, 0, 0.15)';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'translateY(0)';
                   e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.05)';
                 }}
               >
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
-                  <span style={{ fontSize: '15px', fontWeight: 700, color: '#0B2341' }}>Category D Watchlist</span>
-                  <span style={{ fontSize: '11.5px', color: '#64748B', lineHeight: '1.4' }}>
-                    High risk safety staff. Requires immediate monthly counselling.
-                  </span>
-                  <span style={{ fontSize: '20px', fontWeight: 800, color: '#1E293B', marginTop: '4px' }}>
-                    {catDCount} Flagged
-                  </span>
+                <div style={{ padding: '28px 24px 32px 24px', display: 'flex', flexDirection: 'column', gap: '20px', flex: 1 }}>
+                  <div style={{
+                    backgroundColor: '#FEE2E2',
+                    borderRadius: '50%',
+                    width: '44px',
+                    height: '44px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#DC2626',
+                    flexShrink: 0
+                  }}>
+                    <ShieldAlert size={20} />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <h3 style={{ fontSize: '17px', fontWeight: 700, color: '#0B2341', margin: 0 }}>Category D Watchlist</h3>
+                    <p style={{ fontSize: '13px', color: '#64748B', margin: 0, lineHeight: '1.5' }}>
+                      High risk safety staff. Requires immediate monthly counselling.
+                    </p>
+                  </div>
                 </div>
                 <div style={{
-                  backgroundColor: '#FEE2E2',
-                  borderRadius: '50%',
-                  width: '40px',
-                  height: '40px',
+                  backgroundColor: '#FEF2F2',
+                  padding: '18px 24px',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#DC2626',
-                  flexShrink: 0
+                  justifyContent: 'space-between',
+                  borderTop: '1px solid #F1F5F9'
                 }}>
-                  <ShieldAlert size={18} />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                    <span style={{ fontSize: '28px', fontWeight: 800, color: '#DC2626', lineHeight: '1.1' }}>
+                      {catDCount}
+                    </span>
+                    <span style={{ fontSize: '12px', fontWeight: 600, color: '#475569' }}>Flagged Staff</span>
+                  </div>
+                  <div style={{
+                    backgroundColor: '#FFFFFF',
+                    borderRadius: '50%',
+                    width: '36px',
+                    height: '36px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#DC2626',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+                  }}>
+                    <ArrowRight size={18} />
+                  </div>
                 </div>
               </div>
 
-              {/* Card 4: Retest History Log */}
+              {/* Card 4: Counselling History Log */}
               <div 
                 onClick={() => handleTabChange('history')}
                 style={{
                   backgroundColor: '#FFFFFF',
-                  borderRadius: '12px',
+                  borderRadius: '16px',
                   border: '1px solid #E2E8F0',
                   borderLeft: '4px solid #64748B',
-                  padding: '24px',
                   display: 'flex',
-                  alignItems: 'flex-start',
+                  flexDirection: 'column',
                   justifyContent: 'space-between',
                   cursor: 'pointer',
                   boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
                   transition: 'transform 0.2s, box-shadow 0.2s',
+                  overflow: 'hidden',
+                  height: '100%',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.08)';
+                  e.currentTarget.style.transform = 'translateY(-4px)';
+                  e.currentTarget.style.boxShadow = '0 12px 20px -8px rgba(0, 0, 0, 0.15)';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'translateY(0)';
                   e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.05)';
                 }}
               >
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
-                  <span style={{ fontSize: '15px', fontWeight: 700, color: '#0B2341' }}>Counselling History Log</span>
-                  <span style={{ fontSize: '11.5px', color: '#64748B', lineHeight: '1.4' }}>
-                    View completed safety cycles, dates, and historical scorecards.
-                  </span>
-                  <span style={{ fontSize: '20px', fontWeight: 800, color: '#1E293B', marginTop: '4px' }}>
-                    {retestHistory.length} Completed
-                  </span>
+                <div style={{ padding: '28px 24px 32px 24px', display: 'flex', flexDirection: 'column', gap: '20px', flex: 1 }}>
+                  <div style={{
+                    backgroundColor: '#F1F5F9',
+                    borderRadius: '50%',
+                    width: '44px',
+                    height: '44px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#475569',
+                    flexShrink: 0
+                  }}>
+                    <History size={20} />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <h3 style={{ fontSize: '17px', fontWeight: 700, color: '#0B2341', margin: 0 }}>Counselling History Log</h3>
+                    <p style={{ fontSize: '13px', color: '#64748B', margin: 0, lineHeight: '1.5' }}>
+                      View completed safety cycles, dates, and historical scorecards.
+                    </p>
+                  </div>
                 </div>
                 <div style={{
-                  backgroundColor: '#F1F5F9',
-                  borderRadius: '50%',
-                  width: '40px',
-                  height: '40px',
+                  backgroundColor: '#F8FAFC',
+                  padding: '18px 24px',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#475569',
-                  flexShrink: 0
+                  justifyContent: 'space-between',
+                  borderTop: '1px solid #F1F5F9'
                 }}>
-                  <History size={18} />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                    <span style={{ fontSize: '28px', fontWeight: 800, color: '#475569', lineHeight: '1.1' }}>
+                      {retestHistory.length}
+                    </span>
+                    <span style={{ fontSize: '12px', fontWeight: 600, color: '#475569' }}>Completed Cycles</span>
+                  </div>
+                  <div style={{
+                    backgroundColor: '#FFFFFF',
+                    borderRadius: '50%',
+                    width: '36px',
+                    height: '36px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#475569',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+                  }}>
+                    <ArrowRight size={18} />
+                  </div>
                 </div>
               </div>
             </div>
