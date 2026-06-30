@@ -241,7 +241,7 @@ const Sidebar = ({ isOpen, onClose }) => {
       <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
         <div className="sidebar-logo" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <img src="/logo.png" alt="Logo" style={{ width: '32px', height: '32px', objectFit: 'contain' }} />
-          <span className="sidebar-logo-text">RES Portal</span>
+          <span className="sidebar-logo-text">IRES Portal</span>
         </div>
 
         <nav className="sidebar-menu" ref={menuRef} onScroll={handleScroll}>
