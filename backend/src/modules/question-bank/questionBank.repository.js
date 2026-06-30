@@ -37,6 +37,9 @@ async function runAutoMigration() {
       remarks TEXT
     );
 
+    -- Create index on question_bank(role_code, status) if not exists
+    CREATE INDEX IF NOT EXISTS idx_question_bank_role_code_status ON question_bank(role_code, status);
+
     -- Update constraints to CASCADE delete safely using a DO block to prevent deadlocks on restarts
     DO $$
     BEGIN
@@ -302,35 +305,45 @@ async function replaceQuestionBank({ roleCode, questions, log }) {
     // 1. Delete existing questions for this role
     await client.query("DELETE FROM question_bank WHERE role_code = $1", [roleCode]);
 
-    // 2. Insert new questions
-    const insertQuestionQuery = `
-      INSERT INTO question_bank (
-        role_code,
-        question_text,
-        option_a,
-        option_b,
-        option_c,
-        option_d,
-        correct_answer,
-        explanation,
-        is_active,
-        status,
-        created_at
-      )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true, 'active', NOW())
-    `;
+    // 2. Insert new questions in bulk
+    if (questions.length > 0) {
+      const values = [];
+      const placeholders = [];
+      let index = 1;
 
-    for (const q of questions) {
-      await client.query(insertQuestionQuery, [
-        roleCode,
-        q.questionText,
-        q.optionA,
-        q.optionB,
-        q.optionC,
-        q.optionD,
-        q.correctAnswer,
-        q.explanation || null
-      ]);
+      for (const q of questions) {
+        placeholders.push(`($${index}, $${index + 1}, $${index + 2}, $${index + 3}, $${index + 4}, $${index + 5}, $${index + 6}, $${index + 7}, true, 'active', NOW())`);
+        values.push(
+          roleCode,
+          q.questionText,
+          q.optionA,
+          q.optionB,
+          q.optionC,
+          q.optionD,
+          q.correctAnswer,
+          q.explanation || null
+        );
+        index += 8;
+      }
+
+      const bulkInsertQuery = `
+        INSERT INTO question_bank (
+          role_code,
+          question_text,
+          option_a,
+          option_b,
+          option_c,
+          option_d,
+          correct_answer,
+          explanation,
+          is_active,
+          status,
+          created_at
+        )
+        VALUES ${placeholders.join(", ")}
+      `;
+
+      await client.query(bulkInsertQuery, values);
     }
 
     // 3. Insert upload log
@@ -458,6 +471,58 @@ async function getAllActiveQuestions() {
   return result.rows;
 }
 
+async function getExistingQuestionsForRoles(roles) {
+  if (!roles || roles.length === 0) return [];
+  const query = `
+    SELECT question_text as "questionText", role_code as "roleCode"
+    FROM question_bank
+    WHERE role_code = ANY($1);
+  `;
+  const result = await pool.query(query, [roles]);
+  return result.rows;
+}
+
+async function createQuestionsBulk(questions) {
+  if (!questions || questions.length === 0) return [];
+  
+  const values = [];
+  const placeholders = [];
+  let index = 1;
+  
+  for (const q of questions) {
+    placeholders.push(`($${index}, $${index + 1}, $${index + 2}, $${index + 3}, $${index + 4}, $${index + 5}, $${index + 6}, 'active', NOW())`);
+    values.push(
+      q.roleCode,
+      q.questionText,
+      q.optionA,
+      q.optionB,
+      q.optionC,
+      q.optionD,
+      q.correctAnswer
+    );
+    index += 7;
+  }
+  
+  const query = `
+    INSERT INTO question_bank (
+      role_code,
+      question_text,
+      option_a,
+      option_b,
+      option_c,
+      option_d,
+      correct_answer,
+      status,
+      created_at
+    )
+    VALUES ${placeholders.join(", ")}
+    RETURNING id;
+  `;
+  
+  const result = await pool.query(query, values);
+  return result.rows;
+}
+
 module.exports = {
   createQuestion,
   getQuestionByTextAndRole,
@@ -472,5 +537,7 @@ module.exports = {
   deleteQuestion,
   getAllActiveQuestionsByRole,
   getAllActiveQuestions,
+  getExistingQuestionsForRoles,
+  createQuestionsBulk,
 };
 

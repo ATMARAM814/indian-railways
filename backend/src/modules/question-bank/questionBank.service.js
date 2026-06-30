@@ -195,6 +195,11 @@ async function importQuestionsService(userId, questionsList) {
 
   let insertedCount = 0;
   const failed = [];
+  const validToInsert = [];
+
+  const roles = [...new Set(questionsList.map(q => (q.roleCode || '').toUpperCase()).filter(Boolean))];
+  const existingRows = await db.getExistingQuestionsForRoles(roles);
+  const existingSet = new Set(existingRows.map(r => `${r.roleCode}:${r.questionText.trim()}`));
 
   for (let i = 0; i < questionsList.length; i++) {
     const rowNumber = i + 1;
@@ -208,13 +213,14 @@ async function importQuestionsService(userId, questionsList) {
       const correctAnswerUpper = row.correctAnswer.toUpperCase();
 
       // 2. Duplicate checks
-      const existing = await db.getQuestionByTextAndRole(row.questionText, roleCodeUpper);
-      if (existing) {
+      const key = `${roleCodeUpper}:${row.questionText.trim()}`;
+      if (existingSet.has(key)) {
         throw new Error(`A question with this text already exists for role ${roleCodeUpper}`);
       }
 
-      // 3. Insert
-      await db.createQuestion({
+      existingSet.add(key);
+
+      validToInsert.push({
         roleCode: roleCodeUpper,
         questionText: row.questionText,
         optionA: row.optionA,
@@ -223,14 +229,18 @@ async function importQuestionsService(userId, questionsList) {
         optionD: row.optionD,
         correctAnswer: correctAnswerUpper,
       });
-
-      insertedCount++;
     } catch (err) {
       failed.push({
         row: rowNumber,
         reason: err.message,
       });
     }
+  }
+
+  // 3. Bulk insert valid questions
+  if (validToInsert.length > 0) {
+    await db.createQuestionsBulk(validToInsert);
+    insertedCount = validToInsert.length;
   }
 
   if (insertedCount > 0) {
