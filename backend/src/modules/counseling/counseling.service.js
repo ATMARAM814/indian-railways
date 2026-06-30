@@ -16,12 +16,17 @@ async function verifyAssessorAccess(candidate, assessorId, assessorRole) {
     throw new Error("Access Denied: You do not have permission to counsel candidates.");
   }
 
+  if (roleUpper === "SUPER_ADMIN" || roleUpper.includes("SUPER_ADMIN")) {
+    // Super Admin has unrestricted access
+    return;
+  }
+
   if (roleUpper === "TI" || roleUpper.includes("TI")) {
     const tiStations = await db.getTiStations(assessorId);
     if (!tiStations.includes(candidate.stationId)) {
       throw new Error("Access Denied: Candidate station is not in your monitored section.");
     }
-  } else if (roleUpper === "AOM" || roleUpper === "SUPER_ADMIN" || roleUpper.includes("AOM") || roleUpper.includes("SUPER_ADMIN")) {
+  } else if (roleUpper === "AOM" || roleUpper.includes("AOM")) {
     const assessorDiv = await db.getUserDivisionId(assessorId);
     if (!assessorDiv || assessorDiv !== candidate.divisionId) {
       throw new Error("Access Denied: Candidate belongs to another division.");

@@ -50,12 +50,12 @@ const CounselingPage = () => {
   // New Counseling Control Centre Tabs: 'landing', 'schedule', 'categoryC', 'categoryD', 'history'
   const [currentTab, setCurrentTab] = useState('landing');
   const [eligibleCandidates, setEligibleCandidates] = useState([]);
-  const [selectedEligibleId, setSelectedEligibleId] = useState('');
   const [scheduledList, setScheduledList] = useState([]);
   const [retestHistory, setRetestHistory] = useState([]);
   const [scheduleLoading, setScheduleLoading] = useState(false);
   const [historyLogLoading, setHistoryLogLoading] = useState(false);
-  const [scheduleSearch, setScheduleSearch] = useState('');
+  const [scheduleNameSearch, setScheduleNameSearch] = useState('');
+  const [scheduleStationSearch, setScheduleStationSearch] = useState('');
 
   const refreshScheduledList = async () => {
     try {
@@ -404,20 +404,22 @@ const CounselingPage = () => {
   }
 
   if (!candidateId) {
-    const handleScheduleSubmit = async (e) => {
-      e.preventDefault();
-      if (!selectedEligibleId) return;
+    const handleDirectSchedule = async (profileId) => {
       setScheduleLoading(true);
       setFeedback(null);
       try {
-        const res = await scheduleCounseling(selectedEligibleId);
+        const res = await scheduleCounseling(profileId);
         if (res.success) {
           setFeedback({
             type: 'success',
             message: res.message || 'Counselling session scheduled successfully.'
           });
-          setSelectedEligibleId('');
           await refreshScheduledList();
+          // Also refetch the eligible candidates list
+          const eligRes = await getEligibleCandidatesForScheduling();
+          if (eligRes.success) {
+            setEligibleCandidates(eligRes.data || []);
+          }
         } else {
           setFeedback({
             type: 'error',
@@ -491,12 +493,14 @@ const CounselingPage = () => {
       });
     };
 
-    const filteredEligibleOptions = eligibleCandidates.filter(c => 
-      (c.fullName || '').toLowerCase().includes((scheduleSearch || '').toLowerCase()) ||
-      (c.hrmsId || '').toLowerCase().includes((scheduleSearch || '').toLowerCase()) ||
-      (c.role || '').toLowerCase().includes((scheduleSearch || '').toLowerCase()) ||
-      (c.stationName || '').toLowerCase().includes((scheduleSearch || '').toLowerCase())
-    );
+    const filteredEligibleOptions = eligibleCandidates.filter(c => {
+      const matchesName = (c.fullName || '').toLowerCase().includes(scheduleNameSearch.toLowerCase()) ||
+                          (c.hrmsId || '').toLowerCase().includes(scheduleNameSearch.toLowerCase()) ||
+                          (c.role || '').toLowerCase().includes(scheduleNameSearch.toLowerCase());
+      const matchesStation = (c.stationName || '').toLowerCase().includes(scheduleStationSearch.toLowerCase()) ||
+                             (c.stationCode || '').toLowerCase().includes(scheduleStationSearch.toLowerCase());
+      return matchesName && matchesStation;
+    });
 
     const catCCount = directoryCandidates.filter(c => c.category === 'C').length;
     const catDCount = directoryCandidates.filter(c => c.category === 'D').length;
@@ -784,81 +788,173 @@ const CounselingPage = () => {
           {/* SCHEDULE COUNSELLING TAB */}
           {currentTab === 'schedule' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              {/* Form Section */}
+              {/* Manual Scheduling Section */}
               <div style={{
                 backgroundColor: '#FFFFFF',
                 borderRadius: '16px',
                 border: '1px solid #D7E3EF',
                 padding: '24px',
-                boxShadow: '0 4px 6px -1px rgba(11, 35, 65, 0.05)'
+                boxShadow: '0 4px 6px -1px rgba(11, 35, 65, 0.05)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '20px'
               }}>
-                <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: 700, color: '#0B2341' }}>
-                  Schedule Manually
-                </h3>
-                <form onSubmit={handleScheduleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>
-                      Select Candidate Working Under You
-                    </label>
-                    <input 
-                      type="text" 
-                      placeholder="Type candidate name, HRMS, or role to filter..." 
-                      value={scheduleSearch}
-                      onChange={(e) => setScheduleSearch(e.target.value)}
+                <div>
+                  <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', fontWeight: 700, color: '#0B2341' }}>
+                    Schedule Counselling Manually
+                  </h3>
+                  <p style={{ margin: 0, fontSize: '12.5px', color: '#64748B' }}>
+                    Search and select any candidate working under your division/section to manually schedule safety counselling.
+                  </p>
+                </div>
+
+                {/* Filters Row (Horizontal) */}
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '16px',
+                  flexWrap: 'wrap'
+                }}>
+                  <div style={{ flex: 1, minWidth: '240px', position: 'relative' }}>
+                    <Search style={{
+                      position: 'absolute',
+                      left: '12px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      color: '#94A3B8'
+                    }} size={16} />
+                    <input
+                      type="text"
+                      placeholder="Search by Name / HRMS ID..."
+                      value={scheduleNameSearch}
+                      onChange={(e) => setScheduleNameSearch(e.target.value)}
                       style={{
-                        padding: '10px 14px',
+                        width: '100%',
+                        padding: '8px 12px 8px 36px',
                         borderRadius: '8px',
                         border: '1px solid #CBD5E1',
-                        fontSize: '13.5px',
+                        fontSize: '13px',
                         outline: 'none',
-                        marginBottom: '8px'
+                        fontFamily: 'inherit',
+                        transition: 'all 0.2s'
                       }}
                     />
-                    <select
-                      value={selectedEligibleId}
-                      onChange={(e) => setSelectedEligibleId(e.target.value)}
+                  </div>
+
+                  <div style={{ flex: 1, minWidth: '240px', position: 'relative' }}>
+                    <Search style={{
+                      position: 'absolute',
+                      left: '12px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      color: '#94A3B8'
+                    }} size={16} />
+                    <input
+                      type="text"
+                      placeholder="Search by Station Name / Station Code..."
+                      value={scheduleStationSearch}
+                      onChange={(e) => setScheduleStationSearch(e.target.value)}
                       style={{
-                        padding: '10px 14px',
+                        width: '100%',
+                        padding: '8px 12px 8px 36px',
                         borderRadius: '8px',
                         border: '1px solid #CBD5E1',
-                        fontSize: '13.5px',
+                        fontSize: '13px',
                         outline: 'none',
-                        backgroundColor: '#FFFFFF',
-                        cursor: 'pointer'
+                        fontFamily: 'inherit',
+                        transition: 'all 0.2s'
                       }}
-                    >
-                      <option value="">-- Choose Candidate --</option>
-                      {filteredEligibleOptions.map(c => (
-                        <option key={c.userId} value={c.userId}>
-                          {c.fullName} ({c.hrmsId}) | {c.role} | {c.stationCode}
-                        </option>
-                      ))}
-                    </select>
+                    />
                   </div>
-                  <button
-                    type="submit"
-                    disabled={scheduleLoading || !selectedEligibleId}
-                    style={{
-                      padding: '10px 20px',
-                      backgroundColor: selectedEligibleId ? '#2B5CE6' : '#94A3B8',
-                      color: '#FFFFFF',
-                      border: 'none',
-                      borderRadius: '8px',
-                      fontSize: '14px',
-                      fontWeight: 700,
-                      cursor: selectedEligibleId ? 'pointer' : 'not-allowed',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '8px',
-                      alignSelf: 'flex-start',
-                      transition: 'all 0.2s'
-                    }}
-                  >
-                    {scheduleLoading ? <Loader2 className="animate-spin" size={16} /> : <Calendar size={16} />}
-                    <span>Schedule Counselling</span>
-                  </button>
-                </form>
+                </div>
+
+                {/* Eligible Candidates Table */}
+                <div style={{
+                  border: '1px solid #E2E8F0',
+                  borderRadius: '12px',
+                  overflow: 'hidden'
+                }}>
+                  <table style={{
+                    width: '100%',
+                    borderCollapse: 'collapse',
+                    textAlign: 'left',
+                    fontSize: '13px'
+                  }}>
+                    <thead>
+                      <tr style={{
+                        backgroundColor: '#F8FAFC',
+                        borderBottom: '1px solid #E2E8F0',
+                        color: '#475569',
+                        fontWeight: 600
+                      }}>
+                        <th style={{ padding: '12px 16px' }}>Staff Details</th>
+                        <th style={{ padding: '12px 16px' }}>Station</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'right' }}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredEligibleOptions.slice(0, 10).map((cand) => (
+                        <tr
+                          key={cand.userId}
+                          style={{
+                            borderBottom: '1px solid #F1F5F9',
+                            transition: 'background-color 0.2s'
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F8FAFC'}
+                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                        >
+                          <td style={{ padding: '12px 16px' }}>
+                            <div style={{ fontWeight: 700, color: '#0B2341' }}>{cand.fullName}</div>
+                            <div style={{ fontSize: '11.5px', color: '#64748B', marginTop: '2px' }}>
+                              HRMS ID: {cand.hrmsId} | {cand.role}
+                            </div>
+                          </td>
+                          <td style={{ padding: '12px 16px', fontWeight: 500, color: '#334155' }}>
+                            {cand.stationName || 'N/A'} {cand.stationCode ? `(${cand.stationCode})` : ''}
+                          </td>
+                          <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                            <button
+                              onClick={() => handleDirectSchedule(cand.userId)}
+                              disabled={scheduleLoading}
+                              style={{
+                                padding: '6px 12px',
+                                backgroundColor: '#2B5CE6',
+                                border: 'none',
+                                borderRadius: '6px',
+                                fontSize: '12px',
+                                fontWeight: 700,
+                                color: '#FFFFFF',
+                                cursor: 'pointer',
+                                transition: 'background-color 0.2s',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px'
+                              }}
+                              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1D4ED8'}
+                              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#2B5CE6'}
+                            >
+                              <Calendar size={13} />
+                              Schedule
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+
+                      {filteredEligibleOptions.length === 0 && (
+                        <tr>
+                          <td colSpan="3" style={{ padding: '24px', textAlign: 'center', color: '#94A3B8' }}>
+                            No eligible candidates found.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+                {filteredEligibleOptions.length > 10 && (
+                  <div style={{ fontSize: '11.5px', color: '#64748B', textAlign: 'center', marginTop: '-8px' }}>
+                    Showing first 10 matches. Refine your search filters above if the candidate is not listed.
+                  </div>
+                )}
               </div>
 
               {/* Table Section */}
