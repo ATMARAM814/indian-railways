@@ -49,27 +49,44 @@ async function getPmSummary(profileId) {
       (
         SELECT percentage 
         FROM assessments 
-        WHERE assessed_user_id = $1 AND status = 'completed' AND approval_status = 'approved'
+        WHERE assessed_user_id = $1 AND status = 'completed'
         ORDER BY created_at DESC 
         LIMIT 1
       ) as latest_score,
-      (
-        SELECT sc.category_code
-        FROM employee_categories ec
-        JOIN staff_categories sc ON sc.id = ec.category_id
-        WHERE ec.profile_id = $1
-        ORDER BY ec.created_at DESC
-        LIMIT 1
+      COALESCE(
+        (
+          SELECT 
+            CASE 
+              WHEN a.alcoholic_status = 'Alcoholic' OR a.percentage <= 25 THEN 'D'
+              WHEN a.mcq_score < 15 OR a.alertness_score < 15 THEN 'C'
+              WHEN a.percentage >= 80 THEN 'A'
+              WHEN a.percentage >= 50 THEN 'B'
+              WHEN a.percentage >= 26 THEN 'C'
+              ELSE 'D'
+            END
+          FROM assessments a
+          WHERE a.assessed_user_id = $1 AND a.status = 'completed'
+          ORDER BY a.created_at DESC
+          LIMIT 1
+        ),
+        (
+          SELECT sc.category_code
+          FROM employee_categories ec
+          JOIN staff_categories sc ON sc.id = ec.category_id
+          WHERE ec.profile_id = $1
+          ORDER BY ec.created_at DESC
+          LIMIT 1
+        )
       ) as current_category,
       (
         SELECT COUNT(*)::int
         FROM assessments
-        WHERE assessed_user_id = $1 AND status = 'completed' AND approval_status = 'approved'
+        WHERE assessed_user_id = $1 AND status = 'completed'
       ) as total_assessments,
       (
-        SELECT evaluated_at
+        SELECT COALESCE(evaluated_at, created_at)
         FROM assessments
-        WHERE assessed_user_id = $1 AND status = 'completed' AND approval_status = 'approved'
+        WHERE assessed_user_id = $1 AND status = 'completed'
         ORDER BY created_at DESC
         LIMIT 1
       ) as last_assessment_date;
@@ -82,10 +99,10 @@ async function getPmPerformanceTrend(profileId) {
   const query = `
     SELECT 
       percentage,
-      evaluated_at as "assessmentDate"
+      COALESCE(evaluated_at, created_at) as "assessmentDate"
     FROM assessments
-    WHERE assessed_user_id = $1 AND status = 'completed' AND approval_status = 'approved'
-    ORDER BY evaluated_at ASC;
+    WHERE assessed_user_id = $1 AND status = 'completed'
+    ORDER BY COALESCE(evaluated_at, created_at) ASC;
   `;
   const result = await pool.query(query, [profileId]);
   return result.rows;
@@ -100,7 +117,7 @@ async function getPmSectionWisePerformance(profileId) {
       AVG(discipline_score)::numeric(10,2) as discipline,
       AVG(appearance_score)::numeric(10,2) as appearance
     FROM assessments
-    WHERE assessed_user_id = $1 AND status = 'completed' AND approval_status = 'approved';
+    WHERE assessed_user_id = $1 AND status = 'completed';
   `;
   const result = await pool.query(query, [profileId]);
   return result.rows[0];
@@ -108,17 +125,35 @@ async function getPmSectionWisePerformance(profileId) {
 
 async function getPmCategoryHistory(profileId) {
   const query = `
-    SELECT
-      ec.created_at as date,
-      sc.category_code as category
-    FROM employee_categories ec
-    JOIN staff_categories sc ON sc.id = ec.category_id
-    WHERE ec.profile_id = $1
-    ORDER BY ec.created_at ASC;
+    SELECT date, category FROM (
+      SELECT ec.created_at as date, sc.category_code as category
+      FROM employee_categories ec
+      JOIN staff_categories sc ON sc.id = ec.category_id
+      WHERE ec.profile_id = $1
+      UNION ALL
+      SELECT COALESCE(a.evaluated_at, a.created_at) as date,
+        CASE 
+          WHEN a.alcoholic_status = 'Alcoholic' OR a.percentage <= 25 THEN 'D'
+          WHEN a.mcq_score < 15 OR a.alertness_score < 15 THEN 'C'
+          WHEN a.percentage >= 80 THEN 'A'
+          WHEN a.percentage >= 50 THEN 'B'
+          WHEN a.percentage >= 26 THEN 'C'
+          ELSE 'D'
+        END as category
+      FROM assessments a
+      WHERE a.assessed_user_id = $1 AND a.status = 'completed'
+        AND NOT EXISTS (
+          SELECT 1 FROM employee_categories ec2
+          WHERE ec2.profile_id = $1 
+            AND ec2.created_at >= COALESCE(a.evaluated_at, a.created_at) - INTERVAL '5 seconds'
+            AND ec2.created_at <= COALESCE(a.evaluated_at, a.created_at) + INTERVAL '5 seconds'
+        )
+    ) combined
+    ORDER BY date ASC;
   `;
-    const result = await pool.query(query, [profileId]);
-    return result.rows;
-  }
+  const result = await pool.query(query, [profileId]);
+  return result.rows;
+}
 
   // ==========================================
   // TM DASHBOARD QUERIES
@@ -130,27 +165,44 @@ async function getPmCategoryHistory(profileId) {
         (
           SELECT percentage 
           FROM assessments 
-          WHERE assessed_user_id = $1 AND status = 'completed' AND approval_status = 'approved'
+          WHERE assessed_user_id = $1 AND status = 'completed'
           ORDER BY created_at DESC 
           LIMIT 1
         ) as latest_score,
-        (
-          SELECT sc.category_code
-          FROM employee_categories ec
-          JOIN staff_categories sc ON sc.id = ec.category_id
-          WHERE ec.profile_id = $1
-          ORDER BY ec.created_at DESC
-          LIMIT 1
+        COALESCE(
+          (
+            SELECT 
+              CASE 
+                WHEN a.alcoholic_status = 'Alcoholic' OR a.percentage <= 25 THEN 'D'
+                WHEN a.mcq_score < 15 OR a.alertness_score < 15 THEN 'C'
+                WHEN a.percentage >= 80 THEN 'A'
+                WHEN a.percentage >= 50 THEN 'B'
+                WHEN a.percentage >= 26 THEN 'C'
+                ELSE 'D'
+              END
+            FROM assessments a
+            WHERE a.assessed_user_id = $1 AND a.status = 'completed'
+            ORDER BY a.created_at DESC
+            LIMIT 1
+          ),
+          (
+            SELECT sc.category_code
+            FROM employee_categories ec
+            JOIN staff_categories sc ON sc.id = ec.category_id
+            WHERE ec.profile_id = $1
+            ORDER BY ec.created_at DESC
+            LIMIT 1
+          )
         ) as current_category,
         (
           SELECT COUNT(*)::int
           FROM assessments
-          WHERE assessed_user_id = $1 AND status = 'completed' AND approval_status = 'approved'
+          WHERE assessed_user_id = $1 AND status = 'completed'
         ) as total_assessments,
         (
-          SELECT evaluated_at
+          SELECT COALESCE(evaluated_at, created_at)
           FROM assessments
-          WHERE assessed_user_id = $1 AND status = 'completed' AND approval_status = 'approved'
+          WHERE assessed_user_id = $1 AND status = 'completed'
           ORDER BY created_at DESC
           LIMIT 1
         ) as last_assessment_date;
@@ -163,10 +215,10 @@ async function getPmCategoryHistory(profileId) {
     const query = `
       SELECT 
         percentage,
-        evaluated_at as "assessmentDate"
+        COALESCE(evaluated_at, created_at) as "assessmentDate"
       FROM assessments
-      WHERE assessed_user_id = $1 AND status = 'completed' AND approval_status = 'approved'
-      ORDER BY evaluated_at ASC;
+      WHERE assessed_user_id = $1 AND status = 'completed'
+      ORDER BY COALESCE(evaluated_at, created_at) ASC;
     `;
     const result = await pool.query(query, [profileId]);
     return result.rows;
@@ -181,7 +233,7 @@ async function getPmCategoryHistory(profileId) {
         AVG(discipline_score)::numeric(10,2) as discipline,
         AVG(appearance_score)::numeric(10,2) as appearance
       FROM assessments
-      WHERE assessed_user_id = $1 AND status = 'completed' AND approval_status = 'approved';
+      WHERE assessed_user_id = $1 AND status = 'completed';
     `;
     const result = await pool.query(query, [profileId]);
     return result.rows[0];
@@ -189,13 +241,31 @@ async function getPmCategoryHistory(profileId) {
 
   async function getTmCategoryHistory(profileId) {
     const query = `
-      SELECT
-        ec.created_at as date,
-        sc.category_code as category
-      FROM employee_categories ec
-      JOIN staff_categories sc ON sc.id = ec.category_id
-      WHERE ec.profile_id = $1
-      ORDER BY ec.created_at ASC;
+      SELECT date, category FROM (
+        SELECT ec.created_at as date, sc.category_code as category
+        FROM employee_categories ec
+        JOIN staff_categories sc ON sc.id = ec.category_id
+        WHERE ec.profile_id = $1
+        UNION ALL
+        SELECT COALESCE(a.evaluated_at, a.created_at) as date,
+          CASE 
+            WHEN a.alcoholic_status = 'Alcoholic' OR a.percentage <= 25 THEN 'D'
+            WHEN a.mcq_score < 15 OR a.alertness_score < 15 THEN 'C'
+            WHEN a.percentage >= 80 THEN 'A'
+            WHEN a.percentage >= 50 THEN 'B'
+            WHEN a.percentage >= 26 THEN 'C'
+            ELSE 'D'
+          END as category
+        FROM assessments a
+        WHERE a.assessed_user_id = $1 AND a.status = 'completed'
+          AND NOT EXISTS (
+            SELECT 1 FROM employee_categories ec2
+            WHERE ec2.profile_id = $1 
+              AND ec2.created_at >= COALESCE(a.evaluated_at, a.created_at) - INTERVAL '5 seconds'
+              AND ec2.created_at <= COALESCE(a.evaluated_at, a.created_at) + INTERVAL '5 seconds'
+          )
+      ) combined
+      ORDER BY date ASC;
     `;
     const result = await pool.query(query, [profileId]);
     return result.rows;
