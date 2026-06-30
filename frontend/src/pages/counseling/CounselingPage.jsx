@@ -578,43 +578,52 @@ const CounselingPage = () => {
             </div>
           ) : (
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <h1 style={{ fontSize: '24px', fontWeight: 800, color: '#0B2341', margin: 0 }}>
-                  Counselling Control Centre
-                </h1>
-                <p style={{ fontSize: '13.5px', color: '#64748B', margin: '4px 0 0 0' }}>
-                  {currentTab === 'schedule' && 'Manually schedule safety counselling for any candidate under your scope.'}
-                  {currentTab === 'categoryC' && 'Quarterly Safety Counselling Watchlist (Category C / Medium Risk Staff)'}
-                  {currentTab === 'categoryD' && 'Monthly Safety Counselling Watchlist (Category D / High Risk Staff)'}
-                  {currentTab === 'history' && 'Logs and scorecard histories of all completed safety counselling cycles.'}
-                </p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <button
+                  onClick={() => {
+                    handleTabChange('landing');
+                    handleSearchQueryChange('');
+                    setStatusFilter('all');
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: '#FFFFFF',
+                    border: '1px solid #D7E3EF',
+                    borderRadius: '8px',
+                    width: '36px',
+                    height: '36px',
+                    cursor: 'pointer',
+                    color: '#475569',
+                    transition: 'all 0.2s',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#EFF6FF';
+                    e.currentTarget.style.borderColor = '#BFDBFE';
+                    e.currentTarget.style.color = '#2B5CE6';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '#FFFFFF';
+                    e.currentTarget.style.borderColor = '#D7E3EF';
+                    e.currentTarget.style.color = '#475569';
+                  }}
+                  title="Back to Control Centre"
+                >
+                  <ArrowLeft size={18} />
+                </button>
+                <div>
+                  <h1 style={{ fontSize: '24px', fontWeight: 800, color: '#0B2341', margin: 0 }}>
+                    Counselling Control Centre
+                  </h1>
+                  <p style={{ fontSize: '13.5px', color: '#64748B', margin: '4px 0 0 0' }}>
+                    {currentTab === 'schedule' && 'Manually schedule safety counselling for any candidate under your scope.'}
+                    {currentTab === 'categoryC' && 'Quarterly Safety Counselling Watchlist (Category C / Medium Risk Staff)'}
+                    {currentTab === 'categoryD' && 'Monthly Safety Counselling Watchlist (Category D / High Risk Staff)'}
+                    {currentTab === 'history' && 'Logs and scorecard histories of all completed safety counselling cycles.'}
+                  </p>
+                </div>
               </div>
-              <button
-                onClick={() => {
-                  handleTabChange('landing');
-                  handleSearchQueryChange('');
-                  setStatusFilter('all');
-                }}
-                style={{
-                  padding: '8px 16px',
-                  backgroundColor: '#FFFFFF',
-                  border: '1px solid #D7E3EF',
-                  borderRadius: '8px',
-                  fontSize: '13.5px',
-                  fontWeight: 700,
-                  color: '#475569',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  transition: 'all 0.2s'
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F8FAFC'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FFFFFF'}
-              >
-                <ArrowLeft size={16} />
-                Back to Control Centre
-              </button>
             </div>
           )}
 
@@ -1236,18 +1245,18 @@ const CounselingPage = () => {
                                 }}
                                 style={{
                                   padding: '6px 14px',
-                                  backgroundColor: '#3B82F6',
+                                  backgroundColor: '#EF4444',
                                   border: 'none',
                                   borderRadius: '6px',
                                   fontSize: '12px',
                                   fontWeight: 700,
                                   color: '#FFFFFF',
                                   cursor: 'pointer',
-                                  boxShadow: '0 2px 4px rgba(59, 130, 246, 0.2)',
+                                  boxShadow: '0 2px 4px rgba(239, 68, 68, 0.2)',
                                   transition: 'all 0.2s'
                                 }}
-                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#2563EB'}
-                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#3B82F6'}
+                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#DC2626'}
+                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#EF4444'}
                               >
                                 Start Counselling
                               </button>
@@ -1460,18 +1469,18 @@ const CounselingPage = () => {
                                 }}
                                 style={{
                                   padding: '6px 14px',
-                                  backgroundColor: '#3B82F6',
+                                  backgroundColor: '#EF4444',
                                   border: 'none',
                                   borderRadius: '6px',
                                   fontSize: '12px',
                                   fontWeight: 700,
                                   color: '#FFFFFF',
                                   cursor: 'pointer',
-                                  boxShadow: '0 2px 4px rgba(59, 130, 246, 0.2)',
+                                  boxShadow: '0 2px 4px rgba(239, 68, 68, 0.2)',
                                   transition: 'all 0.2s'
                                 }}
-                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#2563EB'}
-                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#3B82F6'}
+                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#DC2626'}
+                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#EF4444'}
                               >
                                 Counsel
                               </button>
