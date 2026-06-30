@@ -338,7 +338,7 @@ const CounselingPage = () => {
           {/* Header Row */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <button
-              onClick={() => navigate(-1)}
+              onClick={() => navigate('/counseling')}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -382,7 +382,7 @@ const CounselingPage = () => {
             <h3 style={{ margin: '0 0 8px 0', fontSize: '16px', fontWeight: 700 }}>Connection Error</h3>
             <p style={{ margin: 0, fontSize: '13.5px' }}>{error}</p>
             <button
-              onClick={() => navigate(-1)}
+              onClick={() => navigate('/counseling')}
               style={{
                 marginTop: '16px',
                 padding: '8px 16px',
@@ -1432,7 +1432,7 @@ const CounselingPage = () => {
                           </td>
                           <td style={{ padding: '16px 20px', textAlign: 'right' }}>
                             <button
-                              onClick={() => navigate(`/assessments/${row.role}/${row.assessmentId}/view`)}
+                              onClick={() => navigate(`/assessments/${row.role}/${row.assessmentId}/view?from=counseling`)}
                               style={{
                                 padding: '6px 14px',
                                 backgroundColor: '#0B2341',
@@ -1644,7 +1644,7 @@ const CounselingPage = () => {
         {/* Header Row */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => navigate('/counseling')}
             style={{
               display: 'flex',
               alignItems: 'center',

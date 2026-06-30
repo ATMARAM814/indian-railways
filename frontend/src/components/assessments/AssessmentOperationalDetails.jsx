@@ -66,7 +66,9 @@ export const AssessmentOperationalDetails = ({
         <div className="op-item">
           <label className="op-label">Alcoholic Status *</label>
           {readOnly ? (
-            <div className="op-value-readonly">{details.alcoholicStatus || 'Not Specified'}</div>
+            <div className="op-value-readonly">
+              {details.alcoholicStatus === 'Sober' ? 'Non-Alcoholic' : (details.alcoholicStatus || 'Not Specified')}
+            </div>
           ) : (
             <select
               name="alcoholicStatus"
@@ -106,7 +108,9 @@ export const AssessmentOperationalDetails = ({
         <div className="op-item">
           <label className="op-label">REF Status</label>
           {readOnly ? (
-            <div className="op-value-readonly">{details.refStatus || 'Not Specified'}</div>
+            <div className="op-value-readonly">
+              {details.refStatus === 'Fit' ? 'Cleared' : (details.refStatus || 'Not Specified')}
+            </div>
           ) : (
             <select
               name="refStatus"

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate, Navigate } from 'react-router-dom';
+import { useParams, useNavigate, Navigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useAssessments } from '../../hooks/useAssessments';
 import DashboardLayout from '../../components/layout/DashboardLayout';
@@ -17,6 +17,8 @@ const AssessmentFormPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const isViewMode = window.location.pathname.includes('/view');
+  const [searchParams] = useSearchParams();
+  const fromSource = searchParams.get('from');
 
   const {
     handleGetDetails,
@@ -243,7 +245,9 @@ const AssessmentFormPage = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <button
             onClick={() => {
-              if (assessmentResult && assessmentResult.assessed_user_id) {
+              if (fromSource === 'counseling') {
+                navigate('/counseling');
+              } else if (assessmentResult && assessmentResult.assessed_user_id) {
                 navigate(`/assessments/${roleCode}/${assessmentResult.assessed_user_id}/history`);
               } else {
                 navigate(`/assessments/${roleCode}`);
@@ -426,13 +430,15 @@ const AssessmentFormPage = () => {
                 checklistScore={checklistScore}
                 onSaveDraft={onSave}
                 onSubmitFinal={onSubmit}
-                 onCancel={() => {
-                   if (assessmentResult && assessmentResult.assessed_user_id) {
-                     navigate(`/assessments/${roleCode}/${assessmentResult.assessed_user_id}/history`);
-                   } else {
-                     navigate(`/assessments/${roleCode}`);
-                   }
-                 }}
+                onCancel={() => {
+                  if (fromSource === 'counseling') {
+                    navigate('/counseling');
+                  } else if (assessmentResult && assessmentResult.assessed_user_id) {
+                    navigate(`/assessments/${roleCode}/${assessmentResult.assessed_user_id}/history`);
+                  } else {
+                    navigate(`/assessments/${roleCode}`);
+                  }
+                }}
                 onReset={handleResetChecklist}
                 savingDraft={savingDraft}
                 submitting={submitting}
