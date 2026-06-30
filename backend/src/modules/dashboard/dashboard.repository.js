@@ -149,7 +149,7 @@ async function getPmCategoryHistory(profileId) {
             AND ec2.created_at <= COALESCE(a.evaluated_at, a.created_at) + INTERVAL '5 seconds'
         )
     ) combined
-    ORDER BY date ASC;
+    ORDER BY date DESC;
   `;
   const result = await pool.query(query, [profileId]);
   return result.rows;
@@ -265,7 +265,7 @@ async function getPmCategoryHistory(profileId) {
               AND ec2.created_at <= COALESCE(a.evaluated_at, a.created_at) + INTERVAL '5 seconds'
           )
       ) combined
-      ORDER BY date ASC;
+      ORDER BY date DESC;
     `;
     const result = await pool.query(query, [profileId]);
     return result.rows;
