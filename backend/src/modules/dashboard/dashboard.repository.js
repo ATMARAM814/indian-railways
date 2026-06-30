@@ -1404,9 +1404,9 @@ async function getDashboardCategoryCandidatesDb({
   }
   
   if (category === 'C') {
-    conditions.push(`COALESCE(sc.category_code, CASE WHEN lca.percentage >= 26 AND lca.percentage < 50 THEN 'C' ELSE NULL END) = 'C'`);
+    conditions.push(`COALESCE(sc.category_code, CASE WHEN lca.alcoholic_status = 'Alcoholic' OR lca.percentage <= 25 THEN 'D' WHEN lca.mcq_score < 15 OR lca.alertness_score < 15 THEN 'C' WHEN lca.percentage >= 26 AND lca.percentage < 50 THEN 'C' ELSE NULL END) = 'C'`);
   } else if (category === 'D') {
-    conditions.push(`COALESCE(sc.category_code, CASE WHEN lca.percentage <= 25 OR lca.alcoholic_status = 'Alcoholic' THEN 'D' ELSE NULL END) = 'D'`);
+    conditions.push(`COALESCE(sc.category_code, CASE WHEN lca.alcoholic_status = 'Alcoholic' OR lca.percentage <= 25 THEN 'D' ELSE NULL END) = 'D'`);
   }
   
   if (search && search.trim()) {
@@ -1424,7 +1424,7 @@ async function getDashboardCategoryCandidatesDb({
       p.id as "userId",
       p.full_name as "fullName",
       r.name as "role",
-      COALESCE(sc.category_code, CASE WHEN lca.alcoholic_status = 'Alcoholic' OR lca.percentage <= 25 THEN 'D' WHEN lca.percentage >= 26 AND lca.percentage < 50 THEN 'C' ELSE NULL END) as "category",
+      COALESCE(sc.category_code, CASE WHEN lca.alcoholic_status = 'Alcoholic' OR lca.percentage <= 25 THEN 'D' WHEN lca.mcq_score < 15 OR lca.alertness_score < 15 THEN 'C' WHEN lca.percentage >= 80 THEN 'A' WHEN lca.percentage >= 50 THEN 'B' WHEN lca.percentage >= 26 THEN 'C' ELSE NULL END) as "category",
       lca.percentage as "latestScore",
       lca.evaluated_at as "lastAssessmentDate",
       s.station_name as "stationName",
@@ -1432,7 +1432,9 @@ async function getDashboardCategoryCandidatesDb({
       CASE
         WHEN sc.category_code = 'D' THEN 'Category D / Critical Risk'
         WHEN sc.category_code = 'C' THEN 'Category C / Medium Risk'
+        WHEN lca.alcoholic_status = 'Alcoholic' THEN 'Alcoholic Status'
         WHEN lca.percentage <= 25 THEN 'Low Assessment Score (<= 25%)'
+        WHEN lca.mcq_score < 15 OR lca.alertness_score < 15 THEN 'Score < 60% in Critical Parameter(s)'
         WHEN lca.percentage >= 26 AND lca.percentage < 50 THEN 'Medium Assessment Score (26-49%)'
         ELSE 'Risk Watchlist'
       END as "reason"
@@ -1448,7 +1450,7 @@ async function getDashboardCategoryCandidatesDb({
     ) ec ON true
     LEFT JOIN staff_categories sc ON sc.id = ec.category_id
     LEFT JOIN LATERAL (
-      SELECT percentage, evaluated_at, alcoholic_status FROM assessments
+      SELECT percentage, evaluated_at, alcoholic_status, mcq_score, alertness_score FROM assessments
       WHERE assessed_user_id = p.id AND status = 'completed' AND approval_status = 'approved'
       ORDER BY created_at DESC
       LIMIT 1

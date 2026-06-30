@@ -90,7 +90,7 @@ async function selfHealUserCategories() {
 
     const assRes = await pool.query(`
       SELECT DISTINCT ON (assessed_user_id)
-        id, assessed_user_id, percentage, approved_by, approved_at, alcoholic_status
+        id, assessed_user_id, percentage, approved_by, approved_at, alcoholic_status, mcq_score, alertness_score
       FROM assessments
       WHERE approval_status = 'approved'
       ORDER BY assessed_user_id, created_at DESC
@@ -99,10 +99,14 @@ async function selfHealUserCategories() {
     for (const row of assRes.rows) {
       const userId = row.assessed_user_id;
       const pct = Number(row.percentage || 0);
+      const mcqScore = Number(row.mcq_score || 0);
+      const alertnessScore = Number(row.alertness_score || 0);
       
       let expectedCode = 'D';
-      if (row.alcoholic_status === 'Alcoholic') {
+      if (row.alcoholic_status === 'Alcoholic' || pct <= 25) {
         expectedCode = 'D';
+      } else if (mcqScore < 15 || alertnessScore < 15) {
+        expectedCode = 'C';
       } else {
         if (pct >= 80) expectedCode = 'A';
         else if (pct >= 50) expectedCode = 'B';

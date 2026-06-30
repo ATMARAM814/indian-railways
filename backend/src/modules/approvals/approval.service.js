@@ -120,10 +120,15 @@ async function approveAssessmentService(
   }
 
   let categoryCode = 'D';
-  if (assessment.alcoholic_status === 'Alcoholic') {
+  const pct = Number(assessment.percentage || 0);
+  const mcqScore = Number(assessment.mcq_score || 0);
+  const alertnessScore = Number(assessment.alertness_score || 0);
+
+  if (assessment.alcoholic_status === 'Alcoholic' || pct <= 25) {
     categoryCode = 'D';
+  } else if (mcqScore < 15 || alertnessScore < 15) {
+    categoryCode = 'C';
   } else {
-    const pct = Number(assessment.percentage || 0);
     if (pct >= 80) {
       categoryCode = 'A';
     } else if (pct >= 50) {

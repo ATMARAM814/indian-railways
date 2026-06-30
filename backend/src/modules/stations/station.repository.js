@@ -524,6 +524,7 @@ async function getStationHighRiskWatchlistDb(stationId) {
       lca.evaluated_at as "lastAssessmentDate",
       CASE
         WHEN sc.category_code = 'D' THEN 'Category D / Critical Risk'
+        WHEN lca.alcoholic_status = 'Alcoholic' THEN 'Alcoholic Status'
         WHEN lca.percentage <= 25 THEN 'Low Assessment Score (<= 25%)'
         ELSE 'Risk Watchlist'
       END as "reason"
@@ -538,14 +539,14 @@ async function getStationHighRiskWatchlistDb(stationId) {
     ) ec ON true
     LEFT JOIN staff_categories sc ON sc.id = ec.category_id
     LEFT JOIN LATERAL (
-      SELECT percentage, evaluated_at FROM assessments
+      SELECT percentage, evaluated_at, alcoholic_status FROM assessments
       WHERE assessed_user_id = p.id AND status = 'completed' AND approval_status = 'approved'
       ORDER BY created_at DESC
       LIMIT 1
     ) lca ON true
     WHERE ssp.station_id = $1 
       AND ssp.is_current = true
-      AND (sc.category_code = 'D' OR lca.percentage <= 25)
+      AND (sc.category_code = 'D' OR lca.percentage <= 25 OR lca.alcoholic_status = 'Alcoholic')
     ORDER BY lca.percentage ASC NULLS LAST;
   `;
   const result = await pool.query(query, [stationId]);
@@ -651,6 +652,7 @@ async function getStationCategoryCWatchlistDb(stationId) {
       lca.evaluated_at as "lastAssessmentDate",
       CASE
         WHEN sc.category_code = 'C' THEN 'Category C / Medium Risk'
+        WHEN lca.mcq_score < 15 OR lca.alertness_score < 15 THEN 'Score < 60% in Critical Parameter(s)'
         WHEN lca.percentage >= 26 AND lca.percentage < 50 THEN 'Medium Assessment Score (26-49%)'
         ELSE 'Medium Risk Watchlist'
       END as "reason"
@@ -665,14 +667,22 @@ async function getStationCategoryCWatchlistDb(stationId) {
     ) ec ON true
     LEFT JOIN staff_categories sc ON sc.id = ec.category_id
     LEFT JOIN LATERAL (
-      SELECT percentage, evaluated_at FROM assessments
+      SELECT percentage, evaluated_at, alcoholic_status, mcq_score, alertness_score FROM assessments
       WHERE assessed_user_id = p.id AND status = 'completed' AND approval_status = 'approved'
       ORDER BY created_at DESC
       LIMIT 1
     ) lca ON true
     WHERE ssp.station_id = $1 
       AND ssp.is_current = true
-      AND (sc.category_code = 'C' OR (lca.percentage >= 26 AND lca.percentage < 50))
+      AND (
+        sc.category_code = 'C' 
+        OR 
+        (
+          COALESCE(lca.alcoholic_status, '') != 'Alcoholic' 
+          AND COALESCE(lca.percentage, 0) > 25 
+          AND (COALESCE(lca.mcq_score, 0) < 15 OR COALESCE(lca.alertness_score, 0) < 15 OR (lca.percentage >= 26 AND lca.percentage < 50))
+        )
+      )
     ORDER BY lca.percentage ASC NULLS LAST;
   `;
   const result = await pool.query(query, [stationId]);
@@ -701,7 +711,7 @@ async function getDivisionCategoryCandidatesDb(divisionId, categoryCode) {
     ) ec ON true
     LEFT JOIN staff_categories sc ON sc.id = ec.category_id
     LEFT JOIN LATERAL (
-      SELECT percentage, evaluated_at FROM assessments
+      SELECT percentage, evaluated_at, alcoholic_status, mcq_score, alertness_score FROM assessments
       WHERE assessed_user_id = p.id AND status = 'completed' AND approval_status = 'approved'
       ORDER BY created_at DESC
       LIMIT 1
@@ -709,9 +719,21 @@ async function getDivisionCategoryCandidatesDb(divisionId, categoryCode) {
     WHERE s.division_id = $1 
       AND ssp.is_current = true
       AND (
-        ($2 = 'C' AND (sc.category_code = 'C' OR (lca.percentage >= 26 AND lca.percentage < 50)))
+        ($2 = 'C' AND (
+          sc.category_code = 'C' 
+          OR 
+          (
+            COALESCE(lca.alcoholic_status, '') != 'Alcoholic' 
+            AND COALESCE(lca.percentage, 0) > 25 
+            AND (COALESCE(lca.mcq_score, 0) < 15 OR COALESCE(lca.alertness_score, 0) < 15 OR (lca.percentage >= 26 AND lca.percentage < 50))
+          )
+        ))
         OR
-        ($2 = 'D' AND (sc.category_code = 'D' OR lca.percentage <= 25))
+        ($2 = 'D' AND (
+          sc.category_code = 'D' 
+          OR COALESCE(lca.percentage, 0) <= 25 
+          OR COALESCE(lca.alcoholic_status, '') = 'Alcoholic'
+        ))
       )
     ORDER BY lca.percentage ASC NULLS LAST, p.full_name ASC;
   `;
@@ -742,7 +764,7 @@ async function getTiCategoryCandidatesDb(stationIds, categoryCode) {
     ) ec ON true
     LEFT JOIN staff_categories sc ON sc.id = ec.category_id
     LEFT JOIN LATERAL (
-      SELECT percentage, evaluated_at FROM assessments
+      SELECT percentage, evaluated_at, alcoholic_status, mcq_score, alertness_score FROM assessments
       WHERE assessed_user_id = p.id AND status = 'completed' AND approval_status = 'approved'
       ORDER BY created_at DESC
       LIMIT 1
@@ -750,9 +772,21 @@ async function getTiCategoryCandidatesDb(stationIds, categoryCode) {
     WHERE ssp.station_id = ANY($1) 
       AND ssp.is_current = true
       AND (
-        ($2 = 'C' AND (sc.category_code = 'C' OR (lca.percentage >= 26 AND lca.percentage < 50)))
+        ($2 = 'C' AND (
+          sc.category_code = 'C' 
+          OR 
+          (
+            COALESCE(lca.alcoholic_status, '') != 'Alcoholic' 
+            AND COALESCE(lca.percentage, 0) > 25 
+            AND (COALESCE(lca.mcq_score, 0) < 15 OR COALESCE(lca.alertness_score, 0) < 15 OR (lca.percentage >= 26 AND lca.percentage < 50))
+          )
+        ))
         OR
-        ($2 = 'D' AND (sc.category_code = 'D' OR lca.percentage <= 25))
+        ($2 = 'D' AND (
+          sc.category_code = 'D' 
+          OR COALESCE(lca.percentage, 0) <= 25 
+          OR COALESCE(lca.alcoholic_status, '') = 'Alcoholic'
+        ))
       )
     ORDER BY lca.percentage ASC NULLS LAST, p.full_name ASC;
   `;
