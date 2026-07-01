@@ -50,3 +50,23 @@ export const getRetestHistory = async () => {
   const res = await apiClient.get('/counseling/history-retests');
   return res.data;
 };
+
+export const getCounselingSubjectsForRole = async (roleCode) => {
+  const res = await apiClient.get(`/counseling/subjects/${roleCode}`);
+  return res.data;
+};
+
+export const createCounselingSubject = async (subjectData) => {
+  const res = await apiClient.post('/counseling/subjects', subjectData);
+  return res.data;
+};
+
+export const updateCounselingSubject = async (subjectId, subjectData) => {
+  const res = await apiClient.put(`/counseling/subjects/${subjectId}`, subjectData);
+  return res.data;
+};
+
+export const deleteCounselingSubject = async (subjectId) => {
+  const res = await apiClient.delete(`/counseling/subjects/${subjectId}`);
+  return res.data;
+};

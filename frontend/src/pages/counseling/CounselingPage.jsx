@@ -12,11 +12,15 @@ import {
   scheduleCounseling,
   getScheduledCounselingList,
   cancelScheduledCounseling,
-  getRetestHistory
+  getRetestHistory,
+  getCounselingSubjectsForRole,
+  createCounselingSubject,
+  updateCounselingSubject,
+  deleteCounselingSubject
 } from '../../api/counselingApi';
 import { 
   ArrowLeft, ArrowRight, User, ShieldAlert, CheckCircle, AlertCircle, Save, Loader2, MessageSquare, Zap, Search, Calendar, History,
-  Clock, AlertTriangle, UserCheck, Eye, Trash2, ChevronRight, X
+  Clock, AlertTriangle, UserCheck, Eye, Trash2, ChevronRight, X, Edit, Plus
 } from 'lucide-react';
 
 const CounselingPage = () => {
@@ -31,6 +35,99 @@ const CounselingPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [activatingRetest, setActivatingRetest] = useState(false);
   const [feedback, setFeedback] = useState(null);
+
+  // Manage Subjects State
+  const [selectedSubjectRole, setSelectedSubjectRole] = useState('PM');
+  const [subjectsList, setSubjectsList] = useState([]);
+  const [subjectsLoading, setSubjectsLoading] = useState(false);
+  const [subjectFormOpen, setSubjectFormOpen] = useState(false);
+  const [editingSubject, setEditingSubject] = useState(null);
+  const [subjectNameInput, setSubjectNameInput] = useState('');
+  const [subjectDescInput, setSubjectDescInput] = useState('');
+
+  const loadSubjectsForRole = async (roleCode) => {
+    setSubjectsLoading(true);
+    try {
+      const data = await getCounselingSubjectsForRole(roleCode);
+      if (data && data.success) {
+        setSubjectsList(data.data);
+      }
+    } catch (err) {
+      console.error("Failed to load subjects", err);
+      setFeedback({
+        type: 'error',
+        message: err.response?.data?.message || err.message || 'Failed to load subjects'
+      });
+      setTimeout(() => setFeedback(null), 4000);
+    } finally {
+      setSubjectsLoading(false);
+    }
+  };
+
+  const handleSaveSubject = async (e) => {
+    e.preventDefault();
+    if (!subjectNameInput.trim()) {
+      alert("Subject name is required");
+      return;
+    }
+    try {
+      if (editingSubject) {
+        const res = await updateCounselingSubject(editingSubject.id, {
+          subjectName: subjectNameInput,
+          description: subjectDescInput
+        });
+        if (res.success) {
+          setFeedback({ type: 'success', message: 'Subject updated successfully.' });
+        }
+      } else {
+        const res = await createCounselingSubject({
+          roleCode: selectedSubjectRole,
+          subjectName: subjectNameInput,
+          description: subjectDescInput
+        });
+        if (res.success) {
+          setFeedback({ type: 'success', message: 'Subject created successfully.' });
+        }
+      }
+      setSubjectFormOpen(false);
+      setEditingSubject(null);
+      setSubjectNameInput('');
+      setSubjectDescInput('');
+      loadSubjectsForRole(selectedSubjectRole);
+    } catch (err) {
+      setFeedback({
+        type: 'error',
+        message: err.response?.data?.message || err.message || 'Failed to save subject'
+      });
+    } finally {
+      setTimeout(() => setFeedback(null), 4000);
+    }
+  };
+
+  const handleDeleteSubject = async (subjectId) => {
+    if (!window.confirm("Are you sure you want to delete this subject? This will delete all candidate progress associated with it.")) {
+      return;
+    }
+    try {
+      const res = await deleteCounselingSubject(subjectId);
+      if (res.success) {
+        setFeedback({ type: 'success', message: 'Subject deleted successfully.' });
+        loadSubjectsForRole(selectedSubjectRole);
+      }
+    } catch (err) {
+      setFeedback({
+        type: 'error',
+        message: err.response?.data?.message || err.message || 'Failed to delete subject'
+      });
+      setTimeout(() => setFeedback(null), 4000);
+    }
+  };
+
+  useEffect(() => {
+    if (currentTab === 'subjects') {
+      loadSubjectsForRole(selectedSubjectRole);
+    }
+  }, [currentTab, selectedSubjectRole]);
 
   // Sync state with URL search params
   const updateUrlParams = (updates) => {
@@ -635,6 +732,7 @@ const CounselingPage = () => {
                     {currentTab === 'categoryC' && 'Quarterly Safety Counselling Watchlist (Category C / Medium Risk Staff)'}
                     {currentTab === 'categoryD' && 'Monthly Safety Counselling Watchlist (Category D / High Risk Staff)'}
                     {currentTab === 'history' && 'Logs and scorecard histories of all completed safety counselling cycles.'}
+                    {currentTab === 'subjects' && 'Manage registered counselling subjects and syllabus checklists for division roles.'}
                   </p>
                 </div>
               </div>
@@ -970,6 +1068,81 @@ const CounselingPage = () => {
                     alignItems: 'center',
                     justifyContent: 'center',
                     color: '#475569',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+                  }}>
+                    <ArrowRight size={18} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Card 5: Manage Subjects */}
+              <div 
+                onClick={() => handleTabChange('subjects')}
+                style={{
+                  backgroundColor: '#FFFFFF',
+                  borderRadius: '16px',
+                  border: '1px solid #E2E8F0',
+                  borderLeft: '4px solid #10B981',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
+                  transition: 'transform 0.2s, box-shadow 0.2s',
+                  overflow: 'hidden',
+                  height: '100%',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-4px)';
+                  e.currentTarget.style.boxShadow = '0 12px 20px -8px rgba(0, 0, 0, 0.15)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.05)';
+                }}
+              >
+                <div style={{ padding: '28px 24px 32px 24px', display: 'flex', flexDirection: 'column', gap: '20px', flex: 1 }}>
+                  <div style={{
+                    backgroundColor: '#D1FAE5',
+                    borderRadius: '50%',
+                    width: '44px',
+                    height: '44px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#059669',
+                    flexShrink: 0
+                  }}>
+                    <ClipboardList size={20} />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <h3 style={{ fontSize: '17px', fontWeight: 700, color: '#0B2341', margin: 0 }}>Manage Subjects</h3>
+                    <p style={{ fontSize: '13px', color: '#64748B', margin: 0, lineHeight: '1.5' }}>
+                      Create, update, and delete counselling subjects registered for each role.
+                    </p>
+                  </div>
+                </div>
+                <div style={{
+                  backgroundColor: '#ECFDF5',
+                  padding: '18px 24px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  borderTop: '1px solid #F1F5F9'
+                }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 600, color: '#047857' }}>Configuration</span>
+                    <span style={{ fontSize: '12px', fontWeight: 500, color: '#475569' }}>Counselling Topics</span>
+                  </div>
+                  <div style={{
+                    backgroundColor: '#FFFFFF',
+                    borderRadius: '50%',
+                    width: '36px',
+                    height: '36px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#059669',
                     boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
                   }}>
                     <ArrowRight size={18} />
@@ -1674,6 +1847,361 @@ const CounselingPage = () => {
                   </tbody>
                 </table>
               </div>
+            </div>
+          )}
+
+          {/* MANAGE SUBJECTS TAB */}
+          {currentTab === 'subjects' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              {/* Role Selection Tabs & Add Subject Button */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                backgroundColor: '#FFFFFF',
+                borderRadius: '16px',
+                border: '1px solid #D7E3EF',
+                padding: '16px 20px',
+                boxShadow: '0 4px 6px -1px rgba(11, 35, 65, 0.05)',
+                flexWrap: 'wrap',
+                gap: '16px'
+              }}>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  {[
+                    { code: 'PM', label: 'Pointsman (PM)' },
+                    { code: 'SM', label: 'Station Master (SM)' },
+                    { code: 'TM', label: 'Train Manager (TM)' },
+                    { code: 'TI', label: 'Traffic Inspector (TI)' },
+                    { code: 'SMS', label: 'SM Supervisor (SMS)' }
+                  ].map((roleOpt) => {
+                    const isSelected = selectedSubjectRole === roleOpt.code;
+                    return (
+                      <button
+                        key={roleOpt.code}
+                        onClick={() => setSelectedSubjectRole(roleOpt.code)}
+                        style={{
+                          padding: '8px 16px',
+                          borderRadius: '8px',
+                          border: isSelected ? '1px solid #2B5CE6' : '1px solid #CBD5E1',
+                          backgroundColor: isSelected ? '#EFF6FF' : '#FFFFFF',
+                          color: isSelected ? '#2B5CE6' : '#475569',
+                          fontWeight: 600,
+                          fontSize: '13px',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s'
+                        }}
+                      >
+                        {roleOpt.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <button
+                  onClick={() => {
+                    setEditingSubject(null);
+                    setSubjectNameInput('');
+                    setSubjectDescInput('');
+                    setSubjectFormOpen(true);
+                  }}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '10px 18px',
+                    backgroundColor: '#10B981',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '13.5px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    boxShadow: '0 4px 6px -1px rgba(16, 185, 129, 0.2)'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#059669'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#10B981'}
+                >
+                  <Plus size={16} />
+                  Add New Subject
+                </button>
+              </div>
+
+              {/* Table of Subjects */}
+              <div style={{
+                backgroundColor: '#FFFFFF',
+                borderRadius: '16px',
+                border: '1px solid #D7E3EF',
+                boxShadow: '0 4px 6px -1px rgba(11, 35, 65, 0.05)',
+                overflow: 'hidden'
+              }}>
+                {subjectsLoading ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px', gap: '12px' }}>
+                    <Loader2 className="animate-spin" size={28} style={{ color: '#2B5CE6' }} />
+                    <span style={{ fontSize: '13.5px', color: '#64748B' }}>Loading subjects list...</span>
+                  </div>
+                ) : subjectsList.length === 0 ? (
+                  <div style={{ padding: '60px', textAlign: 'center', color: '#94A3B8', fontSize: '14px' }}>
+                    No counseling subjects registered for this role.
+                  </div>
+                ) : (
+                  <table style={{
+                    width: '100%',
+                    borderCollapse: 'collapse',
+                    textAlign: 'left',
+                    fontSize: '13.5px'
+                  }}>
+                    <thead>
+                      <tr style={{
+                        backgroundColor: '#F8FAFC',
+                        borderBottom: '1px solid #E2E8F0',
+                        color: '#475569',
+                        fontWeight: 600
+                      }}>
+                        <th style={{ padding: '16px 20px', width: '30%' }}>Subject Name</th>
+                        <th style={{ padding: '16px 20px', width: '55%' }}>Description</th>
+                        <th style={{ padding: '16px 20px', width: '15%', textAlign: 'right' }}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {subjectsList.map((sub) => (
+                        <tr
+                          key={sub.id}
+                          style={{
+                            borderBottom: '1px solid #F1F5F9',
+                            transition: 'background-color 0.2s'
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F8FAFC'}
+                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                        >
+                          <td style={{ padding: '16px 20px', fontWeight: 700, color: '#0B2341' }}>
+                            {sub.subjectName}
+                          </td>
+                          <td style={{ padding: '16px 20px', color: '#475569', lineHeight: '1.5' }}>
+                            {sub.description || <span style={{ color: '#94A3B8', fontStyle: 'italic' }}>No description provided</span>}
+                          </td>
+                          <td style={{ padding: '16px 20px', textAlign: 'right' }}>
+                            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                              <button
+                                onClick={() => {
+                                  setEditingSubject(sub);
+                                  setSubjectNameInput(sub.subjectName);
+                                  setSubjectDescInput(sub.description || '');
+                                  setSubjectFormOpen(true);
+                                }}
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  width: '32px',
+                                  height: '32px',
+                                  backgroundColor: '#EFF6FF',
+                                  border: '1px solid #BFDBFE',
+                                  borderRadius: '6px',
+                                  color: '#2B5CE6',
+                                  cursor: 'pointer',
+                                  transition: 'all 0.2s'
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#DBEAFE'}
+                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#EFF6FF'}
+                                title="Edit Subject"
+                              >
+                                <Edit size={14} />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteSubject(sub.id)}
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  width: '32px',
+                                  height: '32px',
+                                  backgroundColor: '#FEF2F2',
+                                  border: '1px solid #FCA5A5',
+                                  borderRadius: '6px',
+                                  color: '#DC2626',
+                                  cursor: 'pointer',
+                                  transition: 'all 0.2s'
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#FEE2E2'}
+                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FEF2F2'}
+                                title="Delete Subject"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+
+              {/* Add/Edit Modal */}
+              {subjectFormOpen && (
+                <div style={{
+                  position: 'fixed',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  backgroundColor: 'rgba(15, 23, 42, 0.4)',
+                  backdropFilter: 'blur(4px)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  zIndex: 1000
+                }}>
+                  <div style={{
+                    backgroundColor: '#FFFFFF',
+                    borderRadius: '16px',
+                    width: '90%',
+                    maxWidth: '500px',
+                    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    border: '1px solid #D7E3EF'
+                  }}>
+                    <div style={{
+                      padding: '20px 24px',
+                      borderBottom: '1px solid #E2E8F0',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      backgroundColor: '#F8FAFC',
+                      borderTopLeftRadius: '16px',
+                      borderTopRightRadius: '16px'
+                    }}>
+                      <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 800, color: '#0B2341' }}>
+                        {editingSubject ? 'Edit Counselling Subject' : 'Add New Counselling Subject'}
+                      </h3>
+                      <button
+                        onClick={() => {
+                          setSubjectFormOpen(false);
+                          setEditingSubject(null);
+                        }}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          fontSize: '22px',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          color: '#64748B',
+                          outline: 'none'
+                        }}
+                      >
+                        &times;
+                      </button>
+                    </div>
+
+                    <form onSubmit={handleSaveSubject} style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '24px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>Role</label>
+                        <input
+                          type="text"
+                          value={
+                            selectedSubjectRole === 'PM' ? 'Pointsman (PM)' :
+                            selectedSubjectRole === 'SM' ? 'Station Master (SM)' :
+                            selectedSubjectRole === 'TM' ? 'Train Manager (TM)' :
+                            selectedSubjectRole === 'TI' ? 'Traffic Inspector (TI)' :
+                            selectedSubjectRole === 'SMS' ? 'SM Supervisor (SMS)' : selectedSubjectRole
+                          }
+                          disabled
+                          style={{
+                            padding: '10px 12px',
+                            borderRadius: '8px',
+                            border: '1px solid #E2E8F0',
+                            backgroundColor: '#F1F5F9',
+                            color: '#64748B',
+                            fontSize: '13.5px',
+                            fontWeight: 500
+                          }}
+                        />
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>Subject Name *</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="e.g. Stabling and clearing of load"
+                          value={subjectNameInput}
+                          onChange={(e) => setSubjectNameInput(e.target.value)}
+                          style={{
+                            padding: '10px 12px',
+                            borderRadius: '8px',
+                            border: '1px solid #CBD5E1',
+                            fontSize: '13.5px',
+                            outline: 'none',
+                            fontFamily: 'inherit'
+                          }}
+                        />
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>Description</label>
+                        <textarea
+                          placeholder="Provide details about the subject curriculum or checklist items..."
+                          value={subjectDescInput}
+                          onChange={(e) => setSubjectDescInput(e.target.value)}
+                          rows="4"
+                          style={{
+                            padding: '10px 12px',
+                            borderRadius: '8px',
+                            border: '1px solid #CBD5E1',
+                            fontSize: '13.5px',
+                            outline: 'none',
+                            fontFamily: 'inherit',
+                            resize: 'vertical'
+                          }}
+                        />
+                      </div>
+
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'flex-end',
+                        gap: '12px',
+                        marginTop: '8px'
+                      }}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSubjectFormOpen(false);
+                            setEditingSubject(null);
+                          }}
+                          style={{
+                            padding: '10px 20px',
+                            borderRadius: '8px',
+                            border: '1px solid #D7E3EF',
+                            backgroundColor: '#FFFFFF',
+                            color: '#475569',
+                            fontSize: '13.5px',
+                            fontWeight: 600,
+                            cursor: 'pointer'
+                          }}
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          style={{
+                            padding: '10px 20px',
+                            borderRadius: '8px',
+                            border: 'none',
+                            backgroundColor: '#10B981',
+                            color: '#FFFFFF',
+                            fontSize: '13.5px',
+                            fontWeight: 700,
+                            cursor: 'pointer'
+                          }}
+                        >
+                          {editingSubject ? 'Save Changes' : 'Create Subject'}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

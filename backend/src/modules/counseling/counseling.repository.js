@@ -566,6 +566,37 @@ async function getRetestHistoryDb({ assessorId, assessorRole }) {
   return result.rows;
 }
 
+async function createCounselingSubjectDb({ roleCode, subjectName, description }) {
+  const query = `
+    INSERT INTO counseling_subjects (role_code, subject_name, description)
+    VALUES ($1, $2, $3)
+    RETURNING id, role_code as "roleCode", subject_name as "subjectName", description;
+  `;
+  const res = await pool.query(query, [roleCode, subjectName, description]);
+  return res.rows[0];
+}
+
+async function updateCounselingSubjectDb(subjectId, { subjectName, description }) {
+  const query = `
+    UPDATE counseling_subjects
+    SET subject_name = $2, description = $3, updated_at = CURRENT_TIMESTAMP
+    WHERE id = $1
+    RETURNING id, role_code as "roleCode", subject_name as "subjectName", description;
+  `;
+  const res = await pool.query(query, [subjectId, subjectName, description]);
+  return res.rows[0];
+}
+
+async function deleteCounselingSubjectDb(subjectId) {
+  const query = `
+    DELETE FROM counseling_subjects
+    WHERE id = $1
+    RETURNING id;
+  `;
+  const res = await pool.query(query, [subjectId]);
+  return res.rows[0];
+}
+
 module.exports = {
   getCandidateDetailsDb,
   getCounselingSubjectsForRoleDb,
@@ -581,5 +612,8 @@ module.exports = {
   scheduleCounselingDb,
   getScheduledCounselingListDb,
   cancelScheduledCounselingDb,
-  getRetestHistoryDb
+  getRetestHistoryDb,
+  createCounselingSubjectDb,
+  updateCounselingSubjectDb,
+  deleteCounselingSubjectDb
 };

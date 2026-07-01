@@ -225,6 +225,45 @@ async function getRetestHistory({ assessorId, assessorRole }) {
   return await db.getRetestHistoryDb({ assessorId, assessorRole });
 }
 
+function verifySubjectAuthority(assessorRole) {
+  const validRoles = ["TI", "AOM", "SUPER_ADMIN", "AOM Users"];
+  const roleUpper = (assessorRole || "").toUpperCase();
+  const isAuthorizedRole = validRoles.includes(roleUpper) || 
+    roleUpper.includes("AOM") || 
+    roleUpper.includes("SUPER_ADMIN") || 
+    roleUpper.includes("TI");
+
+  if (!isAuthorizedRole) {
+    throw new Error("Access Denied: You do not have permission to manage subjects.");
+  }
+}
+
+async function getCounselingSubjectsForRoleService(roleCode, assessorRole) {
+  verifySubjectAuthority(assessorRole);
+  return await db.getCounselingSubjectsForRoleDb(roleCode);
+}
+
+async function createCounselingSubject({ roleCode, subjectName, description }, assessorRole) {
+  verifySubjectAuthority(assessorRole);
+  if (!roleCode || !subjectName) {
+    throw new Error("roleCode and subjectName are required.");
+  }
+  return await db.createCounselingSubjectDb({ roleCode, subjectName, description });
+}
+
+async function updateCounselingSubject(subjectId, { subjectName, description }, assessorRole) {
+  verifySubjectAuthority(assessorRole);
+  if (!subjectName) {
+    throw new Error("subjectName is required.");
+  }
+  return await db.updateCounselingSubjectDb(subjectId, { subjectName, description });
+}
+
+async function deleteCounselingSubject(subjectId, assessorRole) {
+  verifySubjectAuthority(assessorRole);
+  return await db.deleteCounselingSubjectDb(subjectId);
+}
+
 module.exports = {
   getCandidateCounselingData,
   saveCandidateCounselingData,
@@ -235,5 +274,9 @@ module.exports = {
   scheduleCounseling,
   getScheduledCounselingList,
   cancelScheduledCounseling,
-  getRetestHistory
+  getRetestHistory,
+  getCounselingSubjectsForRoleService,
+  createCounselingSubject,
+  updateCounselingSubject,
+  deleteCounselingSubject
 };
