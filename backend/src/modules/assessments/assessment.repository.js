@@ -923,7 +923,7 @@ async function getAssessorRoleStats(assessorId, assessorRole) {
       targetRoles.push('TM');
     }
   } else if (['Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS'].includes(assessorRole)) {
-    targetRoles = ['SM', 'SS', 'Cabin Master', 'PM', 'Shunting Master'];
+    targetRoles = ['PM', 'Shunting Master', 'SM', 'SS', 'Cabin Master'];
   } else if (assessorRole === 'TI') {
     targetRoles = ['SM', 'SS', 'TM', 'Cabin Master'];
   } else if (assessorRole === 'AOM') {
