@@ -20,7 +20,7 @@ import {
 } from '../../api/counselingApi';
 import { 
   ArrowLeft, ArrowRight, User, ShieldAlert, CheckCircle, AlertCircle, Save, Loader2, MessageSquare, Zap, Search, Calendar, History,
-  Clock, AlertTriangle, UserCheck, Eye, Trash2, ChevronRight, X, Edit, Plus
+  Clock, AlertTriangle, UserCheck, Eye, Trash2, ChevronRight, X, Edit, Plus, ClipboardList
 } from 'lucide-react';
 
 const CounselingPage = () => {
