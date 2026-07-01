@@ -942,7 +942,7 @@ async function getEligibleStaff(assessorId, assessorRole, roleCode, filters = {}
     `);
     conditions.push(`
       (
-        r.name IN ('SM', 'SS', 'Cabin Master', 'CABIN MASTER')
+        r.name IN ('SM', 'SS', 'Cabin Master', 'CABIN MASTER', 'PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM')
       )
     `);
   } else if (assessorRole === 'SM' || assessorRole === 'SS' || ['Cabin Master', 'CABIN MASTER'].includes(assessorRole)) {
@@ -954,6 +954,17 @@ async function getEligibleStaff(assessorId, assessorRole, roleCode, filters = {}
         WHERE profile_id = $${values.length}
           AND is_current = true
         LIMIT 1
+      )
+    `);
+    conditions.push(`
+      NOT EXISTS (
+        SELECT 1 
+        FROM staff_station_postings ssp_sms
+        JOIN profiles p_sms ON p_sms.id = ssp_sms.profile_id
+        JOIN roles r_sms ON r_sms.id = p_sms.role_id
+        WHERE ssp_sms.station_id = ssp.station_id 
+          AND ssp_sms.is_current = true 
+          AND r_sms.name IN ('Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Station Master Supervisior', 'Station Master Supervisio')
       )
     `);
     if (assessorId === '439a8db6-2546-4858-abbc-3752f4acb536') {
@@ -1281,7 +1292,7 @@ async function getBulkEligibleStaff(assessorId, assessorRole, roleCode) {
     `);
     conditions.push(`
       (
-        r.name IN ('SM', 'SS', 'Cabin Master', 'CABIN MASTER')
+        r.name IN ('SM', 'SS', 'Cabin Master', 'CABIN MASTER', 'PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM')
       )
     `);
   } else if (assessorRole === 'SM' || assessorRole === 'SS' || ['Cabin Master', 'CABIN MASTER'].includes(assessorRole)) {
@@ -1293,6 +1304,17 @@ async function getBulkEligibleStaff(assessorId, assessorRole, roleCode) {
         WHERE profile_id = $${values.length}
           AND is_current = true
         LIMIT 1
+      )
+    `);
+    conditions.push(`
+      NOT EXISTS (
+        SELECT 1 
+        FROM staff_station_postings ssp_sms
+        JOIN profiles p_sms ON p_sms.id = ssp_sms.profile_id
+        JOIN roles r_sms ON r_sms.id = p_sms.role_id
+        WHERE ssp_sms.station_id = ssp.station_id 
+          AND ssp_sms.is_current = true 
+          AND r_sms.name IN ('Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Station Master Supervisior', 'Station Master Supervisio')
       )
     `);
     if (assessorId === '439a8db6-2546-4858-abbc-3752f4acb536') {

@@ -81,6 +81,15 @@ async function createAssessment({
     }
   }
 
+  if (assessmentType !== 'Retest' && assessmentCycle !== 'Retest after Counseling' && ['SM', 'SS', 'Cabin Master', 'CABIN MASTER'].includes(finalAssessorRoleCode)) {
+    const hasSms = await hasStationSupervisor(assessedUserId);
+    if (hasSms) {
+      throw new Error(
+        "This station has an assigned Station Master Supervisor. Station Master cannot assess staff of this station."
+      );
+    }
+  }
+
   const activeExists = await hasActiveAssessment(assessedUserId);
   if (activeExists) {
     throw new Error("This employee already has an active assessment cycle.");
@@ -153,9 +162,9 @@ function validateAssessmentHierarchy(
     "Cabin Master": ["PM", "Shunting Master", "SHUNTING MASTER", "SHM"],
     "CABIN MASTER": ["PM", "Shunting Master", "SHUNTING MASTER", "SHM"],
     TI: ["SM", "SS", "TM", "Cabin Master", "CABIN MASTER"],
-    "Station Master Supervisor": ["SM", "SS", "Cabin Master", "CABIN MASTER"],
-    SMS: ["SM", "SS", "Cabin Master", "CABIN MASTER"],
-    "STATION MASTER SUPERVISOR": ["SM", "SS", "Cabin Master", "CABIN MASTER"],
+    "Station Master Supervisor": ["SM", "SS", "Cabin Master", "CABIN MASTER", "PM", "Shunting Master", "SHUNTING MASTER", "SHM"],
+    SMS: ["SM", "SS", "Cabin Master", "CABIN MASTER", "PM", "Shunting Master", "SHUNTING MASTER", "SHM"],
+    "STATION MASTER SUPERVISOR": ["SM", "SS", "Cabin Master", "CABIN MASTER", "PM", "Shunting Master", "SHUNTING MASTER", "SHM"],
     AOM: ["TI", "Station Master Supervisor", "SMS", "STATION MASTER SUPERVISOR"],
   };
 
