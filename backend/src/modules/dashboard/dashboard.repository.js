@@ -605,7 +605,6 @@ async function getAomSummary(divisionId) {
         FROM assessments a
         WHERE a.status = 'completed'
           AND a.approval_status = 'pending_approval'
-          AND a.assessed_role_code IN ('SM', 'TM', 'TI', 'SS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Cabin Master', 'CABIN MASTER')
           AND a.assessed_user_id IN (
             SELECT ssp.profile_id
             FROM staff_station_postings ssp
@@ -685,7 +684,7 @@ async function getAomRoleDistribution(divisionId) {
     JOIN stations s ON s.id = ssp.station_id
     JOIN profiles p ON p.id = ssp.profile_id
     JOIN roles r ON r.id = p.role_id
-    WHERE s.division_id = $1 AND ssp.is_current = true
+    WHERE s.division_id = $1 AND ssp.is_current = true AND p.status = 'active'
     GROUP BY r.name;
   `;
   const result = await pool.query(query, [divisionId]);

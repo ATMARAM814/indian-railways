@@ -33,7 +33,7 @@ const LanguageSwitcher = ({ theme = 'light' }) => {
 
   return (
     <div className="lang-switcher-container" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-      <Globe size={15} style={{ color: isDark ? '#93C5FD' : '#64748B' }} />
+      <Globe size={15} className="lang-switcher-icon" style={{ color: isDark ? '#93C5FD' : '#64748B' }} />
       <select 
         value={lang} 
         onChange={(e) => changeLanguage(e.target.value)}
