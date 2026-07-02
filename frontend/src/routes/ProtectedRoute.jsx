@@ -18,7 +18,6 @@ const ProtectedRoute = ({ children }) => {
 
   if (!isAuthenticated) {
     // Redirect to login page but save the current location they were trying to access
-    
     const state = location.pathname === '/change-password' ? null : { from: location };
     return <Navigate to="/login" state={state} replace />;
   }

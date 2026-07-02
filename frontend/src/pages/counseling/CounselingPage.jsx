@@ -123,12 +123,6 @@ const CounselingPage = () => {
     }
   };
 
-  useEffect(() => {
-    if (currentTab === 'subjects') {
-      loadSubjectsForRole(selectedSubjectRole);
-    }
-  }, [currentTab, selectedSubjectRole]);
-
   // Sync state with URL search params
   const updateUrlParams = (updates) => {
     const nextParams = new URLSearchParams(searchParams);
@@ -166,6 +160,12 @@ const CounselingPage = () => {
   const [historyLogLoading, setHistoryLogLoading] = useState(false);
   const [scheduleNameSearch, setScheduleNameSearch] = useState(searchParams.get('scheduleNameSearch') || '');
   const [scheduleStationSearch, setScheduleStationSearch] = useState(searchParams.get('scheduleStationSearch') || '');
+
+  useEffect(() => {
+    if (currentTab === 'subjects') {
+      loadSubjectsForRole(selectedSubjectRole);
+    }
+  }, [currentTab, selectedSubjectRole]);
 
   const handleTabChange = (tab) => {
     setCurrentTab(tab);
