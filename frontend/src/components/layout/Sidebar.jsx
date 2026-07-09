@@ -224,6 +224,10 @@ const Sidebar = ({ isOpen, onClose }) => {
     if (role !== 'SUPER_ADMIN') {
       main.push({ name: 'PME & REF Status', path: '/pme-ref-status', icon: <FileCheck size={18} /> });
     }
+    const hasEmployeePmeRefAccess = ['SS', 'SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'Station Master Supervisior', 'Station Master Supervisio', 'TI', 'AOM', 'SUPER_ADMIN'].includes(role);
+    if (hasEmployeePmeRefAccess) {
+      main.push({ name: 'Employee PME & Ref Status', path: '/employee-pme-ref-status', icon: <FileCheck size={18} /> });
+    }
     if (role !== 'SUPER_ADMIN' && role !== 'AOM') {
       main.push({ name: 'My Profile', path: '/profile', icon: <User size={18} /> });
     }

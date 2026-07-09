@@ -16,6 +16,7 @@ const {
   activateUserController,
   transferUserController,
   getWorkforcePresenceController,
+  getEmployeePmeRefStatusController,
 } = require("./user.controller");
 
 router.post(
@@ -37,6 +38,13 @@ router.get(
   authenticate,
   enforcePasswordChange,
   getWorkforcePresenceController
+);
+
+router.get(
+  "/employee-pme-ref-status",
+  authenticate,
+  enforcePasswordChange,
+  getEmployeePmeRefStatusController
 );
 
 router.get(

@@ -22,6 +22,8 @@ const {
   assignUserCategory,
   getCategoryByCode,
   getActiveRolesInScope,
+  getEmployeePmeRefStatus,
+  countEmployeePmeRefStatus,
 } = require("./user.repository");
 
 const CREATE_PERMISSIONS = {
@@ -787,6 +789,33 @@ async function getWorkforcePresenceService(userId, role) {
   return await getActiveRolesInScope(userId, role);
 }
 
+async function getEmployeePmeRefStatusService(creatorUserId, creatorRole, filters = {}) {
+  const users = await getEmployeePmeRefStatus({
+    creatorUserId,
+    creatorRole,
+    ...filters
+  });
+
+  const totalCount = await countEmployeePmeRefStatus({
+    creatorUserId,
+    creatorRole,
+    ...filters
+  });
+
+  const limit = filters.limit ? parseInt(filters.limit, 10) : 10;
+  const page = filters.page ? parseInt(filters.page, 10) : 1;
+
+  return {
+    users,
+    pagination: {
+      totalItems: totalCount,
+      totalPages: Math.ceil(totalCount / limit),
+      currentPage: page,
+      limit
+    }
+  };
+}
+
 module.exports = {
   createUserService,
   listUsersService,
@@ -797,4 +826,5 @@ module.exports = {
   activateUserService,
   transferUserService,
   getWorkforcePresenceService,
+  getEmployeePmeRefStatusService,
 };

@@ -1054,6 +1054,268 @@ async function getActiveRolesInScope(userId, role) {
   return result.rows.map((row) => row.name);
 }
 
+async function getEmployeePmeRefStatus(filters) {
+  const {
+    creatorUserId,
+    creatorRole,
+    search,
+    stationId,
+    pmeStatus,
+    refStatus,
+    page = 1,
+    limit = 10
+  } = filters;
+
+  const offset = (Number(page) - 1) * Number(limit);
+  const values = [];
+  const conditions = [];
+
+  let query = `
+    SELECT
+      p.id,
+      p.full_name,
+      p.hrms_id,
+      p.designation,
+      p.status,
+      p.pme_due,
+      p.pme_done,
+      p.ref_due,
+      p.ref_done,
+      r.name as role,
+      s.id as station_id,
+      s.station_name,
+      s.station_code,
+      CASE
+        WHEN p.pme_due IS NULL THEN '—'
+        WHEN p.pme_due < NOW() THEN 'OVERDUE'
+        WHEN p.pme_done IS NOT NULL AND p.pme_done >= p.pme_due THEN 'FIT'
+        ELSE 'DUE'
+      END as computed_pme_status,
+      CASE
+        WHEN p.ref_due IS NULL THEN '—'
+        WHEN p.ref_due < NOW() THEN 'OVERDUE'
+        WHEN p.ref_done IS NOT NULL AND p.ref_done >= p.ref_due THEN 'COMPLETED'
+        ELSE 'DUE'
+      END as computed_ref_status
+    FROM profiles p
+    JOIN roles r ON r.id = p.role_id
+    LEFT JOIN staff_station_postings ssp ON ssp.profile_id = p.id AND ssp.is_current = true
+    LEFT JOIN stations s ON s.id = ssp.station_id
+  `;
+
+  // Apply hierarchy conditions
+  if (creatorRole === "SM" || creatorRole === "SS" || ["Station Master Supervisor", "STATION MASTER SUPERVISOR", "SMS"].includes(creatorRole) || ["Cabin Master", "CABIN MASTER"].includes(creatorRole)) {
+    values.push(creatorUserId);
+    conditions.push(`
+      s.id = (
+        SELECT station_id
+        FROM staff_station_postings
+        WHERE profile_id = $${values.length}
+          AND is_current = true
+        LIMIT 1
+      )
+    `);
+  } else if (creatorRole === "TI") {
+    values.push(creatorUserId);
+    conditions.push(`
+      s.id IN (
+        SELECT station_id
+        FROM station_assignments
+        WHERE profile_id = $${values.length}
+          AND assignment_type = 'TI_AREA'
+          AND assigned_to IS NULL
+      )
+      AND s.id NOT IN (
+        SELECT station_id
+        FROM staff_station_postings ssp_sms
+        JOIN profiles p_sms ON p_sms.id = ssp_sms.profile_id
+        JOIN roles r_sms ON r_sms.id = p_sms.role_id
+        WHERE ssp_sms.is_current = true
+          AND r_sms.name IN ('Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Station Master Supervisior', 'Station Master Supervisio')
+      )
+    `);
+  } else if (creatorRole === "AOM") {
+    values.push(creatorUserId);
+    conditions.push(`
+      s.division_id = (
+        SELECT division_id
+        FROM division_assignments
+        WHERE profile_id = $${values.length}
+          AND is_current = true
+        LIMIT 1
+      )
+    `);
+  }
+
+  conditions.push(`p.status = 'active'`);
+
+  if (creatorRole === "SM" || creatorRole === "SS" || ["Station Master Supervisor", "STATION MASTER SUPERVISOR", "SMS"].includes(creatorRole) || ["Cabin Master", "CABIN MASTER"].includes(creatorRole)) {
+    conditions.push(`r.name IN ('PM', 'Pointsman', 'Pointsmen', 'SM', 'Station Master', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'Cabin Master', 'CABIN MASTER', 'SS', 'Station Master Incharge')`);
+  }
+
+  if (stationId) {
+    values.push(stationId);
+    conditions.push(`s.id = $${values.length}`);
+  }
+
+  if (search) {
+    values.push(`%${search}%`);
+    conditions.push(`(p.full_name ILIKE $${values.length} OR p.hrms_id ILIKE $${values.length} OR p.designation ILIKE $${values.length})`);
+  }
+
+  if (pmeStatus) {
+    values.push(pmeStatus.toUpperCase());
+    conditions.push(`
+      CASE
+        WHEN p.pme_due IS NULL THEN '—'
+        WHEN p.pme_due < NOW() THEN 'OVERDUE'
+        WHEN p.pme_done IS NOT NULL AND p.pme_done >= p.pme_due THEN 'FIT'
+        ELSE 'DUE'
+      END = $${values.length}
+    `);
+  }
+
+  if (refStatus) {
+    values.push(refStatus.toUpperCase());
+    conditions.push(`
+      CASE
+        WHEN p.ref_due IS NULL THEN '—'
+        WHEN p.ref_due < NOW() THEN 'OVERDUE'
+        WHEN p.ref_done IS NOT NULL AND p.ref_done >= p.ref_due THEN 'COMPLETED'
+        ELSE 'DUE'
+      END = $${values.length}
+    `);
+  }
+
+  if (conditions.length > 0) {
+    query += ` WHERE ${conditions.join(" AND ")} `;
+  }
+
+  query += `
+    ORDER BY p.full_name
+    LIMIT $${values.length + 1}
+    OFFSET $${values.length + 2}
+  `;
+
+  values.push(Number(limit), offset);
+
+  const result = await pool.query(query, values);
+  return result.rows;
+}
+
+async function countEmployeePmeRefStatus(filters) {
+  const {
+    creatorUserId,
+    creatorRole,
+    search,
+    stationId,
+    pmeStatus,
+    refStatus
+  } = filters;
+
+  const values = [];
+  const conditions = [];
+
+  let query = `
+    SELECT COUNT(*)
+    FROM profiles p
+    JOIN roles r ON r.id = p.role_id
+    LEFT JOIN staff_station_postings ssp ON ssp.profile_id = p.id AND ssp.is_current = true
+    LEFT JOIN stations s ON s.id = ssp.station_id
+  `;
+
+  // Apply hierarchy conditions
+  if (creatorRole === "SM" || creatorRole === "SS" || ["Station Master Supervisor", "STATION MASTER SUPERVISOR", "SMS"].includes(creatorRole) || ["Cabin Master", "CABIN MASTER"].includes(creatorRole)) {
+    values.push(creatorUserId);
+    conditions.push(`
+      s.id = (
+        SELECT station_id
+        FROM staff_station_postings
+        WHERE profile_id = $${values.length}
+          AND is_current = true
+        LIMIT 1
+      )
+    `);
+  } else if (creatorRole === "TI") {
+    values.push(creatorUserId);
+    conditions.push(`
+      s.id IN (
+        SELECT station_id
+        FROM station_assignments
+        WHERE profile_id = $${values.length}
+          AND assignment_type = 'TI_AREA'
+          AND assigned_to IS NULL
+      )
+      AND s.id NOT IN (
+        SELECT station_id
+        FROM staff_station_postings ssp_sms
+        JOIN profiles p_sms ON p_sms.id = ssp_sms.profile_id
+        JOIN roles r_sms ON r_sms.id = p_sms.role_id
+        WHERE ssp_sms.is_current = true
+          AND r_sms.name IN ('Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Station Master Supervisior', 'Station Master Supervisio')
+      )
+    `);
+  } else if (creatorRole === "AOM") {
+    values.push(creatorUserId);
+    conditions.push(`
+      s.division_id = (
+        SELECT division_id
+        FROM division_assignments
+        WHERE profile_id = $${values.length}
+          AND is_current = true
+        LIMIT 1
+      )
+    `);
+  }
+
+  conditions.push(`p.status = 'active'`);
+
+  if (creatorRole === "SM" || creatorRole === "SS" || ["Station Master Supervisor", "STATION MASTER SUPERVISOR", "SMS"].includes(creatorRole) || ["Cabin Master", "CABIN MASTER"].includes(creatorRole)) {
+    conditions.push(`r.name IN ('PM', 'Pointsman', 'Pointsmen', 'SM', 'Station Master', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'Cabin Master', 'CABIN MASTER', 'SS', 'Station Master Incharge')`);
+  }
+
+  if (stationId) {
+    values.push(stationId);
+    conditions.push(`s.id = $${values.length}`);
+  }
+
+  if (search) {
+    values.push(`%${search}%`);
+    conditions.push(`(p.full_name ILIKE $${values.length} OR p.hrms_id ILIKE $${values.length} OR p.designation ILIKE $${values.length})`);
+  }
+
+  if (pmeStatus) {
+    values.push(pmeStatus.toUpperCase());
+    conditions.push(`
+      CASE
+        WHEN p.pme_due IS NULL THEN '—'
+        WHEN p.pme_due < NOW() THEN 'OVERDUE'
+        WHEN p.pme_done IS NOT NULL AND p.pme_done >= p.pme_due THEN 'FIT'
+        ELSE 'DUE'
+      END = $${values.length}
+    `);
+  }
+
+  if (refStatus) {
+    values.push(refStatus.toUpperCase());
+    conditions.push(`
+      CASE
+        WHEN p.ref_due IS NULL THEN '—'
+        WHEN p.ref_due < NOW() THEN 'OVERDUE'
+        WHEN p.ref_done IS NOT NULL AND p.ref_done >= p.ref_due THEN 'COMPLETED'
+        ELSE 'DUE'
+      END = $${values.length}
+    `);
+  }
+
+  if (conditions.length > 0) {
+    query += ` WHERE ${conditions.join(" AND ")} `;
+  }
+
+  const result = await pool.query(query, values);
+  return parseInt(result.rows[0].count, 10);
+}
+
 module.exports = {
   getRoleByName,
   findUserByHrmsId,
@@ -1075,4 +1337,6 @@ module.exports = {
   assignUserCategory,
   getCategoryByCode,
   getActiveRolesInScope,
+  getEmployeePmeRefStatus,
+  countEmployeePmeRefStatus,
 };

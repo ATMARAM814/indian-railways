@@ -8,6 +8,7 @@ const {
   activateUserService,
   transferUserService,
   getWorkforcePresenceService,
+  getEmployeePmeRefStatusService,
 } = require("./user.service");
 
 async function createUserController(
@@ -237,6 +238,25 @@ async function getWorkforcePresenceController(req, res) {
   }
 }
 
+async function getEmployeePmeRefStatusController(req, res) {
+  try {
+    const result = await getEmployeePmeRefStatusService(
+      req.user.userId,
+      req.user.role,
+      req.query
+    );
+    return res.status(200).json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+}
+
 module.exports = {
   createUserController,
   listUsersController,
@@ -247,4 +267,5 @@ module.exports = {
   activateUserController,
   transferUserController,
   getWorkforcePresenceController,
+  getEmployeePmeRefStatusController,
 };

@@ -296,6 +296,37 @@ const WorkforceProfilePage = () => {
               </div>
             </div>
 
+            {/* PME & REF Compliance Card */}
+            <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #D7E3EF', borderRadius: '16px', padding: '24px', boxShadow: '0 1px 3px rgba(11, 35, 65, 0.05)' }}>
+              <h3 style={{ margin: '0 0 20px 0', fontSize: '15px', fontWeight: 700, color: '#0F172A', borderBottom: '1px solid #EEF2F6', paddingBottom: '12px' }}>PME &amp; REF Compliance</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div>
+                  <span style={{ fontSize: '11px', color: '#64748B', textTransform: 'uppercase', fontWeight: 600 }}>PME Last Done</span>
+                  <div style={{ fontSize: '13.5px', color: '#334155', fontWeight: 500, marginTop: '4px' }}>
+                    {formatDate(profile.pme_done)}
+                  </div>
+                </div>
+                <div>
+                  <span style={{ fontSize: '11px', color: '#64748B', textTransform: 'uppercase', fontWeight: 600 }}>PME Next Due</span>
+                  <div style={{ fontSize: '13.5px', fontWeight: 600, marginTop: '4px', color: profile.pme_due && new Date(profile.pme_due) < new Date() ? '#DC2626' : '#334155' }}>
+                    {formatDate(profile.pme_due)}
+                  </div>
+                </div>
+                <div>
+                  <span style={{ fontSize: '11px', color: '#64748B', textTransform: 'uppercase', fontWeight: 600 }}>REF Last Done</span>
+                  <div style={{ fontSize: '13.5px', color: '#334155', fontWeight: 500, marginTop: '4px' }}>
+                    {formatDate(profile.ref_done)}
+                  </div>
+                </div>
+                <div>
+                  <span style={{ fontSize: '11px', color: '#64748B', textTransform: 'uppercase', fontWeight: 600 }}>REF Next Due</span>
+                  <div style={{ fontSize: '13.5px', fontWeight: 600, marginTop: '4px', color: profile.ref_due && new Date(profile.ref_due) < new Date() ? '#DC2626' : '#334155' }}>
+                    {formatDate(profile.ref_due)}
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Reporting Hierarchy Card */}
             <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #D7E3EF', borderRadius: '16px', padding: '24px', boxShadow: '0 1px 3px rgba(11, 35, 65, 0.05)' }}>
               <h3 style={{ margin: '0 0 20px 0', fontSize: '15px', fontWeight: 700, color: '#0F172A', borderBottom: '1px solid #EEF2F6', paddingBottom: '12px' }}>Reporting Hierarchy</h3>

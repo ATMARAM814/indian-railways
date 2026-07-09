@@ -39,6 +39,7 @@ const AOMUsersPage = React.lazy(() => import('./pages/workforce/AOMUsersPage'));
 const WorkforceProfilePage = React.lazy(() => import('./pages/workforce/WorkforceProfilePage'));
 const MyProfilePage = React.lazy(() => import('./pages/profile/MyProfilePage'));
 const PmeRefStatusPage = React.lazy(() => import('./pages/pme-ref/PmeRefStatusPage'));
+const EmployeePmeRefStatusPage = React.lazy(() => import('./pages/pme-ref/EmployeePmeRefStatusPage'));
 
 // Audit Log Pages
 const AuditLogsPage = React.lazy(() => import('./pages/audit/AuditLogsPage'));
@@ -244,6 +245,16 @@ function App() {
             element={
               <ProtectedRoute>
                 <PmeRefStatusPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/employee-pme-ref-status"
+            element={
+              <ProtectedRoute>
+                <RoleRoute allowedRoles={['SS', 'SMS', 'STATION MASTER SUPERVISOR', 'Station Master Supervisor', 'Station Master Supervisior', 'Station Master Supervisio', 'TI', 'AOM', 'SUPER_ADMIN']}>
+                  <EmployeePmeRefStatusPage />
+                </RoleRoute>
               </ProtectedRoute>
             }
           />
