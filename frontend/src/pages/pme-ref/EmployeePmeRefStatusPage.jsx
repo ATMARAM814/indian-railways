@@ -24,7 +24,8 @@ const EmployeePmeRefStatusPage = () => {
     search: '',
     stationId: '',
     pmeStatus: '',
-    refStatus: ''
+    refStatus: '',
+    role: ''
   });
 
   const [activePage, setActivePage] = useState(1);
@@ -85,7 +86,8 @@ const EmployeePmeRefStatusPage = () => {
       search: '',
       stationId: '',
       pmeStatus: '',
-      refStatus: ''
+      refStatus: '',
+      role: ''
     });
     setActivePage(1);
   };
@@ -287,6 +289,37 @@ const EmployeePmeRefStatusPage = () => {
                 <option value="COMPLETED">Completed</option>
                 <option value="DUE">Due</option>
                 <option value="OVERDUE">Overdue / Expired</option>
+              </select>
+            </div>
+
+            {/* Role Filter */}
+            <div>
+              <label htmlFor="role" style={{ display: 'block', fontSize: '12.5px', fontWeight: 600, color: '#475569', marginBottom: '8px' }}>Employee Role</label>
+              <select
+                id="role"
+                name="role"
+                value={filters.role}
+                onChange={handleFilterChange}
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  fontSize: '13.5px',
+                  borderRadius: '8px',
+                  border: '1px solid #D7E3EF',
+                  color: '#0F172A',
+                  backgroundColor: '#F8FAFC',
+                  outline: 'none',
+                  cursor: 'pointer'
+                }}
+              >
+                <option value="">All Roles</option>
+                <option value="PM">Pointsman</option>
+                <option value="SM">Station Master</option>
+                <option value="SS">Station Master Incharge</option>
+                <option value="SMS">SM Supervisor</option>
+                <option value="Cabin Master">Cabin Master</option>
+                <option value="Shunting Master">Shunting Master</option>
+                <option value="TI">Traffic Inspector</option>
               </select>
             </div>
 

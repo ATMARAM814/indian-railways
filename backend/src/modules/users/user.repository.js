@@ -1062,6 +1062,7 @@ async function getEmployeePmeRefStatus(filters) {
     stationId,
     pmeStatus,
     refStatus,
+    role,
     page = 1,
     limit = 10
   } = filters;
@@ -1125,14 +1126,7 @@ async function getEmployeePmeRefStatus(filters) {
           AND assignment_type = 'TI_AREA'
           AND assigned_to IS NULL
       )
-      AND s.id NOT IN (
-        SELECT station_id
-        FROM staff_station_postings ssp_sms
-        JOIN profiles p_sms ON p_sms.id = ssp_sms.profile_id
-        JOIN roles r_sms ON r_sms.id = p_sms.role_id
-        WHERE ssp_sms.is_current = true
-          AND r_sms.name IN ('Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Station Master Supervisior', 'Station Master Supervisio')
-      )
+      AND r.name NOT IN ('SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'Station Master Supervisior', 'Station Master Supervisio')
     `);
   } else if (creatorRole === "AOM") {
     values.push(creatorUserId);
@@ -1187,6 +1181,28 @@ async function getEmployeePmeRefStatus(filters) {
     `);
   }
 
+  if (role) {
+    const roleUpper = role.toUpperCase();
+    if (roleUpper === 'PM') {
+      conditions.push(`r.name IN ('PM', 'Pointsman', 'Pointsmen')`);
+    } else if (roleUpper === 'SM') {
+      conditions.push(`r.name IN ('SM', 'Station Master', 'STATION MASTER')`);
+    } else if (roleUpper === 'SS') {
+      conditions.push(`r.name IN ('SS', 'Station Master Incharge', 'STATION MASTER INCHARGE', 'Station Superintendent', 'SM Incharge')`);
+    } else if (roleUpper === 'SMS') {
+      conditions.push(`r.name IN ('SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'Station Master Supervisior', 'Station Master Supervisio')`);
+    } else if (roleUpper === 'CABIN MASTER' || roleUpper === 'CM') {
+      conditions.push(`r.name IN ('Cabin Master', 'CABIN MASTER', 'CM')`);
+    } else if (roleUpper === 'SHUNTING MASTER' || roleUpper === 'SHM') {
+      conditions.push(`r.name IN ('Shunting Master', 'SHUNTING MASTER', 'SHM')`);
+    } else if (roleUpper === 'TI') {
+      conditions.push(`r.name IN ('TI', 'Traffic Inspector', 'TRAFFIC INSPECTOR')`);
+    } else {
+      values.push(role);
+      conditions.push(`r.name = $${values.length}`);
+    }
+  }
+
   if (conditions.length > 0) {
     query += ` WHERE ${conditions.join(" AND ")} `;
   }
@@ -1210,7 +1226,8 @@ async function countEmployeePmeRefStatus(filters) {
     search,
     stationId,
     pmeStatus,
-    refStatus
+    refStatus,
+    role
   } = filters;
 
   const values = [];
@@ -1246,14 +1263,7 @@ async function countEmployeePmeRefStatus(filters) {
           AND assignment_type = 'TI_AREA'
           AND assigned_to IS NULL
       )
-      AND s.id NOT IN (
-        SELECT station_id
-        FROM staff_station_postings ssp_sms
-        JOIN profiles p_sms ON p_sms.id = ssp_sms.profile_id
-        JOIN roles r_sms ON r_sms.id = p_sms.role_id
-        WHERE ssp_sms.is_current = true
-          AND r_sms.name IN ('Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Station Master Supervisior', 'Station Master Supervisio')
-      )
+      AND r.name NOT IN ('SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'Station Master Supervisior', 'Station Master Supervisio')
     `);
   } else if (creatorRole === "AOM") {
     values.push(creatorUserId);
@@ -1306,6 +1316,28 @@ async function countEmployeePmeRefStatus(filters) {
         ELSE 'DUE'
       END = $${values.length}
     `);
+  }
+
+  if (role) {
+    const roleUpper = role.toUpperCase();
+    if (roleUpper === 'PM') {
+      conditions.push(`r.name IN ('PM', 'Pointsman', 'Pointsmen')`);
+    } else if (roleUpper === 'SM') {
+      conditions.push(`r.name IN ('SM', 'Station Master', 'STATION MASTER')`);
+    } else if (roleUpper === 'SS') {
+      conditions.push(`r.name IN ('SS', 'Station Master Incharge', 'STATION MASTER INCHARGE', 'Station Superintendent', 'SM Incharge')`);
+    } else if (roleUpper === 'SMS') {
+      conditions.push(`r.name IN ('SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'Station Master Supervisior', 'Station Master Supervisio')`);
+    } else if (roleUpper === 'CABIN MASTER' || roleUpper === 'CM') {
+      conditions.push(`r.name IN ('Cabin Master', 'CABIN MASTER', 'CM')`);
+    } else if (roleUpper === 'SHUNTING MASTER' || roleUpper === 'SHM') {
+      conditions.push(`r.name IN ('Shunting Master', 'SHUNTING MASTER', 'SHM')`);
+    } else if (roleUpper === 'TI') {
+      conditions.push(`r.name IN ('TI', 'Traffic Inspector', 'TRAFFIC INSPECTOR')`);
+    } else {
+      values.push(role);
+      conditions.push(`r.name = $${values.length}`);
+    }
   }
 
   if (conditions.length > 0) {
