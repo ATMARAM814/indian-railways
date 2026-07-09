@@ -11,7 +11,11 @@ const {
   scheduleCounselingController,
   getScheduledCounselingListController,
   cancelScheduledCounselingController,
-  getRetestHistoryController
+  getRetestHistoryController,
+  getCounselingSubjectsForRoleController,
+  createCounselingSubjectController,
+  updateCounselingSubjectController,
+  deleteCounselingSubjectController
 } = require("./counseling.controller");
 
 const router = express.Router();
@@ -94,6 +98,38 @@ router.post(
   authenticate,
   authorize("TI", "AOM", "SUPER_ADMIN", "AOM Users"),
   activateRetestController
+);
+
+// Manage Subjects: Get subjects for a role
+router.get(
+  "/subjects/:roleCode",
+  authenticate,
+  authorize("TI", "AOM", "SUPER_ADMIN", "AOM Users"),
+  getCounselingSubjectsForRoleController
+);
+
+// Manage Subjects: Create a new subject
+router.post(
+  "/subjects",
+  authenticate,
+  authorize("TI", "AOM", "SUPER_ADMIN", "AOM Users"),
+  createCounselingSubjectController
+);
+
+// Manage Subjects: Update a subject
+router.put(
+  "/subjects/:subjectId",
+  authenticate,
+  authorize("TI", "AOM", "SUPER_ADMIN", "AOM Users"),
+  updateCounselingSubjectController
+);
+
+// Manage Subjects: Delete a subject
+router.delete(
+  "/subjects/:subjectId",
+  authenticate,
+  authorize("TI", "AOM", "SUPER_ADMIN", "AOM Users"),
+  deleteCounselingSubjectController
 );
 
 module.exports = router;

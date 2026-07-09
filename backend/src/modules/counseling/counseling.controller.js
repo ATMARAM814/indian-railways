@@ -249,6 +249,64 @@ async function getRetestHistoryController(req, res) {
   }
 }
 
+async function getCounselingSubjectsForRoleController(req, res) {
+  try {
+    const { roleCode } = req.params;
+    const assessorRole = req.user.role;
+    if (!roleCode) {
+      return res.status(400).json({ success: false, message: "roleCode is required." });
+    }
+    const data = await service.getCounselingSubjectsForRoleService(roleCode, assessorRole);
+    return res.status(200).json({ success: true, data });
+  } catch (error) {
+    const statusCode = error.message.includes("Access Denied") ? 403 : 500;
+    return res.status(statusCode).json({ success: false, message: error.message });
+  }
+}
+
+async function createCounselingSubjectController(req, res) {
+  try {
+    const { roleCode, subjectName, description } = req.body;
+    const assessorRole = req.user.role;
+    const data = await service.createCounselingSubject({ roleCode, subjectName, description }, assessorRole);
+    return res.status(200).json({ success: true, message: "Subject created successfully.", data });
+  } catch (error) {
+    const statusCode = error.message.includes("Access Denied") ? 403 : 500;
+    return res.status(statusCode).json({ success: false, message: error.message });
+  }
+}
+
+async function updateCounselingSubjectController(req, res) {
+  try {
+    const { subjectId } = req.params;
+    const { subjectName, description } = req.body;
+    const assessorRole = req.user.role;
+    if (!subjectId) {
+      return res.status(400).json({ success: false, message: "subjectId is required." });
+    }
+    const data = await service.updateCounselingSubject(subjectId, { subjectName, description }, assessorRole);
+    return res.status(200).json({ success: true, message: "Subject updated successfully.", data });
+  } catch (error) {
+    const statusCode = error.message.includes("Access Denied") ? 403 : 500;
+    return res.status(statusCode).json({ success: false, message: error.message });
+  }
+}
+
+async function deleteCounselingSubjectController(req, res) {
+  try {
+    const { subjectId } = req.params;
+    const assessorRole = req.user.role;
+    if (!subjectId) {
+      return res.status(400).json({ success: false, message: "subjectId is required." });
+    }
+    const data = await service.deleteCounselingSubject(subjectId, assessorRole);
+    return res.status(200).json({ success: true, message: "Subject deleted successfully.", data });
+  } catch (error) {
+    const statusCode = error.message.includes("Access Denied") ? 403 : 500;
+    return res.status(statusCode).json({ success: false, message: error.message });
+  }
+}
+
 module.exports = {
   getCandidateCounselingController,
   saveCandidateCounselingController,
@@ -259,5 +317,9 @@ module.exports = {
   scheduleCounselingController,
   getScheduledCounselingListController,
   cancelScheduledCounselingController,
-  getRetestHistoryController
+  getRetestHistoryController,
+  getCounselingSubjectsForRoleController,
+  createCounselingSubjectController,
+  updateCounselingSubjectController,
+  deleteCounselingSubjectController
 };

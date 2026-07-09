@@ -727,7 +727,7 @@ async function getRoleStatsForAssessor(assessorId, assessorRole, roleCode) {
   let scopeCondition = '';
   const values = [roleCode, assessorId];
 
-  if (assessorRole === 'SM' || assessorRole === 'SS' || ['Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS'].includes(assessorRole) || ['Cabin Master', 'CABIN MASTER'].includes(assessorRole)) {
+  if (['Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS'].includes(assessorRole)) {
     scopeJoin = `LEFT JOIN staff_station_postings ssp ON ssp.profile_id = p.id AND ssp.is_current = true`;
     scopeCondition = `
       AND ssp.station_id = (
@@ -736,6 +736,26 @@ async function getRoleStatsForAssessor(assessorId, assessorRole, roleCode) {
         WHERE profile_id = $2
           AND is_current = true
         LIMIT 1
+      )
+    `;
+  } else if (assessorRole === 'SM' || assessorRole === 'SS' || ['Cabin Master', 'CABIN MASTER'].includes(assessorRole)) {
+    scopeJoin = `LEFT JOIN staff_station_postings ssp ON ssp.profile_id = p.id AND ssp.is_current = true`;
+    scopeCondition = `
+      AND ssp.station_id = (
+        SELECT station_id
+        FROM staff_station_postings
+        WHERE profile_id = $2
+          AND is_current = true
+        LIMIT 1
+      )
+      AND NOT EXISTS (
+        SELECT 1 
+        FROM staff_station_postings ssp_sms
+        JOIN profiles p_sms ON p_sms.id = ssp_sms.profile_id
+        JOIN roles r_sms ON r_sms.id = p_sms.role_id
+        WHERE ssp_sms.station_id = ssp.station_id 
+          AND ssp_sms.is_current = true 
+          AND r_sms.name IN ('Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Station Master Supervisior', 'Station Master Supervisio')
       )
     `;
   } else if (assessorRole === 'TI') {
@@ -903,7 +923,7 @@ async function getAssessorRoleStats(assessorId, assessorRole) {
       targetRoles.push('TM');
     }
   } else if (['Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS'].includes(assessorRole)) {
-    targetRoles = ['SM', 'SS', 'Cabin Master'];
+    targetRoles = ['PM', 'Shunting Master', 'SM', 'SS', 'Cabin Master'];
   } else if (assessorRole === 'TI') {
     targetRoles = ['SM', 'SS', 'TM', 'Cabin Master'];
   } else if (assessorRole === 'AOM') {
@@ -942,7 +962,7 @@ async function getEligibleStaff(assessorId, assessorRole, roleCode, filters = {}
     `);
     conditions.push(`
       (
-        r.name IN ('SM', 'SS', 'Cabin Master', 'CABIN MASTER')
+        r.name IN ('SM', 'SS', 'Cabin Master', 'CABIN MASTER', 'PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM')
       )
     `);
   } else if (assessorRole === 'SM' || assessorRole === 'SS' || ['Cabin Master', 'CABIN MASTER'].includes(assessorRole)) {
@@ -954,6 +974,17 @@ async function getEligibleStaff(assessorId, assessorRole, roleCode, filters = {}
         WHERE profile_id = $${values.length}
           AND is_current = true
         LIMIT 1
+      )
+    `);
+    conditions.push(`
+      NOT EXISTS (
+        SELECT 1 
+        FROM staff_station_postings ssp_sms
+        JOIN profiles p_sms ON p_sms.id = ssp_sms.profile_id
+        JOIN roles r_sms ON r_sms.id = p_sms.role_id
+        WHERE ssp_sms.station_id = ssp.station_id 
+          AND ssp_sms.is_current = true 
+          AND r_sms.name IN ('Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Station Master Supervisior', 'Station Master Supervisio')
       )
     `);
     if (assessorId === '439a8db6-2546-4858-abbc-3752f4acb536') {
@@ -1281,7 +1312,7 @@ async function getBulkEligibleStaff(assessorId, assessorRole, roleCode) {
     `);
     conditions.push(`
       (
-        r.name IN ('SM', 'SS', 'Cabin Master', 'CABIN MASTER')
+        r.name IN ('SM', 'SS', 'Cabin Master', 'CABIN MASTER', 'PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM')
       )
     `);
   } else if (assessorRole === 'SM' || assessorRole === 'SS' || ['Cabin Master', 'CABIN MASTER'].includes(assessorRole)) {
@@ -1293,6 +1324,17 @@ async function getBulkEligibleStaff(assessorId, assessorRole, roleCode) {
         WHERE profile_id = $${values.length}
           AND is_current = true
         LIMIT 1
+      )
+    `);
+    conditions.push(`
+      NOT EXISTS (
+        SELECT 1 
+        FROM staff_station_postings ssp_sms
+        JOIN profiles p_sms ON p_sms.id = ssp_sms.profile_id
+        JOIN roles r_sms ON r_sms.id = p_sms.role_id
+        WHERE ssp_sms.station_id = ssp.station_id 
+          AND ssp_sms.is_current = true 
+          AND r_sms.name IN ('Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Station Master Supervisior', 'Station Master Supervisio')
       )
     `);
     if (assessorId === '439a8db6-2546-4858-abbc-3752f4acb536') {
