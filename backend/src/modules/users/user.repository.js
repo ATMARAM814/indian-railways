@@ -1063,6 +1063,8 @@ async function getEmployeePmeRefStatus(filters) {
     pmeStatus,
     refStatus,
     role,
+    startDate,
+    endDate,
     page = 1,
     limit = 10
   } = filters;
@@ -1089,13 +1091,13 @@ async function getEmployeePmeRefStatus(filters) {
       CASE
         WHEN p.pme_due IS NULL THEN '—'
         WHEN p.pme_due < NOW() THEN 'OVERDUE'
-        WHEN p.pme_done IS NOT NULL AND p.pme_done >= p.pme_due THEN 'FIT'
+        WHEN p.pme_done IS NOT NULL THEN 'COMPLETED'
         ELSE 'DUE'
       END as computed_pme_status,
       CASE
         WHEN p.ref_due IS NULL THEN '—'
         WHEN p.ref_due < NOW() THEN 'OVERDUE'
-        WHEN p.ref_done IS NOT NULL AND p.ref_done >= p.ref_due THEN 'COMPLETED'
+        WHEN p.ref_done IS NOT NULL THEN 'COMPLETED'
         ELSE 'DUE'
       END as computed_ref_status
     FROM profiles p
@@ -1163,7 +1165,7 @@ async function getEmployeePmeRefStatus(filters) {
       CASE
         WHEN p.pme_due IS NULL THEN '—'
         WHEN p.pme_due < NOW() THEN 'OVERDUE'
-        WHEN p.pme_done IS NOT NULL AND p.pme_done >= p.pme_due THEN 'FIT'
+        WHEN p.pme_done IS NOT NULL THEN 'COMPLETED'
         ELSE 'DUE'
       END = $${values.length}
     `);
@@ -1175,10 +1177,41 @@ async function getEmployeePmeRefStatus(filters) {
       CASE
         WHEN p.ref_due IS NULL THEN '—'
         WHEN p.ref_due < NOW() THEN 'OVERDUE'
-        WHEN p.ref_done IS NOT NULL AND p.ref_done >= p.ref_due THEN 'COMPLETED'
+        WHEN p.ref_done IS NOT NULL THEN 'COMPLETED'
         ELSE 'DUE'
       END = $${values.length}
     `);
+  }
+
+  if (startDate && endDate) {
+    values.push(startDate, endDate);
+    const startIdx = values.length - 1;
+    const endIdx = values.length;
+    if (pmeStatus && !refStatus) {
+      conditions.push(`p.pme_due >= $${startIdx} AND p.pme_due <= $${endIdx}`);
+    } else if (refStatus && !pmeStatus) {
+      conditions.push(`p.ref_due >= $${startIdx} AND p.ref_due <= $${endIdx}`);
+    } else {
+      conditions.push(`((p.pme_due >= $${startIdx} AND p.pme_due <= $${endIdx}) OR (p.ref_due >= $${startIdx} AND p.ref_due <= $${endIdx}))`);
+    }
+  } else if (startDate) {
+    values.push(startDate);
+    if (pmeStatus && !refStatus) {
+      conditions.push(`p.pme_due >= $${values.length}`);
+    } else if (refStatus && !pmeStatus) {
+      conditions.push(`p.ref_due >= $${values.length}`);
+    } else {
+      conditions.push(`(p.pme_due >= $${values.length} OR p.ref_due >= $${values.length})`);
+    }
+  } else if (endDate) {
+    values.push(endDate);
+    if (pmeStatus && !refStatus) {
+      conditions.push(`p.pme_due <= $${values.length}`);
+    } else if (refStatus && !pmeStatus) {
+      conditions.push(`p.ref_due <= $${values.length}`);
+    } else {
+      conditions.push(`(p.pme_due <= $${values.length} OR p.ref_due <= $${values.length})`);
+    }
   }
 
   if (role) {
@@ -1227,7 +1260,9 @@ async function countEmployeePmeRefStatus(filters) {
     stationId,
     pmeStatus,
     refStatus,
-    role
+    role,
+    startDate,
+    endDate
   } = filters;
 
   const values = [];
@@ -1300,7 +1335,7 @@ async function countEmployeePmeRefStatus(filters) {
       CASE
         WHEN p.pme_due IS NULL THEN '—'
         WHEN p.pme_due < NOW() THEN 'OVERDUE'
-        WHEN p.pme_done IS NOT NULL AND p.pme_done >= p.pme_due THEN 'FIT'
+        WHEN p.pme_done IS NOT NULL THEN 'COMPLETED'
         ELSE 'DUE'
       END = $${values.length}
     `);
@@ -1312,10 +1347,41 @@ async function countEmployeePmeRefStatus(filters) {
       CASE
         WHEN p.ref_due IS NULL THEN '—'
         WHEN p.ref_due < NOW() THEN 'OVERDUE'
-        WHEN p.ref_done IS NOT NULL AND p.ref_done >= p.ref_due THEN 'COMPLETED'
+        WHEN p.ref_done IS NOT NULL THEN 'COMPLETED'
         ELSE 'DUE'
       END = $${values.length}
     `);
+  }
+
+  if (startDate && endDate) {
+    values.push(startDate, endDate);
+    const startIdx = values.length - 1;
+    const endIdx = values.length;
+    if (pmeStatus && !refStatus) {
+      conditions.push(`p.pme_due >= $${startIdx} AND p.pme_due <= $${endIdx}`);
+    } else if (refStatus && !pmeStatus) {
+      conditions.push(`p.ref_due >= $${startIdx} AND p.ref_due <= $${endIdx}`);
+    } else {
+      conditions.push(`((p.pme_due >= $${startIdx} AND p.pme_due <= $${endIdx}) OR (p.ref_due >= $${startIdx} AND p.ref_due <= $${endIdx}))`);
+    }
+  } else if (startDate) {
+    values.push(startDate);
+    if (pmeStatus && !refStatus) {
+      conditions.push(`p.pme_due >= $${values.length}`);
+    } else if (refStatus && !pmeStatus) {
+      conditions.push(`p.ref_due >= $${values.length}`);
+    } else {
+      conditions.push(`(p.pme_due >= $${values.length} OR p.ref_due >= $${values.length})`);
+    }
+  } else if (endDate) {
+    values.push(endDate);
+    if (pmeStatus && !refStatus) {
+      conditions.push(`p.pme_due <= $${values.length}`);
+    } else if (refStatus && !pmeStatus) {
+      conditions.push(`p.ref_due <= $${values.length}`);
+    } else {
+      conditions.push(`(p.pme_due <= $${values.length} OR p.ref_due <= $${values.length})`);
+    }
   }
 
   if (role) {

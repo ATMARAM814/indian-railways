@@ -25,7 +25,9 @@ const EmployeePmeRefStatusPage = () => {
     stationId: '',
     pmeStatus: '',
     refStatus: '',
-    role: ''
+    role: '',
+    startDate: '',
+    endDate: ''
   });
 
   const [activePage, setActivePage] = useState(1);
@@ -87,7 +89,9 @@ const EmployeePmeRefStatusPage = () => {
       stationId: '',
       pmeStatus: '',
       refStatus: '',
-      role: ''
+      role: '',
+      startDate: '',
+      endDate: ''
     });
     setActivePage(1);
   };
@@ -242,6 +246,7 @@ const EmployeePmeRefStatusPage = () => {
             <div>
               <label htmlFor="pmeStatus" style={{ display: 'block', fontSize: '12.5px', fontWeight: 600, color: '#475569', marginBottom: '8px' }}>PME Status</label>
               <select
+              
                 id="pmeStatus"
                 name="pmeStatus"
                 value={filters.pmeStatus}
@@ -259,7 +264,7 @@ const EmployeePmeRefStatusPage = () => {
                 }}
               >
                 <option value="">All PME Statuses</option>
-                <option value="FIT">Fit / Completed</option>
+                <option value="COMPLETED">Completed</option>
                 <option value="DUE">Due</option>
                 <option value="OVERDUE">Overdue / Expired</option>
               </select>
@@ -321,6 +326,52 @@ const EmployeePmeRefStatusPage = () => {
                 <option value="Shunting Master">Shunting Master</option>
                 <option value="TI">Traffic Inspector</option>
               </select>
+            </div>
+
+            {/* Due From Date Filter */}
+            <div>
+              <label htmlFor="startDate" style={{ display: 'block', fontSize: '12.5px', fontWeight: 600, color: '#475569', marginBottom: '8px' }}>Due From Date</label>
+              <input
+                id="startDate"
+                type="date"
+                name="startDate"
+                value={filters.startDate}
+                onChange={handleFilterChange}
+                style={{
+                  width: '100%',
+                  padding: '9px 12px',
+                  fontSize: '13.5px',
+                  borderRadius: '8px',
+                  border: '1px solid #D7E3EF',
+                  color: '#0F172A',
+                  backgroundColor: '#F8FAFC',
+                  outline: 'none',
+                  boxSizing: 'border-box'
+                }}
+              />
+            </div>
+
+            {/* Due To Date Filter */}
+            <div>
+              <label htmlFor="endDate" style={{ display: 'block', fontSize: '12.5px', fontWeight: 600, color: '#475569', marginBottom: '8px' }}>Due To Date</label>
+              <input
+                id="endDate"
+                type="date"
+                name="endDate"
+                value={filters.endDate}
+                onChange={handleFilterChange}
+                style={{
+                  width: '100%',
+                  padding: '9px 12px',
+                  fontSize: '13.5px',
+                  borderRadius: '8px',
+                  border: '1px solid #D7E3EF',
+                  color: '#0F172A',
+                  backgroundColor: '#F8FAFC',
+                  outline: 'none',
+                  boxSizing: 'border-box'
+                }}
+              />
             </div>
 
             {/* Reset Button */}
