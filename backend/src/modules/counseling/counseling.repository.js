@@ -556,7 +556,7 @@ async function getRetestHistoryDb({ assessorId, assessorRole }) {
       LIMIT 1
     ) ec ON true
     LEFT JOIN staff_categories sc ON sc.id = ec.category_id
-    WHERE a.assessment_type = 'Retest'
+    WHERE (a.assessment_type = 'Retest' OR a.id IN (SELECT assessment_id FROM staff_counseling_history WHERE assessment_id IS NOT NULL))
       AND a.status = 'completed'
       AND a.approval_status = 'approved'
       ${scopeCondition}

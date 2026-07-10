@@ -149,6 +149,42 @@ async function approveAssessmentService(
     });
   }
 
+  // Auto-archive counseling checklist if all subjects are completed
+  try {
+    const counselingDb = require("../counseling/counseling.repository");
+    const subjects = await counselingDb.getCounselingSubjectsForRoleDb(assessment.assessed_role_code);
+    const statuses = await counselingDb.getCandidateCounselingStatusesDb(assessment.assessed_user_id);
+    const statusMap = {};
+    statuses.forEach((s) => {
+      statusMap[s.subjectId] = s;
+    });
+
+    const allCompleted = subjects.length > 0 && subjects.every((sub) => {
+      const statusRecord = statusMap[sub.id];
+      return statusRecord && statusRecord.isCompleted === true;
+    });
+
+    if (allCompleted) {
+      // Archive counseling statuses to history
+      await counselingDb.insertCounselingHistoryDb({
+        profileId: assessment.assessed_user_id,
+        completedBy: approverId,
+        assessmentId: assessmentId
+      });
+      // Clear active statuses
+      await counselingDb.clearCandidateCounselingStatusesDb(assessment.assessed_user_id);
+      
+      // Update status of any active manual schedule for this candidate to 'completed'
+      const pool = require("../../config/database");
+      await pool.query(
+        "UPDATE manual_counseling_schedules SET status = 'completed', completed_at = NOW() WHERE profile_id = $1 AND status = 'scheduled'",
+        [assessment.assessed_user_id]
+      );
+    }
+  } catch (counselingErr) {
+    console.error("Failed to auto-archive counseling status on assessment approval:", counselingErr);
+  }
+
   await logAction(
     approverId,
     "ASSESSMENT_APPROVED",
