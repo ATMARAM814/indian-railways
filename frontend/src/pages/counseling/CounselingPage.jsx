@@ -22,6 +22,8 @@ import {
   ArrowLeft, ArrowRight, User, ShieldAlert, CheckCircle, AlertCircle, Save, Loader2, MessageSquare, Zap, Search, Calendar, History,
   Clock, AlertTriangle, UserCheck, Eye, Trash2, ChevronRight, X, Edit, Plus, ClipboardList
 } from 'lucide-react';
+import Loader from '../../components/common/Loader';
+
 
 const CounselingPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -457,10 +459,7 @@ const CounselingPage = () => {
   if (loading) {
     return (
       <DashboardLayout>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60vh', gap: '16px' }}>
-          <Loader2 className="animate-spin" size={32} style={{ color: '#0B2341' }} />
-          <span style={{ fontSize: '14.5px', color: '#64748B', fontWeight: 600 }}>Loading counseling checklist...</span>
-        </div>
+        <Loader message="Loading counseling checklist..." />
       </DashboardLayout>
     );
   }

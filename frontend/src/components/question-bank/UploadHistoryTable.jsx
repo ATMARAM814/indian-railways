@@ -1,5 +1,6 @@
 import React from 'react';
 import { FileText, Loader2 } from 'lucide-react';
+import Loader from '../common/Loader';
 
 const UploadHistoryTable = ({ history = [], loading = false }) => {
   const formatDate = (dateVal) => {
@@ -17,9 +18,8 @@ const UploadHistoryTable = ({ history = [], loading = false }) => {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '60px 0', backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
-        <Loader2 size={36} className="animate-spin" style={{ color: '#1B365D' }} />
-        <span style={{ marginLeft: '12px', fontSize: '15px', color: '#64748B', fontWeight: 500 }}>Loading upload history...</span>
+      <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '20px 0' }}>
+        <Loader message="Loading upload history..." size="sm" />
       </div>
     );
   }
