@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 
 import ProtectedRoute from './routes/ProtectedRoute';
 import RoleRoute from './routes/RoleRoute';
+import Loader from './components/common/Loader';
 
 import Login from './pages/auth/Login';
 import ChangePassword from './pages/auth/ChangePassword';
@@ -116,33 +117,8 @@ const DashboardRoot = () => {
 };
 
 const PageLoader = () => (
-  <div style={{
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    alignItems: 'center',
-    height: '80vh',
-    width: '100%',
-    color: '#0B2341',
-    gap: '16px'
-  }}>
-    <div style={{
-      width: '40px',
-      height: '40px',
-      border: '4px solid #F1F5F9',
-      borderTop: '4px solid #0B2341',
-      borderRadius: '50%',
-      animation: 'spin-loader 1s linear infinite'
-    }}></div>
-    <span style={{ fontSize: '14.5px', fontWeight: 600, color: '#64748B' }}>
-      Loading Safety Console...
-    </span>
-    <style>{`
-      @keyframes spin-loader {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-      }
-    `}</style>
+  <div style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+    <Loader message="Loading Safety Console..." size="md" />
   </div>
 );
 

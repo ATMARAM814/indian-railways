@@ -2,6 +2,7 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import Loader from '../components/common/Loader';
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, user, loading } = useAuth();
@@ -9,10 +10,7 @@ const ProtectedRoute = ({ children }) => {
 
   if (loading) {
     return (
-      <div className="full-page-loader">
-        <div className="spinner"></div>
-        <p>Verifying secure session...</p>
-      </div>
+      <Loader message="Verifying secure session..." fullPage={true} />
     );
   }
 
