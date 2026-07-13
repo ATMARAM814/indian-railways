@@ -162,6 +162,21 @@ async function getStationsListDb(userId, role, filters) {
       s.station_name as "stationName",
       s.station_code as "station_code",
       s.station_code as "stationCode",
+      s.division_id as "divisionId",
+      (
+        SELECT p_sm.id FROM staff_station_postings ssp_sm
+        JOIN profiles p_sm ON p_sm.id = ssp_sm.profile_id
+        JOIN roles r_sm ON r_sm.id = p_sm.role_id
+        WHERE ssp_sm.station_id = s.id AND ssp_sm.is_current = true AND r_sm.name = 'SM'
+        LIMIT 1
+      ) as "assignedSMId",
+      (
+        SELECT p_sm.full_name FROM staff_station_postings ssp_sm
+        JOIN profiles p_sm ON p_sm.id = ssp_sm.profile_id
+        JOIN roles r_sm ON r_sm.id = p_sm.role_id
+        WHERE ssp_sm.station_id = s.id AND ssp_sm.is_current = true AND r_sm.name = 'SM'
+        LIMIT 1
+      ) as "assignedSMName",
       ti.full_name as "assignedTI",
       ti.id as "assignedTiId",
       COUNT(DISTINCT p.id)::int as "totalStaff",
@@ -200,7 +215,7 @@ async function getStationsListDb(userId, role, filters) {
       GROUP BY ssp_inner.station_id
     ) pending_counts ON pending_counts.station_id = s.id
     ${whereClause}
-    GROUP BY s.id, s.station_name, s.station_code, ti.full_name, ti.id, pending_counts.count
+    GROUP BY s.id, s.station_name, s.station_code, s.division_id, ti.full_name, ti.id, pending_counts.count
     ORDER BY s.station_code;
   `;
 
@@ -818,5 +833,41 @@ module.exports = {
   createStationDb,
   assignTiToStationDb,
   closeCurrentSmPostingDb,
-  assignSmToStationDb
+  assignSmToStationDb,
+  updateStationDb,
+  deassignTiFromStationDb,
+  deassignSmFromStationDb
 };
+
+async function updateStationDb(stationId, divisionId, stationName, stationCode) {
+  const query = `
+    UPDATE stations
+    SET division_id = $1, station_name = $2, station_code = $3, updated_at = CURRENT_TIMESTAMP
+    WHERE id = $4
+    RETURNING *;
+  `;
+  const result = await pool.query(query, [divisionId, stationName, stationCode, stationId]);
+  return result.rows[0];
+}
+
+async function deassignTiFromStationDb(stationId) {
+  const query = `
+    UPDATE station_assignments
+    SET assigned_to = CURRENT_DATE
+    WHERE station_id = $1 AND assignment_type = 'TI_AREA' AND assigned_to IS NULL;
+  `;
+  await pool.query(query, [stationId]);
+}
+
+async function deassignSmFromStationDb(stationId) {
+  const query = `
+    UPDATE staff_station_postings
+    SET is_current = false, posted_to = CURRENT_DATE
+    WHERE station_id = $1 AND is_current = true AND profile_id IN (
+      SELECT p.id FROM profiles p
+      JOIN roles r ON r.id = p.role_id
+      WHERE r.name = 'SM' OR r.name = 'SS'
+    );
+  `;
+  await pool.query(query, [stationId]);
+}

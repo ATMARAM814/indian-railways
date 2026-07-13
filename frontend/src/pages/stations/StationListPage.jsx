@@ -4,10 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import LoadingState from '../../components/dashboard/LoadingState';
 import ErrorState from '../../components/dashboard/ErrorState';
-import { getScopedStations, createStation } from '../../services/stationIntelligence.service';
+import { getScopedStations, createStation, updateStation } from '../../services/stationIntelligence.service';
 import { getWorkforceList, getDivisionsList } from '../../services/workforce.service';
 import { useAuth } from '../../context/AuthContext';
-import { Building, Search, PlusCircle, LayoutGrid, Eye, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { Building, Search, PlusCircle, LayoutGrid, Eye, ChevronLeft, ChevronRight, X, Edit3 } from 'lucide-react';
 import '../../styles/station-intelligence.css';
 
 const StationListPage = () => {
@@ -38,6 +38,15 @@ const StationListPage = () => {
   const [trafficInspectors, setTrafficInspectors] = useState([]);
   const [modalError, setModalError] = useState(null);
   const [modalSubmitting, setModalSubmitting] = useState(false);
+
+  // Edit Modal state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingStation, setEditingStation] = useState(null);
+  const [editStationName, setEditStationName] = useState('');
+  const [editStationCode, setEditStationCode] = useState('');
+  const [editDivisionId, setEditDivisionId] = useState('');
+  const [editAssignedSMId, setEditAssignedSMId] = useState('');
+  const [editAssignedTIId, setEditAssignedTIId] = useState('');
 
   const openCreateModal = async () => {
     setIsModalOpen(true);
@@ -106,6 +115,83 @@ const StationListPage = () => {
         loadStations(filters);
       } else {
         setModalError(res.message || "Failed to create station.");
+      }
+    } catch (err) {
+      console.error(err);
+      setModalError(err.response?.data?.message || err.message || "An error occurred.");
+    } finally {
+      setModalSubmitting(false);
+    }
+  };
+
+  const openEditModal = async (station) => {
+    setEditingStation(station);
+    setIsEditModalOpen(true);
+    setModalError(null);
+    setEditStationName(station.stationName || '');
+    setEditStationCode(station.stationCode || '');
+    setEditDivisionId(station.divisionId || '');
+    setEditAssignedSMId(station.assignedSMId || '');
+    setEditAssignedTIId(station.assignedTiId || '');
+    
+    try {
+      const divRes = await getDivisionsList();
+      if (divRes.success) {
+        setDivisions(divRes.data);
+      }
+
+      const smRes = await getWorkforceList({ role: 'SM', limit: 100 });
+      const ssRes = await getWorkforceList({ role: 'SS', limit: 100 });
+      let sms = [];
+      if (smRes.success && smRes.data.users) {
+        sms = [...smRes.data.users];
+      }
+      if (ssRes.success && ssRes.data.users) {
+        sms = [...sms, ...ssRes.data.users];
+      }
+      setStationMasters(sms);
+
+      if (['AOM', 'SUPER_ADMIN'].includes(user?.role)) {
+        const tiRes = await getWorkforceList({ role: 'TI', limit: 100 });
+        if (tiRes.success && tiRes.data.users) {
+          setTrafficInspectors(tiRes.data.users);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load options for editing station:", err);
+      setModalError("Failed to load division or employee list.");
+    }
+  };
+
+  const handleUpdateStation = async (e) => {
+    e.preventDefault();
+    if (!editStationName.trim() || !editStationCode.trim()) {
+      setModalError("Station Name and Code are required.");
+      return;
+    }
+    if (user?.role !== 'TI' && !editDivisionId) {
+      setModalError("Please select a Division.");
+      return;
+    }
+
+    setModalSubmitting(true);
+    setModalError(null);
+
+    try {
+      const payload = {
+        stationName: editStationName.trim(),
+        stationCode: editStationCode.trim().toUpperCase(),
+        divisionId: editDivisionId || undefined,
+        assignedSMId: editAssignedSMId || undefined,
+        assignedTIId: editAssignedTIId || undefined
+      };
+
+      const res = await updateStation(editingStation.stationId, payload);
+      if (res.success) {
+        setIsEditModalOpen(false);
+        loadStations(filters);
+      } else {
+        setModalError(res.message || "Failed to update station.");
       }
     } catch (err) {
       console.error(err);
@@ -306,7 +392,15 @@ const StationListPage = () => {
                           <span style={{ color: '#94A3B8' }}>0 Pending</span>
                         )}
                       </td>
-                      <td className="text-right">
+                      <td className="text-right" style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                        <button
+                          type="button"
+                          onClick={() => openEditModal(row)}
+                          className="btn-open-intel"
+                          style={{ backgroundColor: '#F59E0B', color: '#FFFFFF', gap: '6px' }}
+                        >
+                          <Edit3 size={14} /> Edit
+                        </button>
                         <button
                           type="button"
                           onClick={() => navigate(`/stations/${row.stationId}`)}
@@ -461,27 +555,9 @@ const StationListPage = () => {
                     </div>
                   )}
 
-                  <div style={{ marginBottom: '16px' }}>
-                    <label style={{ display: 'block', marginBottom: '6px', fontSize: '12.5px', fontWeight: 600, color: '#475569' }}>
-                      ASSIGN STATION MASTER {user?.role === 'TI' ? '(REQUIRED)' : '(OPTIONAL)'}
-                    </label>
-                    <select
-                      className="filter-text-input"
-                      style={{ width: '100%', height: '40px', boxSizing: 'border-box' }}
-                      value={assignedSMId}
-                      onChange={(e) => setAssignedSMId(e.target.value)}
-                      required={user?.role === 'TI'}
-                    >
-                      <option value="">Select Station Master</option>
-                      {stationMasters.map(sm => (
-                        <option key={sm.id} value={sm.id}>{sm.full_name} ({sm.hrms_id || sm.employee_id})</option>
-                      ))}
-                    </select>
-                  </div>
-
                   {['AOM', 'SUPER_ADMIN'].includes(user?.role) && (
                     <div style={{ marginBottom: '16px' }}>
-                      <label style={{ display: 'block', marginBottom: '6px', fontSize: '12.5px', fontWeight: 600, color: '#475569' }}>ASSIGN TRAFFIC INSPECTOR (OPTIONAL)</label>
+                      <label style={{ display: 'block', marginBottom: '6px', fontSize: '12.5px', fontWeight: 600, color: '#475569' }}>ASSIGN TRAFFIC INSPECTOR</label>
                       <select
                         className="filter-text-input"
                         style={{ width: '100%', height: '40px', boxSizing: 'border-box' }}
@@ -503,6 +579,109 @@ const StationListPage = () => {
                   </button>
                   <button type="submit" className="btn-open-intel" style={{ backgroundColor: '#2B5CE6', color: '#FFFFFF' }} disabled={modalSubmitting}>
                     {modalSubmitting ? "Creating..." : "Create Station"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Edit Station Modal */}
+        {isEditModalOpen && (
+          <div className="modal-overlay" onClick={() => setIsEditModalOpen(false)}>
+            <div className="staff-modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '550px', width: '90%' }}>
+              <div className="staff-modal-header">
+                <h3 className="staff-modal-title">Edit Station Information</h3>
+                <button className="staff-modal-close-icon-btn" onClick={() => setIsEditModalOpen(false)} aria-label="Close modal">
+                  <X size={20} />
+                </button>
+              </div>
+
+              <form onSubmit={handleUpdateStation}>
+                <div className="staff-modal-body" style={{ padding: '24px', maxHeight: '70vh', overflowY: 'auto' }}>
+                  {modalError && (
+                    <div style={{ 
+                      padding: '12px 16px', 
+                      backgroundColor: '#FEE2E2', 
+                      color: '#991B1B', 
+                      borderRadius: '8px', 
+                      fontSize: '13px', 
+                      fontWeight: 500, 
+                      marginBottom: '16px',
+                      border: '1px solid #FCA5A5'
+                    }}>
+                      {modalError}
+                    </div>
+                  )}
+
+                  <div style={{ marginBottom: '16px' }}>
+                    <label style={{ display: 'block', marginBottom: '6px', fontSize: '12.5px', fontWeight: 600, color: '#475569' }}>STATION NAME</label>
+                    <input
+                      type="text"
+                      className="filter-text-input"
+                      style={{ width: '100%', boxSizing: 'border-box' }}
+                      placeholder="e.g. Bhopal Junction"
+                      value={editStationName}
+                      onChange={(e) => setEditStationName(e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div style={{ marginBottom: '16px' }}>
+                    <label style={{ display: 'block', marginBottom: '6px', fontSize: '12.5px', fontWeight: 600, color: '#475569' }}>STATION CODE</label>
+                    <input
+                      type="text"
+                      className="filter-text-input"
+                      style={{ width: '100%', boxSizing: 'border-box' }}
+                      placeholder="e.g. BPL"
+                      value={editStationCode}
+                      onChange={(e) => setEditStationCode(e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  {user?.role !== 'TI' && (
+                    <div style={{ marginBottom: '16px' }}>
+                      <label style={{ display: 'block', marginBottom: '6px', fontSize: '12.5px', fontWeight: 600, color: '#475569' }}>DIVISION</label>
+                      <select
+                        className="filter-text-input"
+                        style={{ width: '100%', height: '40px', boxSizing: 'border-box' }}
+                        value={editDivisionId}
+                        onChange={(e) => setEditDivisionId(e.target.value)}
+                        required
+                      >
+                        <option value="">Select Division</option>
+                        {divisions.map(d => (
+                          <option key={d.id} value={d.id}>{d.name} ({d.code})</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  {['AOM', 'SUPER_ADMIN'].includes(user?.role) && (
+                    <div style={{ marginBottom: '16px' }}>
+                      <label style={{ display: 'block', marginBottom: '6px', fontSize: '12.5px', fontWeight: 600, color: '#475569' }}>ASSIGN TRAFFIC INSPECTOR</label>
+                      <select
+                        className="filter-text-input"
+                        style={{ width: '100%', height: '40px', boxSizing: 'border-box' }}
+                        value={editAssignedTIId}
+                        onChange={(e) => setEditAssignedTIId(e.target.value)}
+                      >
+                        <option value="">Select Traffic Inspector</option>
+                        {trafficInspectors.map(ti => (
+                          <option key={ti.id} value={ti.id}>{ti.full_name} ({ti.hrms_id})</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </div>
+
+                <div className="staff-modal-footer">
+                  <button type="button" className="staff-modal-close-btn" onClick={() => setIsEditModalOpen(false)} style={{ backgroundColor: '#F1F5F9', border: '1px solid #E2E8F0', color: '#475569' }}>
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn-open-intel" style={{ backgroundColor: '#2B5CE6', color: '#FFFFFF' }} disabled={modalSubmitting}>
+                    {modalSubmitting ? "Saving..." : "Save Changes"}
                   </button>
                 </div>
               </form>

@@ -195,5 +195,99 @@ module.exports = {
   listScopedStationsService,
   getStationIntelligenceService,
   getCategoryCandidatesService,
-  createStationService
+  createStationService,
+  updateStationService
 };
+
+async function updateStationService(stationId, updaterUserId, updaterRole, stationData) {
+  const { stationName, stationCode, divisionId, assignedSMId, assignedTIId } = stationData;
+
+  if (!stationName || !stationCode) {
+    throw new Error("stationName and stationCode are required");
+  }
+
+  // 1. Role Scope Access Check
+  if (updaterRole === "TI") {
+    const tiStations = await db.getTiStations(updaterUserId);
+    if (!tiStations.includes(stationId)) {
+      throw new Error("Access Denied: You do not monitor this station.");
+    }
+  } else if (updaterRole === "AOM") {
+    const aomDiv = await db.getAomDivision(updaterUserId);
+    const stationRes = await poolQuery(`SELECT division_id FROM stations WHERE id = $1`, [stationId]);
+    if (stationRes.rows.length === 0) {
+      throw new Error("Station not found.");
+    }
+    if (stationRes.rows[0].division_id !== aomDiv) {
+      throw new Error("Access Denied: This station is in another division.");
+    }
+  } else if (updaterRole !== "SUPER_ADMIN") {
+    throw new Error("Access Denied: Unauthorized role.");
+  }
+
+  let finalDivisionId = divisionId;
+  if (updaterRole === 'AOM') {
+    const aomDiv = await db.getAomDivision(updaterUserId);
+    finalDivisionId = aomDiv;
+  } else if (updaterRole === 'TI') {
+    const stationRes = await poolQuery(`SELECT division_id FROM stations WHERE id = $1`, [stationId]);
+    finalDivisionId = stationRes.rows[0]?.division_id;
+  }
+
+  if (!finalDivisionId) {
+    throw new Error("divisionId is required to update a station");
+  }
+
+  // 2. Fetch current station info (specifically the currently assigned TI and SM)
+  // Get current assigned TI
+  const currentTiRes = await poolQuery(
+    `SELECT profile_id FROM station_assignments WHERE station_id = $1 AND assignment_type = 'TI_AREA' AND assigned_to IS NULL LIMIT 1`,
+    [stationId]
+  );
+  const currentTiId = currentTiRes.rows[0]?.profile_id;
+
+  // Get current assigned SM
+  const currentSmRes = await poolQuery(
+    `SELECT p.id FROM staff_station_postings ssp
+     JOIN profiles p ON p.id = ssp.profile_id
+     JOIN roles r ON r.id = p.role_id
+     WHERE ssp.station_id = $1 AND ssp.is_current = true AND r.name = 'SM'
+     LIMIT 1`,
+    [stationId]
+  );
+  const currentSmId = currentSmRes.rows[0]?.id;
+
+  // 3. Update core station
+  const updatedStation = await db.updateStationDb(
+    stationId,
+    finalDivisionId,
+    stationName.trim(),
+    stationCode.trim().toUpperCase()
+  );
+
+  // 4. Update SM Assignment if changed
+  if (assignedSMId && assignedSMId !== currentSmId) {
+    // Deassign previous SM(s) from this station
+    await db.deassignSmFromStationDb(stationId);
+    // Close the new SM's active posting elsewhere
+    await db.closeCurrentSmPostingDb(assignedSMId);
+    // Assign new SM to this station
+    await db.assignSmToStationDb(assignedSMId, stationId);
+  } else if (!assignedSMId && currentSmId) {
+    // If explicitly removed
+    await db.deassignSmFromStationDb(stationId);
+  }
+
+  // 5. Update TI Assignment if changed
+  if (updaterRole !== 'TI') {
+    // AOM/Super Admin can assign TI
+    if (assignedTIId && assignedTIId !== currentTiId) {
+      await db.deassignTiFromStationDb(stationId);
+      await db.assignTiToStationDb(assignedTIId, stationId);
+    } else if (!assignedTIId && currentTiId) {
+      await db.deassignTiFromStationDb(stationId);
+    }
+  }
+
+  return updatedStation;
+}

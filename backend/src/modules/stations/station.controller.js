@@ -7,7 +7,8 @@ const {
   listScopedStationsService,
   getStationIntelligenceService,
   getCategoryCandidatesService,
-  createStationService
+  createStationService,
+  updateStationService
 } = require("./station.service");
 
 async function getStationsController(req, res) {
@@ -184,6 +185,37 @@ async function getCategoryCandidatesController(req, res) {
   }
 }
 
+async function updateStationController(req, res) {
+  try {
+    const { stationId } = req.params;
+
+    if (!["TI", "AOM", "SUPER_ADMIN"].includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        message: "Access Denied: Unauthorized role to update stations."
+      });
+    }
+
+    const station = await updateStationService(
+      stationId,
+      req.user.userId,
+      req.user.role,
+      req.body
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Station updated successfully",
+      data: station
+    });
+  } catch (error) {
+    return res.status(error.message.includes("Access Denied") ? 403 : 400).json({
+      success: false,
+      message: error.message
+    });
+  }
+}
+
 module.exports = {
   getStationsController,
   getStationStaffController,
@@ -192,5 +224,6 @@ module.exports = {
   getDivisionsController,
   getStationIntelligenceController,
   getCategoryCandidatesController,
-  createStationController
+  createStationController,
+  updateStationController
 };

@@ -16,7 +16,8 @@ const {
   getDivisionsController,
   getStationIntelligenceController,
   getCategoryCandidatesController,
-  createStationController
+  createStationController,
+  updateStationController
 } = require("./station.controller");
 
 router.get(
@@ -75,6 +76,14 @@ router.get(
   authenticate,
   enforcePasswordChange,
   getStationStaffGroupedController
+);
+
+router.put(
+  "/:stationId",
+  authenticate,
+  enforcePasswordChange,
+  validateStationId,
+  updateStationController
 );
 
 module.exports = router;

@@ -20,3 +20,8 @@ export const createStation = async (stationData) => {
   const res = await apiClient.post('/stations', stationData);
   return res.data;
 };
+
+export const updateStation = async (stationId, stationData) => {
+  const res = await apiClient.put(`/stations/${stationId}`, stationData);
+  return res.data;
+};
