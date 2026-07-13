@@ -202,7 +202,7 @@ const Login = () => {
         
         <div className="auth-header">
           <h2 className="auth-title">Railway Evaluation System</h2>
-          <p className="auth-subtitle">Internal evaluation & assessments portal</p>
+          <p className="auth-subtitle">Safety Competency & Assessment Portal</p>
         </div>
 
         {successMsg && (
