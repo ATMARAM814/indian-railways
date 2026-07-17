@@ -45,7 +45,7 @@ async function loginController(req, res) {
       remarks: `Failed login attempt for HRMS ID: ${hrmsId || "Unknown"}. Reason: ${error.message}`
     });
 
-    return res.status(404).json({
+    return res.status(401).json({
       success: false,
       message: error.message,
     });

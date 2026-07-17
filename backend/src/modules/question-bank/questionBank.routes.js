@@ -80,11 +80,12 @@ router.post(
   importQuestions
 );
 
-// Read endpoints: authenticated users can access
+// Read endpoints: only authorized roles can list questions, candidates cannot
 router.get(
   "/",
   authenticate,
   enforcePasswordChange,
+  authorize("SUPER_ADMIN", "AOM", "TI", "SMS", "Station Master Supervisor", "SS", "SM", "Cabin Master"),
   listQuestions
 );
 
@@ -93,6 +94,7 @@ router.get(
   "/:id",
   authenticate,
   enforcePasswordChange,
+  authorize("SUPER_ADMIN", "AOM", "TI", "SMS", "Station Master Supervisor", "SS", "SM", "Cabin Master"),
   getQuestionById
 );
 

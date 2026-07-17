@@ -10,8 +10,10 @@ function globalErrorHandler(err, req, res, next) {
 
   let userMessage = err.message || "An internal server error occurred.";
 
-  if (isProduction && isDatabaseError) {
-    userMessage = "An internal database error occurred. Please try again later.";
+  if (isProduction) {
+    if (statusCode === 500 || isDatabaseError) {
+      userMessage = "An internal server error occurred. Please try again later.";
+    }
   }
 
   res.status(statusCode).json({

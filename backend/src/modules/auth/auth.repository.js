@@ -78,12 +78,27 @@ async function updateUserPassword(userId, passwordHash) {
       password_hash = $1,
       must_change_password = false,
       failed_login_attempts = 0,
-      is_locked = false
+      is_locked = false,
+      locked_until = null
     WHERE profile_id = $2
     RETURNING *;
   `;
 
   const result = await pool.query(query, [passwordHash, userId]);
+  return result.rows[0];
+}
+
+async function updateUserLockoutStatus(profileId, failedAttempts, isLocked, lockedUntil) {
+  const query = `
+    UPDATE user_credentials
+    SET
+      failed_login_attempts = $2,
+      is_locked = $3,
+      locked_until = $4
+    WHERE profile_id = $1
+    RETURNING *;
+  `;
+  const result = await pool.query(query, [profileId, failedAttempts, isLocked, lockedUntil]);
   return result.rows[0];
 }
 
@@ -93,4 +108,5 @@ module.exports = {
   findCredentialByHrmsId,
   findUserById,
   updateUserPassword,
+  updateUserLockoutStatus,
 };

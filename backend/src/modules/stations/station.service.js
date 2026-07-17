@@ -1,18 +1,70 @@
 const db = require("./station.repository");
 
+async function verifyStationBoundaries(stationId, userId, userRole) {
+  if (userRole === "SUPER_ADMIN") {
+    return;
+  }
+  
+  if (userRole === "TI") {
+    const tiStations = await db.getTiStations(userId);
+    if (!tiStations.includes(stationId)) {
+      throw new Error("Access Denied: You do not monitor this station.");
+    }
+    return;
+  }
+  
+  if (userRole === "AOM") {
+    const aomDiv = await db.getAomDivision(userId);
+    const stationRes = await poolQuery(`SELECT division_id FROM stations WHERE id = $1`, [stationId]);
+    if (stationRes.rows.length === 0) {
+      throw new Error("Station not found.");
+    }
+    if (stationRes.rows[0].division_id !== aomDiv) {
+      throw new Error("Access Denied: This station belongs to another division.");
+    }
+    return;
+  }
+  
+  // SM, SS, Station Master Supervisor, Cabin Master, etc. posted at the station
+  const sharesStation = await poolQuery(`
+    SELECT EXISTS (
+      SELECT 1 
+      FROM staff_station_postings ssp1
+      JOIN staff_station_postings ssp2 ON ssp1.station_id = ssp2.station_id
+      WHERE ssp1.profile_id = $1 
+        AND ssp2.profile_id = $2 
+        AND ssp1.is_current = true 
+        AND ssp2.is_current = true
+    ) as shares_station
+  `, [stationId, userId]);
+  
+  if (!sharesStation.rows[0]?.shares_station) {
+    throw new Error("Access Denied: You do not have permission to access staff data from this station.");
+  }
+}
+
 async function listStations() {
   return await db.getAllStations();
 }
 
-async function listStationStaff(stationId) {
+async function listStationStaff(stationId, userId, userRole) {
+  if (userId && userRole) {
+    await verifyStationBoundaries(stationId, userId, userRole);
+  }
   return await db.getStationStaff(stationId);
 }
 
-async function getStaffSummary(stationId) {
+async function getStaffSummary(stationId, userId, userRole) {
+  if (userId && userRole) {
+    await verifyStationBoundaries(stationId, userId, userRole);
+  }
   return await db.getStationStaffSummary(stationId);
 }
 
-async function listStationStaffGrouped(stationId) {
+async function listStationStaffGrouped(stationId, userId, userRole) {
+  if (userId && userRole) {
+    await verifyStationBoundaries(stationId, userId, userRole);
+  }
   return await db.getStationStaffGrouped(stationId);
 }
 

@@ -138,6 +138,21 @@ async function uploadQuestionsController(req, res) {
       });
     }
 
+    // Secure file upload validation
+    const allowedMimeTypes = [
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "application/vnd.ms-excel"
+    ];
+    const originalName = req.file.originalname || "";
+    const isExtensionValid = originalName.endsWith(".xlsx") || originalName.endsWith(".xls");
+
+    if (!allowedMimeTypes.includes(req.file.mimetype) || !isExtensionValid) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid file type. Only Excel spreadsheets (.xlsx, .xls) are allowed.",
+      });
+    }
+
     const user = await getMe(req.user.userId);
     const userName = user.fullName || user.full_name || user.hrms_id || "Super Admin";
 

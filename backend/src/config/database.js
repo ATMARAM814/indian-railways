@@ -11,10 +11,21 @@ const pool = new Pool({
   } : false,
 });
 
-// Immediately verify connection on module load
+// Immediately verify connection on module load and run schema migrations
 pool.query("SELECT 1")
-  .then(() => {
-    console.log("[Database] Connection pool initialized and verified successfully.");
+  .then(async () => {
+    console.log("[Database] Connection pool verified. Running migrations...");
+    try {
+      await pool.query(`
+        ALTER TABLE user_credentials 
+        ADD COLUMN IF NOT EXISTS locked_until TIMESTAMP WITH TIME ZONE,
+        ADD COLUMN IF NOT EXISTS failed_login_attempts INTEGER DEFAULT 0,
+        ADD COLUMN IF NOT EXISTS is_locked BOOLEAN DEFAULT false;
+      `);
+      console.log("[Database] Schema migration and column verification succeeded.");
+    } catch (migError) {
+      console.error("[Database] Schema migration failed:", migError.message);
+    }
   })
   .catch((err) => {
     console.error("[Database] Critical Error: Failed to connect to the database on startup!", err.message);

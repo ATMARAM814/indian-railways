@@ -630,7 +630,67 @@ async function cancelAssessment(assessmentId, reason, userId, userRole) {
   return cancelledAssessment;
 }
 
-async function getEmployeeAssessmentHistoryService(employeeId) {
+async function getEmployeeAssessmentHistoryService(employeeId, userId, userRole) {
+  if (userId !== employeeId && userRole !== "SUPER_ADMIN") {
+    // Perform boundary checks for non-super-admins looking at other users
+    const pool = require("../../config/database");
+    
+    // Resolve target employee details (station, division, role)
+    const empDetailsRes = await pool.query(`
+      SELECT p.id, r.name as role, ssp.station_id, s.division_id
+      FROM profiles p
+      JOIN roles r ON r.id = p.role_id
+      LEFT JOIN staff_station_postings ssp ON ssp.profile_id = p.id AND ssp.is_current = true
+      LEFT JOIN stations s ON s.id = ssp.station_id
+      WHERE p.id = $1
+    `, [employeeId]);
+    
+    const target = empDetailsRes.rows[0];
+    if (!target) {
+      throw new Error("Employee not found");
+    }
+
+    if (userRole === "SM" || userRole === "SS" || ["Cabin Master", "CABIN MASTER"].includes(userRole)) {
+      // Must be at same station, and target must be Pointsman or Shunting Master
+      const selfStationRes = await pool.query(`
+        SELECT station_id FROM staff_station_postings WHERE profile_id = $1 AND is_current = true LIMIT 1
+      `, [userId]);
+      const selfStation = selfStationRes.rows[0]?.station_id;
+      if (target.station_id !== selfStation || !["PM", "Shunting Master", "SHUNTING MASTER", "SHM"].includes(target.role)) {
+        throw new Error("Access denied: You are not authorized to view this candidate's history.");
+      }
+    } else if (["Station Master Supervisor", "STATION MASTER SUPERVISOR", "SMS"].includes(userRole)) {
+      // Must be at same station, target can be SM/SS/Cabin Master/Pointsman/Shunting Master/Train Manager
+      const selfStationRes = await pool.query(`
+        SELECT station_id FROM staff_station_postings WHERE profile_id = $1 AND is_current = true LIMIT 1
+      `, [userId]);
+      const selfStation = selfStationRes.rows[0]?.station_id;
+      if (target.station_id !== selfStation || !["PM", "SM", "SS", "Cabin Master", "CABIN MASTER", "Shunting Master", "SHUNTING MASTER", "SHM", "TM"].includes(target.role)) {
+        throw new Error("Access denied: You are not authorized to view this candidate's history.");
+      }
+    } else if (userRole === "TI") {
+      // Must monitor the station
+      const tiStationsRes = await pool.query(`
+        SELECT station_id FROM station_assignments WHERE profile_id = $1 AND assignment_type = 'TI_AREA' AND assigned_to IS NULL
+      `, [userId]);
+      const tiStations = tiStationsRes.rows.map(r => r.station_id);
+      if (!tiStations.includes(target.station_id)) {
+        throw new Error("Access denied: Candidate is outside your monitored section.");
+      }
+    } else if (userRole === "AOM") {
+      // Must belong to the division
+      const selfDivRes = await pool.query(`
+        SELECT division_id FROM division_assignments WHERE profile_id = $1 AND is_current = true LIMIT 1
+      `, [userId]);
+      const selfDiv = selfDivRes.rows[0]?.division_id;
+      if (target.division_id !== selfDiv) {
+        throw new Error("Access denied: Candidate is outside your assigned division.");
+      }
+    } else {
+      throw new Error("Access denied: Unauthorized role.");
+    }
+  }
+
   return await getEmployeeAssessmentHistory(employeeId);
 }
 

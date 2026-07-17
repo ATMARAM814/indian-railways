@@ -42,14 +42,15 @@ async function getStationStaffController(req, res) {
   try {
     const { stationId } = req.params;
 
-    const staff = await listStationStaff(stationId);
+    const staff = await listStationStaff(stationId, req.user.userId, req.user.role);
 
     return res.status(200).json({
       success: true,
       data: staff,
     });
   } catch (error) {
-    return res.status(500).json({
+    const isAccessDenied = error.message.includes("Access Denied");
+    return res.status(isAccessDenied ? 403 : 500).json({
       success: false,
       message: error.message,
     });
@@ -60,14 +61,15 @@ async function getStationSummaryController(req, res) {
   try {
     const { stationId } = req.params;
 
-    const summary = await getStaffSummary(stationId);
+    const summary = await getStaffSummary(stationId, req.user.userId, req.user.role);
 
     return res.status(200).json({
       success: true,
       data: summary,
     });
   } catch (error) {
-    return res.status(500).json({
+    const isAccessDenied = error.message.includes("Access Denied");
+    return res.status(isAccessDenied ? 403 : 500).json({
       success: false,
       message: error.message,
     });
@@ -79,14 +81,15 @@ async function getStationStaffGroupedController(req, res) {
     const { stationId } = req.params;
 
     const groupedStaff =
-      await listStationStaffGrouped(stationId);
+      await listStationStaffGrouped(stationId, req.user.userId, req.user.role);
 
     return res.status(200).json({
       success: true,
       data: groupedStaff,
     });
   } catch (error) {
-    return res.status(500).json({
+    const isAccessDenied = error.message.includes("Access Denied");
+    return res.status(isAccessDenied ? 403 : 500).json({
       success: false,
       message: error.message,
     });
