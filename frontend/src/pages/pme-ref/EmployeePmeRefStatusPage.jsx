@@ -324,6 +324,7 @@ const EmployeePmeRefStatusPage = () => {
                 <option value="SMS">SM Supervisor</option>
                 <option value="Cabin Master">Cabin Master</option>
                 <option value="Shunting Master">Shunting Master</option>
+                <option value="TM">Train Manager</option>
                 <option value="TI">Traffic Inspector</option>
               </select>
             </div>

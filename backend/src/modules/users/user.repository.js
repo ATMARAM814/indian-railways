@@ -1230,6 +1230,8 @@ async function getEmployeePmeRefStatus(filters) {
       conditions.push(`r.name IN ('Shunting Master', 'SHUNTING MASTER', 'SHM')`);
     } else if (roleUpper === 'TI') {
       conditions.push(`r.name IN ('TI', 'Traffic Inspector', 'TRAFFIC INSPECTOR')`);
+    } else if (roleUpper === 'TM') {
+      conditions.push(`r.name IN ('TM', 'Train Manager', 'TRAIN MANAGER')`);
     } else {
       values.push(role);
       conditions.push(`r.name = $${values.length}`);
@@ -1400,6 +1402,8 @@ async function countEmployeePmeRefStatus(filters) {
       conditions.push(`r.name IN ('Shunting Master', 'SHUNTING MASTER', 'SHM')`);
     } else if (roleUpper === 'TI') {
       conditions.push(`r.name IN ('TI', 'Traffic Inspector', 'TRAFFIC INSPECTOR')`);
+    } else if (roleUpper === 'TM') {
+      conditions.push(`r.name IN ('TM', 'Train Manager', 'TRAIN MANAGER')`);
     } else {
       values.push(role);
       conditions.push(`r.name = $${values.length}`);
