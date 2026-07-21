@@ -20,8 +20,6 @@ const counselingRoutes = require("./modules/counseling/counseling.routes");
 const { getPmeRefStatusController } = require("./modules/assessments/assessment.controller");
 const { globalErrorHandler } = require("./middleware/error.middleware");
 
-const { sanitizeInput } = require("./middleware/validator.middleware");
-
 const app = express();
 
 // Trust reverse proxy (Vercel, Railway load balancers) for accurate rate limiting IP detection
@@ -45,7 +43,9 @@ const corsOptions = {
       isDevelopment ||
       !origin ||
       normalizedOrigin === normalizedFrontend ||
-      (normalizedOrigin.endsWith("vercel.app") && normalizedOrigin.includes("indian-railways"))
+      normalizedOrigin.endsWith("vercel.app") ||
+      origin.startsWith("http://localhost:") ||
+      origin.startsWith("http://127.0.0.1:")
     ) {
       callback(null, true);
     } else {
@@ -74,10 +74,9 @@ const authLimiter = rateLimit({
 // Apply global rate limiting to all requests
 app.use(globalLimiter);
 
-// 5. Body Parsing Middlewares & Sanitization
-app.use(express.json({ limit: "1mb" })); // Protection from large JSON payloads (hardened to 1MB)
-app.use(express.urlencoded({ extended: true, limit: "1mb" }));
-app.use(sanitizeInput); // Enforce HTML sanitization globally on input data
+// 5. Body Parsing Middlewares
+app.use(express.json({ limit: "10mb" })); // Protection from large JSON payloads
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 // 6. Define Routes
 app.use("/auth", authLimiter, authRoutes); // Apply stricter rate limiter to auth endpoints

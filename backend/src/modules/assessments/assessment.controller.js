@@ -395,14 +395,13 @@ async function cancelAssessmentController(req, res) {
 async function getEmployeeAssessmentHistoryController(req, res) {
   try {
     const { employeeId } = req.params;
-    const result = await getEmployeeAssessmentHistoryService(employeeId, req.user.userId, req.user.role);
+    const result = await getEmployeeAssessmentHistoryService(employeeId);
     return res.status(200).json({
       success: true,
       data: result,
     });
   } catch (error) {
-    const isAccessDenied = error.message.includes("Access denied");
-    return res.status(isAccessDenied ? 403 : 400).json({
+    return res.status(400).json({
       success: false,
       message: error.message,
     });
