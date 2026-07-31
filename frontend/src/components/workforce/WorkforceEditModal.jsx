@@ -125,7 +125,7 @@ const WorkforceEditModal = ({
               marginBottom: '20px'
             }}>
               {error}
-            </div>
+            </div>      
           )}
 
           {/* Readonly Identifiers Section */}
