@@ -1,6 +1,6 @@
 require("dotenv").config();
 
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const pool = require("../config/database");
 
 async function createAomCredential() {

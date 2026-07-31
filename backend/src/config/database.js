@@ -18,10 +18,7 @@ pool.query("SELECT 1")
   })
   .catch((err) => {
     console.error("[Database] Critical Error: Failed to connect to the database on startup!", err.message);
-    // Exit process in production to allow container restarts
-    if (process.env.NODE_ENV === "production") {
-      process.exit(1);
-    }
+    // Do not call process.exit(1) in serverless environments
   });
 
 // Wrap pool.query to log full query details and sanitize output in production
