@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://indian-railways-backend.onrender.com/:path*"
+      "destination": "https://indian-railways-22jp.vercel.app/:path*"
     },
     {
       "source": "/(.*)",
