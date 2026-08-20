@@ -783,8 +783,18 @@ function buildQueryContext(filters, scope) {
 
   const assessConditions = [];
   if (filters.assessmentStatus) {
-    values.push(filters.assessmentStatus);
-    assessConditions.push(`a.status = $${values.length}`);
+    if (filters.assessmentStatus === 'completed') {
+      assessConditions.push(`a.status = 'completed'`);
+    } else if (filters.assessmentStatus === 'pending_approval') {
+      assessConditions.push(`a.approval_status = 'pending_approval'`);
+    } else if (filters.assessmentStatus === 'mcq_submitted') {
+      assessConditions.push(`a.approval_status = 'mcq_submitted'`);
+    } else if (filters.assessmentStatus === 'evaluation_pending') {
+      assessConditions.push(`a.approval_status = 'evaluation_pending'`);
+    } else {
+      values.push(filters.assessmentStatus);
+      assessConditions.push(`a.status = $${values.length}`);
+    }
   }
   if (filters.approvalStatus) {
     values.push(filters.approvalStatus);
@@ -811,9 +821,14 @@ function buildQueryContext(filters, scope) {
 async function getReportsSummaryDb(filters, scope) {
   const { values, whereProfileClause, whereAssessClause } = buildQueryContext(filters, scope);
 
+  const roleParamIndex = values.length + 1;
+  const userIdParamIndex = values.length + 2;
+  values.push(scope.type);
+  values.push(scope.userId);
+
   const query = `
     WITH scoped_profiles AS (
-      SELECT p.id, p.full_name, p.hrms_id, r.name as role_code, ssp.station_id, s.division_id, sc.category_code
+      SELECT p.id, p.full_name, p.hrms_id, r.name as role_code, ssp.station_id, s.division_id, sc.category_code, p.reporting_officer_id
       FROM profiles p
       JOIN roles r ON r.id = p.role_id
       LEFT JOIN staff_station_postings ssp ON ssp.profile_id = p.id AND ssp.is_current = true
@@ -836,7 +851,36 @@ async function getReportsSummaryDb(filters, scope) {
     SELECT
       COUNT(sa.id)::int as "totalAssessments",
       COUNT(sa.id) FILTER (WHERE sa.status = 'completed')::int as "completedAssessments",
-      COUNT(sa.id) FILTER (WHERE sa.approval_status = 'pending_approval')::int as "pendingApprovals",
+      COUNT(sa.id) FILTER (
+        WHERE sa.approval_status = 'pending_approval'
+          AND (
+            $${roleParamIndex} = 'SUPER_ADMIN'
+            OR
+            (sp.reporting_officer_id = $${userIdParamIndex})
+            OR
+            (sp.reporting_officer_id IS NULL AND (
+              ($${roleParamIndex} = 'TI' 
+               AND sp.role_code IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM')
+               AND NOT EXISTS (
+                 SELECT 1 
+                 FROM staff_station_postings ssp_sms
+                 JOIN profiles p_sms ON p_sms.id = ssp_sms.profile_id
+                 JOIN roles r_sms ON r_sms.id = p_sms.role_id
+                 WHERE ssp_sms.station_id = sp.station_id 
+                   AND ssp_sms.is_current = true 
+                   AND r_sms.name IN ('Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Station Master Supervisior', 'Station Master Supervisio')
+               )
+              )
+              OR
+              ($${roleParamIndex} IN ('Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS') 
+               AND sp.role_code IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM') 
+               AND sp.station_id = (SELECT station_id FROM staff_station_postings WHERE profile_id = $${userIdParamIndex} AND is_current = true LIMIT 1)
+              )
+              OR
+              ($${roleParamIndex} = 'AOM' AND sp.role_code IN ('SM', 'TM', 'TI', 'SS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Cabin Master', 'CABIN MASTER'))
+            ))
+          )
+      )::int as "pendingApprovals",
       COALESCE(AVG(sa.percentage) FILTER (WHERE sa.status = 'completed')::numeric(10,2), 0) as "averageScore",
       (SELECT COUNT(DISTINCT id) FROM scoped_profiles WHERE category_code = 'A')::int as "categoryAEmployees",
       (SELECT COUNT(DISTINCT id) FROM scoped_profiles WHERE category_code = 'D')::int as "categoryDEmployees",
