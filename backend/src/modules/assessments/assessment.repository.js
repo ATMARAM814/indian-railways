@@ -101,7 +101,7 @@ async function selfHealUserCategories() {
       const pct = Number(row.percentage || 0);
       const mcqScore = Number(row.mcq_score || 0);
       const alertnessScore = Number(row.alertness_score || 0);
-      
+
       let expectedCode = 'D';
       if (row.alcoholic_status === 'Alcoholic' || pct <= 25) {
         expectedCode = 'D';
@@ -662,9 +662,9 @@ async function saveEvaluationDraftAnswers(
   `;
 
   await pool.query(deleteQuery, [
-  assessmentId,
-  questionIds,
-]);
+    assessmentId,
+    questionIds,
+  ]);
 
   const insertQuery = `
     INSERT INTO assessment_yes_no_answers (
@@ -748,15 +748,6 @@ async function getRoleStatsForAssessor(assessorId, assessorRole, roleCode) {
           AND is_current = true
         LIMIT 1
       )
-      AND NOT EXISTS (
-        SELECT 1 
-        FROM staff_station_postings ssp_sms
-        JOIN profiles p_sms ON p_sms.id = ssp_sms.profile_id
-        JOIN roles r_sms ON r_sms.id = p_sms.role_id
-        WHERE ssp_sms.station_id = ssp.station_id 
-          AND ssp_sms.is_current = true 
-          AND r_sms.name IN ('Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Station Master Supervisior', 'Station Master Supervisio')
-      )
     `;
   } else if (assessorRole === 'TI') {
     scopeJoin = `LEFT JOIN staff_station_postings ssp ON ssp.profile_id = p.id AND ssp.is_current = true`;
@@ -768,15 +759,6 @@ async function getRoleStatsForAssessor(assessorId, assessorRole, roleCode) {
           AND assignment_type = 'TI_AREA'
           AND assigned_to IS NULL
       )
-      ${roleCode !== 'TM' ? `AND NOT EXISTS (
-        SELECT 1 
-        FROM staff_station_postings ssp_sms
-        JOIN profiles p_sms ON p_sms.id = ssp_sms.profile_id
-        JOIN roles r_sms ON r_sms.id = p_sms.role_id
-        WHERE ssp_sms.station_id = ssp.station_id 
-          AND ssp_sms.is_current = true 
-          AND r_sms.name IN ('Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Station Master Supervisior', 'Station Master Supervisio')
-      )` : ''}
     `;
   } else if (assessorRole === 'AOM') {
     scopeJoin = `
@@ -935,9 +917,7 @@ async function getAssessorRoleStats(assessorId, assessorRole) {
   const results = [];
   for (const roleCode of targetRoles) {
     const stats = await getRoleStatsForAssessor(assessorId, assessorRole, roleCode);
-    if (stats.totalStaff > 0) {
-      results.push(stats);
-    }
+    results.push(stats);
   }
   return results;
 }
@@ -976,17 +956,7 @@ async function getEligibleStaff(assessorId, assessorRole, roleCode, filters = {}
         LIMIT 1
       )
     `);
-    conditions.push(`
-      NOT EXISTS (
-        SELECT 1 
-        FROM staff_station_postings ssp_sms
-        JOIN profiles p_sms ON p_sms.id = ssp_sms.profile_id
-        JOIN roles r_sms ON r_sms.id = p_sms.role_id
-        WHERE ssp_sms.station_id = ssp.station_id 
-          AND ssp_sms.is_current = true 
-          AND r_sms.name IN ('Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Station Master Supervisior', 'Station Master Supervisio')
-      )
-    `);
+
     if (assessorId === '439a8db6-2546-4858-abbc-3752f4acb536') {
       conditions.push(`
         (
@@ -1015,22 +985,7 @@ async function getEligibleStaff(assessorId, assessorRole, roleCode, filters = {}
           AND assigned_to IS NULL
       )
     `);
-    if (roleCode !== 'TM') {
-      conditions.push(`
-        NOT EXISTS (
-          SELECT 1 
-          FROM staff_station_postings ssp_sms
-          JOIN profiles p_sms ON p_sms.id = ssp_sms.profile_id
-          JOIN roles r_sms ON r_sms.id = p_sms.role_id
-          WHERE ssp_sms.station_id = ssp.station_id 
-            AND ssp_sms.is_current = true 
-            AND r_sms.name IN ('Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Station Master Supervisior', 'Station Master Supervisio')
-        )
-      `);
-    }
-    conditions.push(`
-      p.reporting_officer_id IS NULL
-    `);
+
   } else if (assessorRole === 'AOM') {
     values.push(assessorId);
     conditions.push(`
@@ -1071,13 +1026,7 @@ async function getEligibleStaff(assessorId, assessorRole, roleCode, filters = {}
         )
       )
     `);
-    conditions.push(`
-      p.reporting_officer_id IS NULL
-    `);
   } else {
-    conditions.push(`
-      p.reporting_officer_id IS NULL
-    `);
   }
 
   // Filter: search
@@ -1326,17 +1275,7 @@ async function getBulkEligibleStaff(assessorId, assessorRole, roleCode) {
         LIMIT 1
       )
     `);
-    conditions.push(`
-      NOT EXISTS (
-        SELECT 1 
-        FROM staff_station_postings ssp_sms
-        JOIN profiles p_sms ON p_sms.id = ssp_sms.profile_id
-        JOIN roles r_sms ON r_sms.id = p_sms.role_id
-        WHERE ssp_sms.station_id = ssp.station_id 
-          AND ssp_sms.is_current = true 
-          AND r_sms.name IN ('Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Station Master Supervisior', 'Station Master Supervisio')
-      )
-    `);
+
     if (assessorId === '439a8db6-2546-4858-abbc-3752f4acb536') {
       conditions.push(`
         (
@@ -1365,22 +1304,7 @@ async function getBulkEligibleStaff(assessorId, assessorRole, roleCode) {
           AND assigned_to IS NULL
       )
     `);
-    if (roleCode !== 'TM') {
-      conditions.push(`
-        NOT EXISTS (
-          SELECT 1 
-          FROM staff_station_postings ssp_sms
-          JOIN profiles p_sms ON p_sms.id = ssp_sms.profile_id
-          JOIN roles r_sms ON r_sms.id = p_sms.role_id
-          WHERE ssp_sms.station_id = ssp.station_id 
-            AND ssp_sms.is_current = true 
-            AND r_sms.name IN ('Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Station Master Supervisior', 'Station Master Supervisio')
-        )
-      `);
-    }
-    conditions.push(`
-      p.reporting_officer_id IS NULL
-    `);
+
   } else if (assessorRole === 'AOM') {
     values.push(assessorId);
     conditions.push(`
@@ -1421,13 +1345,7 @@ async function getBulkEligibleStaff(assessorId, assessorRole, roleCode) {
         )
       )
     `);
-    conditions.push(`
-      p.reporting_officer_id IS NULL
-    `);
   } else {
-    conditions.push(`
-      p.reporting_officer_id IS NULL
-    `);
   }
 
   // Enforce no active assessment cycle
