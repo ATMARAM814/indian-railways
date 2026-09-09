@@ -38,6 +38,10 @@ const AssessmentFormPage = () => {
   const [yesNoQuestions, setYesNoQuestions] = useState([]);
   const [mcqScore, setMcqScore] = useState(0);
 
+  // Missing validation tracking states
+  const [unansweredIds, setUnansweredIds] = useState([]);
+  const [operationalErrors, setOperationalErrors] = useState({});
+
   // Form states
   const [answers, setAnswers] = useState({});
   const [operationalDetails, setOperationalDetails] = useState({
@@ -126,6 +130,7 @@ const AssessmentFormPage = () => {
       ...prev,
       [questionId]: value
     }));
+    setUnansweredIds((prev) => prev.filter((id) => id !== questionId));
   };
 
   const handleOperationalChange = (name, value) => {
@@ -133,11 +138,17 @@ const AssessmentFormPage = () => {
       ...prev,
       [name]: value
     }));
+    setOperationalErrors((prev) => ({
+      ...prev,
+      [name]: false
+    }));
   };
 
   const handleResetChecklist = () => {
     if (window.confirm("Are you sure you want to restart the form filling? This will clear all checklist answers.")) {
       setAnswers({});
+      setUnansweredIds([]);
+      setOperationalErrors({});
     }
   };
 
@@ -145,6 +156,17 @@ const AssessmentFormPage = () => {
     let score = 0;
     yesNoQuestions.forEach((q) => {
       if (answers[q.question_id] === true) {
+        score += q.marks_per_question || 0;
+      }
+    });
+    return score;
+  };
+
+  const calculateAlertnessScore = () => {
+    let score = 0;
+    yesNoQuestions.forEach((q) => {
+      const sec = (q.section_code || '').toUpperCase();
+      if ((sec === 'ALERTNESS' || sec.includes('ALERT')) && answers[q.question_id] === true) {
         score += q.marks_per_question || 0;
       }
     });
@@ -179,36 +201,81 @@ const AssessmentFormPage = () => {
   const onSubmit = async () => {
     setFeedback(null);
 
-    // Validate that all questions are answered
-    const unanswered = yesNoQuestions.some((q) => answers[q.question_id] === undefined);
-    if (unanswered) {
-      setFeedback({
-        type: 'error',
-        message: 'All Yes/No checklist questions must be answered before submitting evaluation.'
+    // 1. Validate that all Yes/No checklist questions are answered
+    const unanswered = yesNoQuestions.filter((q) => answers[q.question_id] === undefined);
+
+    // 2. Validate mandatory Phase 3 operational fields
+    const isMcqMissing = mcqScore === '' || mcqScore === null || mcqScore === undefined || isNaN(Number(mcqScore));
+    const isAlcoholicMissing = !operationalDetails.alcoholicStatus;
+
+    if (unanswered.length > 0 || isMcqMissing || isAlcoholicMissing) {
+      const missingQIds = unanswered.map((q) => q.question_id);
+      setUnansweredIds(missingQIds);
+      setOperationalErrors({
+        mcqScore: isMcqMissing,
+        alcoholicStatus: isAlcoholicMissing
       });
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
+
+      // Priority 1: Unanswered checklist questions
+      if (unanswered.length > 0) {
+        const firstMissing = unanswered[0];
+        const count = unanswered.length;
+        const msg = `Evaluation cannot be submitted: ${count} checklist question${count > 1 ? 's are' : ' is'} unanswered. Auto-scrolled to the first missing question. Please answer all questions.`;
+
+        setFeedback({
+          type: 'error',
+          message: msg
+        });
+
+        setTimeout(() => {
+          const el = document.getElementById(`question-row-${firstMissing.question_id}`);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            const btn = el.querySelector('button');
+            if (btn) btn.focus();
+          } else {
+            window.scrollTo({ top: 400, behavior: 'smooth' });
+          }
+        }, 50);
+        return;
+      }
+
+      // Priority 2: Missing MCQ Score
+      if (isMcqMissing) {
+        setFeedback({
+          type: 'error',
+          message: 'Evaluation cannot be submitted: Knowledge Marks (MCQ Test) is required. Please enter a valid score (0 - 25).'
+        });
+        setTimeout(() => {
+          const el = document.getElementById('mcq-score-input');
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            el.focus();
+          }
+        }, 50);
+        return;
+      }
+
+      // Priority 3: Missing Alcoholic Status
+      if (isAlcoholicMissing) {
+        setFeedback({
+          type: 'error',
+          message: 'Evaluation cannot be submitted: Alcoholic Status is mandatory. Please select Alcoholic or Non-Alcoholic.'
+        });
+        setTimeout(() => {
+          const el = document.getElementById('alcoholic-status-select');
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            el.focus();
+          }
+        }, 50);
+        return;
+      }
     }
 
-    // Validate mandatory Phase 3 fields
-    if (mcqScore === '' || mcqScore === null || mcqScore === undefined || isNaN(mcqScore)) {
-      setFeedback({
-        type: 'error',
-        message: 'Knowledge Marks (MCQ Test) is mandatory and must be entered before submitting evaluation.'
-      });
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
-
-    if (!operationalDetails.alcoholicStatus) {
-      setFeedback({
-        type: 'error',
-        message: 'Alcoholic Status is mandatory and must be selected before submitting evaluation.'
-      });
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
-
+    // Clear any previous errors
+    setUnansweredIds([]);
+    setOperationalErrors({});
     setSubmitting(true);
 
     const answersPayload = yesNoQuestions.map((q) => {
@@ -236,6 +303,7 @@ const AssessmentFormPage = () => {
   };
 
   const checklistScore = calculateChecklistScore();
+  const alertnessScore = calculateAlertnessScore();
 
   return (
     <DashboardLayout>
@@ -376,6 +444,7 @@ const AssessmentFormPage = () => {
                 answers={answers}
                 onAnswerChange={handleAnswerChange}
                 readOnly={isReadOnly}
+                unansweredIds={unansweredIds}
               />
             )}
 
@@ -421,7 +490,11 @@ const AssessmentFormPage = () => {
                 readOnly={isReadOnly}
                 assessorRole={assessmentResult?.assessor_role_code}
                 mcqScore={mcqScore}
-                onMcqScoreChange={(score) => setMcqScore(score)}
+                onMcqScoreChange={(score) => {
+                  setMcqScore(score);
+                  setOperationalErrors((prev) => ({ ...prev, mcqScore: false }));
+                }}
+                errors={operationalErrors}
               />
             )}
 
@@ -430,6 +503,7 @@ const AssessmentFormPage = () => {
               <AssessmentScoreSummary
                 mcqScore={mcqScore}
                 checklistScore={checklistScore}
+                alertnessScore={alertnessScore}
                 onSaveDraft={onSave}
                 onSubmitFinal={onSubmit}
                 onCancel={() => {
@@ -451,6 +525,7 @@ const AssessmentFormPage = () => {
                 approvalRemark={assessmentResult?.approval_remark}
                 assessment={assessmentResult}
                 alcoholicStatus={operationalDetails.alcoholicStatus}
+                feedback={feedback}
               />
             )}
           </div>

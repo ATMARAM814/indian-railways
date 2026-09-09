@@ -1,5 +1,5 @@
 import React from 'react';
-import { Activity } from 'lucide-react';
+import { Activity, AlertCircle } from 'lucide-react';
 
 export const AssessmentOperationalDetails = ({
   details = {},
@@ -7,7 +7,8 @@ export const AssessmentOperationalDetails = ({
   readOnly = false,
   assessorRole = '',
   mcqScore = 0,
-  onMcqScoreChange
+  onMcqScoreChange,
+  errors = {}
 }) => {
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -40,25 +41,34 @@ export const AssessmentOperationalDetails = ({
               {mcqScore !== null && mcqScore !== undefined ? `${mcqScore} / 25 Marks` : 'N/A'}
             </div>
           ) : (
-            <input
-              type="number"
-              name="mcqScore"
-              value={mcqScore !== null && mcqScore !== undefined ? mcqScore : ''}
-              onChange={(e) => {
-                const val = e.target.value;
-                if (val === '') {
-                  onMcqScoreChange('');
-                } else {
-                  const num = Math.min(25, Math.max(0, Number(val)));
-                  onMcqScoreChange(num);
-                }
-              }}
-              placeholder="Enter Marks (0 - 25)"
-              className="op-input"
-              min={0}
-              max={25}
-              required
-            />
+            <>
+              <input
+                id="mcq-score-input"
+                type="number"
+                name="mcqScore"
+                value={mcqScore !== null && mcqScore !== undefined ? mcqScore : ''}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === '') {
+                    onMcqScoreChange('');
+                  } else {
+                    const num = Math.min(25, Math.max(0, Number(val)));
+                    onMcqScoreChange(num);
+                  }
+                }}
+                placeholder="Enter Marks (0 - 25)"
+                className={`op-input ${errors.mcqScore ? 'op-input-error' : ''}`}
+                min={0}
+                max={25}
+                required
+              />
+              {errors.mcqScore && (
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#DC2626', fontSize: '11.5px', fontWeight: 700, marginTop: '4px' }}>
+                  <AlertCircle size={13} style={{ flexShrink: 0 }} />
+                  Knowledge Marks (0 - 25) are mandatory.
+                </span>
+              )}
+            </>
           )}
         </div>
 
@@ -70,17 +80,26 @@ export const AssessmentOperationalDetails = ({
               {details.alcoholicStatus === 'Sober' ? 'Non-Alcoholic' : (details.alcoholicStatus || 'Not Specified')}
             </div>
           ) : (
-            <select
-              name="alcoholicStatus"
-              value={details.alcoholicStatus || ''}
-              onChange={handleInputChange}
-              className="op-input"
-              required
-            >
-              <option value="">Select Status</option>
-              <option value="Alcoholic">Alcoholic</option>
-              <option value="Non-Alcoholic">Non-Alcoholic</option>
-            </select>
+            <>
+              <select
+                id="alcoholic-status-select"
+                name="alcoholicStatus"
+                value={details.alcoholicStatus || ''}
+                onChange={handleInputChange}
+                className={`op-input ${errors.alcoholicStatus ? 'op-input-error' : ''}`}
+                required
+              >
+                <option value="">Select Status</option>
+                <option value="Alcoholic">Alcoholic</option>
+                <option value="Non-Alcoholic">Non-Alcoholic</option>
+              </select>
+              {errors.alcoholicStatus && (
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#DC2626', fontSize: '11.5px', fontWeight: 700, marginTop: '4px' }}>
+                  <AlertCircle size={13} style={{ flexShrink: 0 }} />
+                  Alcoholic status selection is mandatory.
+                </span>
+              )}
+            </>
           )}
         </div>
 
@@ -122,28 +141,6 @@ export const AssessmentOperationalDetails = ({
               <option value="Cleared">Cleared</option>
               <option value="Pending">Pending</option>
               <option value="Failed">Failed</option>
-            </select>
-          )}
-        </div>
-
-
-
-        {/* Automatic Training */}
-        <div className="op-item">
-          <label className="op-label">Automatic Training</label>
-          {readOnly ? (
-            <div className="op-value-readonly">{details.trainingStatus || 'Not Specified'}</div>
-          ) : (
-            <select
-              name="trainingStatus"
-              value={details.trainingStatus || ''}
-              onChange={handleInputChange}
-              className="op-input"
-            >
-              <option value="">Select Training</option>
-              <option value="Not required">Not required</option>
-              <option value="Recommended">Recommended</option>
-              <option value="Mandatory">Mandatory</option>
             </select>
           )}
         </div>
