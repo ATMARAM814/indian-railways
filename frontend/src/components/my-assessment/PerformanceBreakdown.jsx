@@ -2,12 +2,12 @@ import React from 'react';
 import { Target, Shield, Zap, Crown, Star, Smile } from 'lucide-react';
 
 const DOMAIN_CONFIG = [
-  { key: 'mcq_score',            name: 'MCQ Online Examination',          max: 25, color: '#EA580C', bg: '#FFF7ED', border: '#FED7AA', icon: Target  },
-  { key: 'alertness_score',      name: 'Alertness & Reflexes Test',       max: 20, color: '#3B82F6', bg: '#EFF6FF', border: '#BFDBFE', icon: Zap    },
-  { key: 'safety_record_score',  name: 'Safety Record & Rules Compliance',max: 15, color: '#10B981', bg: '#ECFDF5', border: '#A7F3D0', icon: Shield  },
-  { key: 'leadership_score',     name: 'Leadership & Crisis Management',  max: 12, color: '#8B5CF6', bg: '#F5F3FF', border: '#DDD6FE', icon: Crown  },
-  { key: 'discipline_score',     name: 'Discipline & Conduct',            max: 10, color: '#EC4899', bg: '#FDF2F8', border: '#F9A8D4', icon: Star   },
-  { key: 'appearance_score',     name: 'Appearance & Demeanor',           max:  8, color: '#0EA5E9', bg: '#F0F9FF', border: '#BAE6FD', icon: Smile  },
+  { key: 'mcq_score',            name: 'MCQ Online Examination', max: 25, color: '#EA580C', bg: '#FFF7ED', border: '#FED7AA', icon: Target  },
+  { key: 'alertness_score',      name: 'Alertness',              max: 25, color: '#3B82F6', bg: '#EFF6FF', border: '#BFDBFE', icon: Zap     },
+  { key: 'safety_record_score',  name: 'Safety Record',          max: 15, color: '#10B981', bg: '#ECFDF5', border: '#A7F3D0', icon: Shield  },
+  { key: 'leadership_score',     name: 'Leadership & Management', max: 15, color: '#8B5CF6', bg: '#F5F3FF', border: '#DDD6FE', icon: Crown   },
+  { key: 'discipline_score',     name: 'Discipline',             max: 10, color: '#EC4899', bg: '#FDF2F8', border: '#F9A8D4', icon: Star    },
+  { key: 'appearance_score',     name: 'Appearance',             max: 10, color: '#0EA5E9', bg: '#F0F9FF', border: '#BAE6FD', icon: Smile   },
 ];
 
 const PerformanceBreakdown = ({ assessment }) => {

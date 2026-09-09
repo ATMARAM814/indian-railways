@@ -72,16 +72,16 @@ const AssessmentScorecardPage = () => {
     const categoryDesc = getCategoryDescription(category);
     const mcqScore = scorecardDetails.mcq_score || 0;
     
-    return `Assessment score achieved: ${totalScore}/100 (${categoryName} Competency). Demonstrated standard safety competency in "${scorecardDetails.assessed_role_code} Online Examination" scoring ${mcqScore}/25 marks. Overall performance category is resolved as Category ${category} (${categoryDesc}). It is recommended to maintain periodic rules compliance checks and undergo regular shunting/points operation audits to sustain high safety metrics.`;
+    return `Assessment score achieved: ${totalScore}/100 (${categoryName} Competency). Demonstrated standard safety competency in "${scorecardDetails.assessed_role_code} Online Examination" scoring ${mcqScore}/25 marks. Overall performance category is resolved as Category ${category} (${categoryDesc}). It is recommended to maintain periodic rules compliance checks and follow operational safety guidelines to sustain high safety metrics.`;
   };
 
   const DOMAINS = [
-    { key: 'mcq_score',            name: 'MCQ Online Examination',           max: 25 },
-    { key: 'alertness_score',      name: 'Alertness & Reflexes Test',        max: 20 },
-    { key: 'safety_record_score',  name: 'Safety Record & Rules Compliance', max: 15 },
-    { key: 'leadership_score',     name: 'Leadership & Crisis Management',   max: 12 },
-    { key: 'discipline_score',     name: 'Discipline & Conduct',             max: 10 },
-    { key: 'appearance_score',     name: 'Appearance & Demeanor',            max:  8 }
+    { key: 'mcq_score',            name: 'MCQ Online Examination', max: 25 },
+    { key: 'alertness_score',      name: 'Alertness',             max: 25 },
+    { key: 'safety_record_score',  name: 'Safety Record',          max: 15 },
+    { key: 'leadership_score',     name: 'Leadership & Management',max: 15 },
+    { key: 'discipline_score',     name: 'Discipline',             max: 10 },
+    { key: 'appearance_score',     name: 'Appearance',             max: 10 }
   ];
 
   return (
