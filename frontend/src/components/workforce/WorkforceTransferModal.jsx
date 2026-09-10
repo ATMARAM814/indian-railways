@@ -189,8 +189,8 @@ const WorkforceTransferModal = ({
           alignItems: 'center'
         }}>
           <div>
-            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#0F172A' }}>Transfer & Role Reassignment</h3>
-            <p style={{ margin: '4px 0 0 0', fontSize: '12.5px', color: '#64748B' }}>Reassign station posting or update designation role (Promotion / Demotion)</p>
+            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#0F172A' }}>Transfer Employee</h3>
+            <p style={{ margin: '4px 0 0 0', fontSize: '12.5px', color: '#64748B' }}>Reassign posting and set user designation role</p>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748B' }}>
             <X size={20} />
@@ -249,7 +249,7 @@ const WorkforceTransferModal = ({
             {/* New Role Dropdown */}
             <div>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>
-                New Role / Designation (Promotion / Demotion) *
+                New Role *
               </label>
               <select
                 name="newRole"
@@ -258,19 +258,11 @@ const WorkforceTransferModal = ({
                 required
                 style={{ width: '100%', padding: '10px 12px', fontSize: '13.5px', borderRadius: '8px', border: '1px solid #D7E3EF', outline: 'none', cursor: 'pointer' }}
               >
-                {selectableRoles.map(role => {
-                  const roleRank = ROLE_HIERARCHY[role] || 1;
-                  let rankTag = '';
-                  if (role === currentRole) rankTag = ' (Current)';
-                  else if (roleRank > currentRank) rankTag = ' (Promotion)';
-                  else if (roleRank < currentRank) rankTag = ' (Demotion)';
-
-                  return (
-                    <option key={role} value={role}>
-                      {ROLE_DISPLAY_NAMES[role] || role}{rankTag}
-                    </option>
-                  );
-                })}
+                {selectableRoles.map(role => (
+                  <option key={role} value={role}>
+                    {ROLE_DISPLAY_NAMES[role] || role}
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -362,7 +354,7 @@ const WorkforceTransferModal = ({
               <textarea
                 name="reason"
                 rows={3}
-                placeholder="Enter formal reason for this transfer, promotion, or demotion..."
+                placeholder="Enter formal reason for this reassignment..."
                 value={formData.reason}
                 onChange={handleInputChange}
                 required
