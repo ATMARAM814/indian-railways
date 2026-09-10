@@ -692,10 +692,8 @@ async function transferUserService(
 
   const oldRank = ROLE_HIERARCHY[oldRole] || 0;
   const newRank = ROLE_HIERARCHY[newRole] || 0;
-
-  if (newRank < oldRank) {
-    throw new Error(`Invalid role change: Demotions are not permitted during transfer.`);
-  }
+  const isDemotion = newRank < oldRank;
+  const isPromotion = newRank > oldRank;
 
   const pool = require("../../config/database");
 
@@ -713,6 +711,12 @@ async function transferUserService(
       `UPDATE profiles SET role_id = $1, designation = $2, updated_at = now() WHERE id = $3`,
       [roleId, newDesignation, targetUserId]
     );
+    if (['PM', 'TM', 'Shunting Master', 'Cabin Master'].includes(newRole)) {
+      await pool.query(
+        `UPDATE profiles SET reporting_officer_id = NULL WHERE reporting_officer_id = $1`,
+        [targetUserId]
+      );
+    }
   }
 
   let currentPosting = await getCurrentPosting(targetUserId);
@@ -751,18 +755,21 @@ async function transferUserService(
       );
     }
 
+    const targetStationId = transferData.newStationId || currentPosting?.station_id;
+
     if (currentPosting) {
       await closeCurrentPosting(currentPosting.id);
     }
 
     await createNewPosting({
       profileId: targetUserId,
-      stationId: transferData.newStationId,
+      stationId: targetStationId,
       transferredBy: creatorUserId,
-      reason: transferData.reason || "Transfer",
+      reason: transferData.reason || (isDemotion ? "Demotion" : isPromotion ? "Promotion" : "Transfer"),
     });
   }
 
+  const actionVerb = isDemotion ? "demoted" : isPromotion ? "promoted" : "transferred/reassigned";
   await logAction(
     creatorUserId,
     "EMPLOYEE_TRANSFERRED",
@@ -774,12 +781,14 @@ async function transferUserService(
       designation: existingUser.designation 
     },
     { 
-      stationId: isTargetTi ? null : transferData.newStationId, 
+      stationId: isTargetTi ? null : (transferData.newStationId || currentPosting?.station_id), 
       role: newRole, 
       designation: newDesignation,
-      tiAreaStationIds: isTargetTi ? transferData.tiAreaStationIds : null
+      tiAreaStationIds: isTargetTi ? transferData.tiAreaStationIds : null,
+      isDemotion,
+      isPromotion
     },
-    `Employee ${existingUser.full_name} transferred/promoted to ${newDesignation}`
+    `Employee ${existingUser.full_name} ${actionVerb} to ${newDesignation}`
   );
 
   return { success: true };
