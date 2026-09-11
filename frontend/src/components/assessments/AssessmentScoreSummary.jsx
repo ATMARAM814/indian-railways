@@ -1,9 +1,10 @@
 import React from 'react';
-import { Save, CheckCircle } from 'lucide-react';
+import { Save, CheckCircle, AlertCircle } from 'lucide-react';
 
 export const AssessmentScoreSummary = ({
   mcqScore = 0,
   checklistScore = 0,
+  alertnessScore = null,
   onSaveDraft,
   onSubmitFinal,
   onCancel,
@@ -14,7 +15,8 @@ export const AssessmentScoreSummary = ({
   approvalStatus,
   approvalRemark,
   assessment = null,
-  alcoholicStatus = ''
+  alcoholicStatus = '',
+  feedback = null
 }) => {
   const isCompleted = readOnly || assessment?.status === 'completed';
 
@@ -38,7 +40,9 @@ export const AssessmentScoreSummary = ({
 
   const parsedAlertnessScore = isCompleted && assessment?.alertness_score !== undefined && assessment?.alertness_score !== null
     ? Number(assessment.alertness_score)
-    : 25;
+    : (alertnessScore !== null && alertnessScore !== undefined
+        ? Number(alertnessScore)
+        : Number(assessment?.alertness_score || 0));
 
   let categoryCode = 'D';
   let categoryName = 'Category D (High Risk)';
@@ -71,6 +75,33 @@ export const AssessmentScoreSummary = ({
       categoryClass = 'cat-d';
     }
   }
+
+  const getCategoryInsight = () => {
+    if (activeAlcoholicStatus === 'Alcoholic') {
+      return 'Flagged under Railway Safety Protocols due to Alcoholic status. Mandatory safety counseling and re-evaluation required.';
+    }
+    if (parsedMcqScore < 15 && parsedAlertnessScore < 15) {
+      return 'Both Knowledge test and Alertness scores are below qualifying thresholds (<15/25). Targeted counseling and safety monitoring required.';
+    }
+    if (parsedMcqScore < 15) {
+      return 'Knowledge test score is below qualifying threshold (15/25). Targeted technical rules counseling recommended.';
+    }
+    if (parsedAlertnessScore < 15) {
+      return 'Alertness competency score is below qualifying threshold (15/25). Practical vigilance monitoring recommended.';
+    }
+    switch (categoryCode) {
+      case 'A':
+        return 'Demonstrates high operational competency and exemplary safety compliance across all evaluated areas.';
+      case 'B':
+        return 'Meets standard railway operational safety benchmarks with regular periodic review.';
+      case 'C':
+        return 'Safety attention required. Overall score requires targeted counseling and performance monitoring.';
+      case 'D':
+        return 'Critical safety concern. Mandatory corrective safety training and counseling required before sign-off.';
+      default:
+        return 'Safety category projected based on overall score and individual competency cutoffs.';
+    }
+  };
 
   const isApproved = approvalStatus === 'approved';
 
@@ -127,8 +158,8 @@ export const AssessmentScoreSummary = ({
             <div className={`projected-category-badge ${categoryClass}`}>
               Category {categoryCode}
             </div>
-            <p className="proj-description">
-              Grading thresholds: Category A (≥80%), Category B (50-79%), Category C (26-49%), Category D (≤25%).
+            <p className="proj-description" style={{ fontSize: '12.5px', color: '#475569', lineHeight: 1.5, marginTop: '8px' }}>
+              {getCategoryInsight()}
             </p>
 
             {readOnly && approvalStatus && (
@@ -139,6 +170,29 @@ export const AssessmentScoreSummary = ({
                 </p>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {!readOnly && feedback && feedback.type === 'error' && (
+        <div style={{
+          backgroundColor: '#FEF2F2',
+          border: '1px solid #FCA5A5',
+          borderRadius: '10px',
+          padding: '12px 16px',
+          marginTop: '16px',
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: '12px',
+          color: '#991B1B',
+          fontSize: '13.5px',
+          fontWeight: 600,
+          boxShadow: '0 2px 6px rgba(220, 38, 38, 0.08)'
+        }}>
+          <AlertCircle size={20} style={{ color: '#DC2626', flexShrink: 0, marginTop: '1px' }} />
+          <div>
+            <span style={{ display: 'block', fontWeight: 700, color: '#B91C1C' }}>Evaluation Incomplete</span>
+            <span style={{ fontWeight: 500, color: '#7F1D1D' }}>{feedback.message}</span>
           </div>
         </div>
       )}

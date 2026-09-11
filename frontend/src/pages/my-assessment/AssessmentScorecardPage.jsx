@@ -76,12 +76,12 @@ const AssessmentScorecardPage = () => {
   };
 
   const DOMAINS = [
-    { key: 'mcq_score',            name: 'MCQ Online Examination', max: 25 },
-    { key: 'alertness_score',      name: 'Alertness',             max: 25 },
-    { key: 'safety_record_score',  name: 'Safety Record',          max: 15 },
-    { key: 'leadership_score',     name: 'Leadership & Management',max: 15 },
-    { key: 'discipline_score',     name: 'Discipline',             max: 10 },
-    { key: 'appearance_score',     name: 'Appearance',             max: 10 }
+    { key: 'mcq_score',            name: 'MCQ Online Examination',           max: 25 },
+    { key: 'alertness_score',      name: 'Alertness & Vigilance',             max: 25 },
+    { key: 'safety_record_score',  name: 'Safety Record & Rules Compliance', max: 15 },
+    { key: 'leadership_score',     name: 'Leadership & Initiative',          max: 15 },
+    { key: 'discipline_score',     name: 'Discipline & Attendance',          max: 10 },
+    { key: 'appearance_score',     name: 'Appearance & Turnout',             max: 10 }
   ];
 
   return (

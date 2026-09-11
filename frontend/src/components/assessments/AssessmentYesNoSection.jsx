@@ -1,5 +1,5 @@
 import React from 'react';
-import { ClipboardCheck } from 'lucide-react';
+import { ClipboardCheck, AlertCircle } from 'lucide-react';
 
 const sectionNames = {
   ALERTNESS: 'Alertness & Vigilance',
@@ -13,7 +13,8 @@ export const AssessmentYesNoSection = ({
   questions = [],
   answers = {},
   onAnswerChange,
-  readOnly = false
+  readOnly = false,
+  unansweredIds = []
 }) => {
   // Group questions by section
   const groupedQuestions = questions.reduce((acc, q) => {
@@ -64,11 +65,22 @@ export const AssessmentYesNoSection = ({
             <div className="questions-list">
               {sectionQuestions.map((q) => {
                 const currentValue = answers[q.question_id];
+                const isMissing = unansweredIds.includes(q.question_id) && currentValue === undefined;
                 
                 return (
-                  <div key={q.question_id} className="question-row">
+                  <div 
+                    key={q.question_id} 
+                    id={`question-row-${q.question_id}`} 
+                    className={`question-row ${isMissing ? 'question-row-error' : ''}`}
+                  >
                     <div className="question-text-wrapper">
                       <p className="question-text">{q.question_text}</p>
+                      {isMissing && (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', color: '#DC2626', fontSize: '12px', fontWeight: 700, marginTop: '4px' }}>
+                          <AlertCircle size={14} style={{ color: '#DC2626', flexShrink: 0 }} />
+                          Response required: Please select YES or NO
+                        </span>
+                      )}
                     </div>
 
                     <div className="question-options-group">
