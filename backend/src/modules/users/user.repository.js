@@ -1460,9 +1460,22 @@ async function searchEmployeesDb(searchTerm) {
       COALESCE(p.hrms_id, '') AS hrms_id,
       COALESCE(p.full_name, '') AS name,
       COALESCE(NULLIF(p.designation, ''), r.name, '') AS designation,
+      COALESCE(s.station_name, sa_station.station_name, '') AS station_name,
+      COALESCE(s.station_code, sa_station.station_code, '') AS station_code,
       COALESCE(p.phone, '') AS phone_number
     FROM profiles p
     LEFT JOIN roles r ON r.id = p.role_id
+    LEFT JOIN staff_station_postings ssp 
+      ON ssp.profile_id = p.id 
+      AND ssp.is_current = true
+    LEFT JOIN stations s ON s.id = ssp.station_id
+    LEFT JOIN LATERAL (
+      SELECT s2.station_name, s2.station_code
+      FROM station_assignments sa2
+      JOIN stations s2 ON s2.id = sa2.station_id
+      WHERE sa2.profile_id = p.id
+      LIMIT 1
+    ) sa_station ON s.id IS NULL
     WHERE 
       p.hrms_id ILIKE $1
       OR p.full_name ILIKE $1

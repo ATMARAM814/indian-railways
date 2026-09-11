@@ -295,7 +295,7 @@ const SearchEmployeePage = () => {
             </span>
           </div>
         ) : (
-          /* Table of Results - Strictly 4 columns: hrms_id, name, designation, phone number */
+          /* Table of Results - Columns: hrms_id, name, designation, station, phone number */
           <div
             className="staff-table-card"
             style={{
@@ -359,6 +359,18 @@ const SearchEmployeePage = () => {
                         letterSpacing: '0.5px'
                       }}
                     >
+                      Station
+                    </th>
+                    <th
+                      style={{
+                        padding: '16px 24px',
+                        fontSize: '11.5px',
+                        fontWeight: 600,
+                        color: '#475569',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px'
+                      }}
+                    >
                       Phone Number
                     </th>
                   </tr>
@@ -399,6 +411,31 @@ const SearchEmployeePage = () => {
                         <span className="notranslate">
                           {cleanDesignationText(item.designation) || '—'}
                         </span>
+                      </td>
+
+                      {/* Station */}
+                      <td style={{ padding: '16px 24px', fontSize: '13.5px', color: '#334155' }}>
+                        {item.station_name || item.station_code ? (
+                          <div>
+                            <span style={{ fontWeight: 600, color: '#0F172A' }}>
+                              {item.station_code || '—'}
+                            </span>
+                            {item.station_name && (
+                              <span
+                                style={{
+                                  fontSize: '12px',
+                                  color: '#64748B',
+                                  display: 'block',
+                                  marginTop: '1px'
+                                }}
+                              >
+                                {item.station_name}
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <span style={{ color: '#94A3B8' }}>—</span>
+                        )}
                       </td>
 
                       {/* Phone Number */}
