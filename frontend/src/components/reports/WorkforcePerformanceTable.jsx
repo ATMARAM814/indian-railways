@@ -82,15 +82,15 @@ const WorkforcePerformanceTable = ({ workforceList, pagination, onPageChange }) 
               {workforceList.map((emp) => (
                 <tr key={emp.userId} className="hover:bg-slate-50/50 transition-colors">
                   <td className="px-4 py-3 text-xs font-bold text-[#0B2341]">{emp.fullName}</td>
-                  <td className="px-4 py-3 text-xs font-semibold text-slate-600">{emp.hrmsId}</td>
+                  <td className="notranslate px-4 py-3 text-xs font-semibold text-slate-600">{emp.hrmsId}</td>
                   <td className="px-4 py-3 text-xs font-semibold text-slate-600">
-                    <span className="px-2 py-0.5 rounded font-bold text-[10px] bg-slate-100 text-slate-700">
+                    <span className="notranslate px-2 py-0.5 rounded font-bold text-[10px] bg-slate-100 text-slate-700">
                       {emp.role}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-xs font-semibold text-slate-600">{emp.stationName || 'N/A'}</td>
                   <td className="px-4 py-3 text-xs text-center">
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${getCategoryBadgeClass(emp.category)}`}>
+                    <span className={`notranslate px-2 py-0.5 rounded text-[10px] font-bold ${getCategoryBadgeClass(emp.category)}`}>
                       Category {emp.category || 'N/A'}
                     </span>
                   </td>
@@ -104,7 +104,7 @@ const WorkforcePerformanceTable = ({ workforceList, pagination, onPageChange }) 
                     {emp.lastAssessmentDate ? new Date(emp.lastAssessmentDate).toLocaleDateString('en-GB') : '-'}
                   </td>
                   <td className="px-4 py-3 text-xs">{renderApprovalStatus(emp.approvalStatus)}</td>
-                   <td className="px-4 py-3 text-xs font-semibold text-right" style={{ textAlign: 'right' }}>
+                  <td className="px-4 py-3 text-xs font-semibold text-right" style={{ textAlign: 'right' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
                       <Link
                         to={`/reports/employee/${emp.userId}`}

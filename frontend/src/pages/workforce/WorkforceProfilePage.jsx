@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { 
-  ArrowLeft, User, Mail, Phone, Calendar, Award, 
+import {
+  ArrowLeft, User, Mail, Phone, Calendar, Award,
   Briefcase, TrendingUp, MapPin, CheckCircle, XCircle, Clock
 } from 'lucide-react';
-import { 
-  ResponsiveContainer, LineChart, Line, XAxis, 
-  YAxis, CartesianGrid, Tooltip, Legend 
+import {
+  ResponsiveContainer, LineChart, Line, XAxis,
+  YAxis, CartesianGrid, Tooltip, Legend
 } from 'recharts';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import LoadingState from '../../components/dashboard/LoadingState';
@@ -59,17 +59,17 @@ const WorkforceProfilePage = () => {
       <DashboardLayout>
         <div style={{ padding: '32px' }}>
           <ErrorState title="Failed to Load Profile" message={error || 'Profile not found'} />
-          <button 
-            onClick={() => navigate(-1)} 
-            style={{ 
-              marginTop: '16px', 
-              padding: '10px 18px', 
-              fontSize: '13.5px', 
-              fontWeight: 600, 
-              color: '#475569', 
-              backgroundColor: '#F1F5F9', 
-              border: '1px solid #E2E8F0', 
-              borderRadius: '8px', 
+          <button
+            onClick={() => navigate(-1)}
+            style={{
+              marginTop: '16px',
+              padding: '10px 18px',
+              fontSize: '13.5px',
+              fontWeight: 600,
+              color: '#475569',
+              backgroundColor: '#F1F5F9',
+              border: '1px solid #E2E8F0',
+              borderRadius: '8px',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -104,7 +104,7 @@ const WorkforceProfilePage = () => {
       default:
         styles = { ...styles, backgroundColor: '#F1F5F9', color: '#475569' };
     }
-    return <span style={styles}>Cat {cat}</span>;
+    return <span className="notranslate" style={styles}>Cat {cat}</span>;
   };
 
   // Render Risk Badge
@@ -143,19 +143,19 @@ const WorkforceProfilePage = () => {
   return (
     <DashboardLayout>
       <div className="profile-page-container">
-        
+
         {/* Back Button */}
-        <button 
-          onClick={() => navigate(-1)} 
-          style={{ 
-            marginBottom: '24px', 
-            padding: '8px 14px', 
-            fontSize: '13px', 
-            fontWeight: 600, 
-            color: '#475569', 
-            backgroundColor: '#FFFFFF', 
-            border: '1px solid #D7E3EF', 
-            borderRadius: '8px', 
+        <button
+          onClick={() => navigate(-1)}
+          style={{
+            marginBottom: '24px',
+            padding: '8px 14px',
+            fontSize: '13px',
+            fontWeight: 600,
+            color: '#475569',
+            backgroundColor: '#FFFFFF',
+            border: '1px solid #D7E3EF',
+            borderRadius: '8px',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
@@ -201,9 +201,9 @@ const WorkforceProfilePage = () => {
               </div>
               <p style={{ margin: '6px 0 0 0', fontSize: '14px', color: '#64748B', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Briefcase size={16} />
-                <span>{cleanDesignationText(profile.designation || profile.role)}</span>
+                <span className="notranslate">{cleanDesignationText(profile.designation || profile.role)}</span>
                 <span style={{ color: '#D7E3EF' }}>|</span>
-                <span style={{ fontFamily: 'monospace', fontWeight: 600 }}>{profile.hrms_id}</span>
+                <span className="notranslate" style={{ fontFamily: 'monospace', fontWeight: 600 }}>{profile.hrms_id}</span>
               </p>
             </div>
           </div>
@@ -229,10 +229,10 @@ const WorkforceProfilePage = () => {
 
         {/* Two-Column Grid */}
         <div className="profile-layout-grid" style={{ marginBottom: '28px' }}>
-          
+
           {/* Left Column (Bio, Posting, Hierarchy) */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-            
+
             {/* Personal & Professional Details Card */}
             <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #D7E3EF', borderRadius: '16px', padding: '24px', boxShadow: '0 1px 3px rgba(11, 35, 65, 0.05)' }}>
               <h3 style={{ margin: '0 0 20px 0', fontSize: '15px', fontWeight: 700, color: '#0F172A', borderBottom: '1px solid #EEF2F6', paddingBottom: '12px' }}>Staff Details</h3>
@@ -331,7 +331,7 @@ const WorkforceProfilePage = () => {
             <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #D7E3EF', borderRadius: '16px', padding: '24px', boxShadow: '0 1px 3px rgba(11, 35, 65, 0.05)' }}>
               <h3 style={{ margin: '0 0 20px 0', fontSize: '15px', fontWeight: 700, color: '#0F172A', borderBottom: '1px solid #EEF2F6', paddingBottom: '12px' }}>Reporting Hierarchy</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                
+
                 {/* Pointsman/Shunting Master specific hierarchy */}
                 {['PM', 'Shunting Master'].includes(profile.role) && (
                   <>
@@ -404,10 +404,10 @@ const WorkforceProfilePage = () => {
 
           {/* Right Column (Metrics, Trend Graph, History Table) */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-            
+
             {/* Assessment Summary stats */}
             <div className="profile-kpi-grid">
-              
+
               {/* Assessments Completed */}
               <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #D7E3EF', borderRadius: '12px', padding: '16px', boxShadow: '0 1px 3px rgba(11, 35, 65, 0.05)' }}>
                 <span style={{ fontSize: '11px', color: '#64748B', fontWeight: 600, textTransform: 'uppercase' }}>Assessments</span>

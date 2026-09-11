@@ -39,7 +39,7 @@ export const WorkforceTable = ({ workforce }) => {
       default:
         styles = { ...styles, backgroundColor: '#F1F5F9', color: '#475569' };
     }
-    return <span style={styles}>Cat {cat}</span>;
+    return <span className="notranslate" style={styles}>Cat {cat}</span>;
   };
 
   // Render Status Badge
@@ -58,7 +58,7 @@ export const WorkforceTable = ({ workforce }) => {
     if (approvalStatus === 'pending_approval') {
       return <span style={{ color: '#D97706', fontSize: '12.5px', fontWeight: 600 }}>Pending Approval</span>;
     }
-    
+
     // In-progress status checks
     if (['created', 'scheduled', 'mcq_access_sent', 'mcq_pending'].includes(status)) {
       return <span style={{ color: '#2B5CE6', fontSize: '12.5px', fontWeight: 600 }}>MCQ Pending</span>;
@@ -103,10 +103,10 @@ export const WorkforceTable = ({ workforce }) => {
                       <span style={{ fontWeight: 600, color: '#0F172A' }}>{row.fullName}</span>
                     </div>
                   </td>
-                  <td style={{ padding: '14px 20px', fontSize: '13px', fontWeight: 500, color: '#1B365D' }}>
+                  <td className="notranslate" style={{ padding: '14px 20px', fontSize: '13px', fontWeight: 500, color: '#1B365D' }}>
                     {row.role}
                   </td>
-                  <td style={{ padding: '14px 20px', fontSize: '13px', fontFamily: 'monospace', color: '#475569' }}>
+                  <td className="notranslate" style={{ padding: '14px 20px', fontSize: '13px', fontFamily: 'monospace', color: '#475569' }}>
                     {row.hrmsId}
                   </td>
                   <td style={{ padding: '14px 20px' }}>

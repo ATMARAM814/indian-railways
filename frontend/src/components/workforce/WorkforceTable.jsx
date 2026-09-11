@@ -41,7 +41,7 @@ const WorkforceTable = ({
         styles = { ...styles, backgroundColor: '#F1F5F9', color: '#475569' };
     }
 
-    return <span style={styles}>Cat {cat}</span>;
+    return <span className="notranslate" style={styles}>Cat {cat}</span>;
   };
 
   // Render badge helper for Risk Level
@@ -99,12 +99,12 @@ const WorkforceTable = ({
                 <td style={{ padding: '16px 24px' }}>
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
                     <strong style={{ color: '#0F172A', fontSize: '14px' }}>{item.full_name}</strong>
-                    <span style={{ fontSize: '12px', color: '#64748B', marginTop: '2px' }}>{cleanDesignationText(item.designation || item.role)}</span>
+                    <span className="notranslate" style={{ fontSize: '12px', color: '#64748B', marginTop: '2px' }}>{cleanDesignationText(item.designation || item.role)}</span>
                   </div>
                 </td>
 
                 {/* HRMS ID */}
-                <td style={{ padding: '16px 24px', fontSize: '13.5px', color: '#475569', fontFamily: 'monospace', fontWeight: 500 }}>
+                <td className="notranslate" style={{ padding: '16px 24px', fontSize: '13.5px', color: '#475569', fontFamily: 'monospace', fontWeight: 500 }}>
                   {item.hrms_id}
                 </td>
 
