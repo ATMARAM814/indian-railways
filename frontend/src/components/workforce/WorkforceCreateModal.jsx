@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { X, Loader } from 'lucide-react';
-import SearchableStationSelect from '../common/SearchableStationSelect';
 
 const WorkforceCreateModal = ({
   isOpen,
@@ -258,15 +257,18 @@ const WorkforceCreateModal = ({
             {['PM', 'SM', 'SS', 'Cabin Master', 'Shunting Master', 'Station Master Supervisor'].includes(roleCode) && (
               <div>
                 <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>Station Posting *</label>
-                <SearchableStationSelect
+                <select
                   name="stationId"
-                  id="stationId"
                   value={formData.stationId}
                   onChange={handleInputChange}
-                  stations={stations}
-                  placeholder="Select Station"
                   required
-                />
+                  style={{ width: '100%', padding: '10px 12px', fontSize: '13.5px', borderRadius: '8px', border: '1px solid #D7E3EF', backgroundColor: '#F8FAFC', outline: 'none', cursor: 'pointer' }}
+                >
+                  <option value="">Select Station</option>
+                  {stations.map(st => (
+                    <option key={st.id} value={st.id}>{st.station_name} ({st.station_code})</option>
+                  ))}
+                </select>
               </div>
             )}
 

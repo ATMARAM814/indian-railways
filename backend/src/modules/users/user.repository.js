@@ -91,6 +91,7 @@ async function getUsers(filters = {}) {
     status,
     search,
     stationId,
+    stationSearch,
     category,
     tiArea,
     riskLevel,
@@ -162,6 +163,12 @@ async function getUsers(filters = {}) {
   if (stationId) {
     values.push(stationId);
     conditions.push(`s.id = $${values.length}`);
+  }
+
+  const activeStationSearch = stationSearch || filters.station || filters.stationName || filters.stationCode;
+  if (activeStationSearch) {
+    values.push(`%${activeStationSearch.trim()}%`);
+    conditions.push(`(s.station_name ILIKE $${values.length} OR s.station_code ILIKE $${values.length})`);
   }
 
   if (category) {
@@ -510,6 +517,7 @@ async function countUsers(filters = {}) {
     status,
     search,
     stationId,
+    stationSearch,
     category,
     tiArea,
     riskLevel,
@@ -556,6 +564,12 @@ async function countUsers(filters = {}) {
   if (stationId) {
     values.push(stationId);
     conditions.push(`s.id = $${values.length}`);
+  }
+
+  const activeStationCountSearch = stationSearch || filters.station || filters.stationName || filters.stationCode;
+  if (activeStationCountSearch) {
+    values.push(`%${activeStationCountSearch.trim()}%`);
+    conditions.push(`(s.station_name ILIKE $${values.length} OR s.station_code ILIKE $${values.length})`);
   }
 
   if (category) {
@@ -1060,6 +1074,7 @@ async function getEmployeePmeRefStatus(filters) {
     creatorRole,
     search,
     stationId,
+    stationSearch,
     pmeStatus,
     refStatus,
     role,
@@ -1152,6 +1167,12 @@ async function getEmployeePmeRefStatus(filters) {
   if (stationId) {
     values.push(stationId);
     conditions.push(`s.id = $${values.length}`);
+  }
+
+  const pmeStationSearch = stationSearch || filters.station || filters.stationName || filters.stationCode;
+  if (pmeStationSearch) {
+    values.push(`%${pmeStationSearch.trim()}%`);
+    conditions.push(`(s.station_name ILIKE $${values.length} OR s.station_code ILIKE $${values.length})`);
   }
 
   if (search) {
@@ -1260,6 +1281,7 @@ async function countEmployeePmeRefStatus(filters) {
     creatorRole,
     search,
     stationId,
+    stationSearch,
     pmeStatus,
     refStatus,
     role,
@@ -1324,6 +1346,12 @@ async function countEmployeePmeRefStatus(filters) {
   if (stationId) {
     values.push(stationId);
     conditions.push(`s.id = $${values.length}`);
+  }
+
+  const countPmeStationSearch = stationSearch || filters.station || filters.stationName || filters.stationCode;
+  if (countPmeStationSearch) {
+    values.push(`%${countPmeStationSearch.trim()}%`);
+    conditions.push(`(s.station_name ILIKE $${values.length} OR s.station_code ILIKE $${values.length})`);
   }
 
   if (search) {

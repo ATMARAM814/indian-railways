@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { getStationsList } from '../../services/workforce.service';
 import { Search, Calendar, Filter, RotateCcw } from 'lucide-react';
-import SearchableStationSelect from '../common/SearchableStationSelect';
 
 const ReportFilters = ({ filters = {}, onApplyFilters, onResetFilters, userRole }) => {
   const [role, setRole] = useState(filters.role || '');
   const [stationId, setStationId] = useState(filters.stationId || '');
+  const [stationSearch, setStationSearch] = useState(filters.stationSearch || '');
   const [category, setCategory] = useState(filters.category || '');
   const [assessmentStatus, setAssessmentStatus] = useState(filters.assessmentStatus || '');
   const [approvalStatus, setApprovalStatus] = useState(filters.approvalStatus || '');
@@ -18,6 +18,7 @@ const ReportFilters = ({ filters = {}, onApplyFilters, onResetFilters, userRole 
   useEffect(() => {
     setRole(filters.role || '');
     setStationId(filters.stationId || '');
+    setStationSearch(filters.stationSearch || '');
     setCategory(filters.category || '');
     setAssessmentStatus(filters.assessmentStatus || '');
     setApprovalStatus(filters.approvalStatus || '');
@@ -56,6 +57,7 @@ const ReportFilters = ({ filters = {}, onApplyFilters, onResetFilters, userRole 
   const handleReset = () => {
     setRole('');
     setStationId('');
+    setStationSearch('');
     setCategory('');
     setAssessmentStatus('');
     setApprovalStatus('');
@@ -72,6 +74,7 @@ const ReportFilters = ({ filters = {}, onApplyFilters, onResetFilters, userRole 
       onApplyFilters({
         role,
         stationId,
+        stationSearch,
         category,
         assessmentStatus,
         approvalStatus,
@@ -80,10 +83,10 @@ const ReportFilters = ({ filters = {}, onApplyFilters, onResetFilters, userRole 
         toDate,
         search
       });
-    }, search ? 300 : 0);
+    }, (search || stationSearch) ? 300 : 0);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [role, stationId, category, assessmentStatus, approvalStatus, assessmentCycle, fromDate, toDate, search, onApplyFilters]);
+  }, [role, stationId, stationSearch, category, assessmentStatus, approvalStatus, assessmentCycle, fromDate, toDate, search, onApplyFilters]);
 
   return (
     <form onSubmit={(e) => e.preventDefault()} className="filter-card">
@@ -135,22 +138,20 @@ const ReportFilters = ({ filters = {}, onApplyFilters, onResetFilters, userRole 
           </div>
         )}
 
-        {/* Station Filter */}
+        {/* Station Search Input */}
         {['TI', 'AOM', 'SUPER_ADMIN'].includes(userRole) && (
           <div className="filter-item">
-            <label className="filter-label">Station</label>
-            <SearchableStationSelect
-              name="stationId"
-              id="stationId"
-              value={stationId}
-              onChange={(e, val) => setStationId(val !== undefined ? val : e.target.value)}
-              stations={stations}
-              allowAll={true}
-              allLabel="All Stations"
-              placeholder="All Stations"
-              backgroundColor="#FFFFFF"
-              borderColor="#CBD5E1"
-            />
+            <label className="filter-label">Station Name / Code</label>
+            <div className="search-input-wrapper">
+              <Search size={14} className="search-icon" />
+              <input
+                type="text"
+                className="filter-input search-input"
+                placeholder="Search station name or code..."
+                value={stationSearch}
+                onChange={(e) => setStationSearch(e.target.value)}
+              />
+            </div>
           </div>
         )}
 

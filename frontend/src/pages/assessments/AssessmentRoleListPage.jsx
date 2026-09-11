@@ -55,6 +55,7 @@ const AssessmentRoleListPage = () => {
 
   const [filters, setFilters] = useState({
     search: '',
+    stationSearch: '',
     stationId: '',
     status: '',
     category: '',
@@ -216,6 +217,7 @@ const AssessmentRoleListPage = () => {
   const handleFilterReset = () => {
     setFilters({
       search: '',
+      stationSearch: '',
       stationId: '',
       status: '',
       category: '',

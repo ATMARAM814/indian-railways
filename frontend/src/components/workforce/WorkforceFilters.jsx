@@ -1,6 +1,5 @@
 import React from 'react';
 import { Search } from 'lucide-react';
-import SearchableStationSelect from '../common/SearchableStationSelect';
 
 const WorkforceFilters = ({
   filters,
@@ -38,26 +37,39 @@ const WorkforceFilters = ({
                 border: '1px solid #D7E3EF',
                 color: '#0F172A',
                 backgroundColor: '#F8FAFC',
-                outline: 'none'
+                outline: 'none',
+                boxSizing: 'border-box'
               }}
             />
           </div>
         </div>
 
-        {/* Station Filter (Conditional) */}
+        {/* Station Search Input */}
         {showStation && (
           <div>
-            <label htmlFor="stationId" style={{ display: 'block', fontSize: '12.5px', fontWeight: 600, color: '#475569', marginBottom: '8px' }}>Station</label>
-            <SearchableStationSelect
-              id="stationId"
-              name="stationId"
-              value={filters.stationId || ''}
-              onChange={handleChange}
-              stations={stations}
-              allowAll={true}
-              allLabel="All Stations"
-              placeholder="All Stations"
-            />
+            <label htmlFor="stationSearch" style={{ display: 'block', fontSize: '12.5px', fontWeight: 600, color: '#475569', marginBottom: '8px' }}>Station Name / Code</label>
+            <div style={{ position: 'relative' }}>
+              <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} />
+              <input
+                id="stationSearch"
+                type="text"
+                name="stationSearch"
+                placeholder="Search station name or code..."
+                value={filters.stationSearch || ''}
+                onChange={handleChange}
+                style={{
+                  width: '100%',
+                  padding: '10px 12px 10px 36px',
+                  fontSize: '13.5px',
+                  borderRadius: '8px',
+                  border: '1px solid #D7E3EF',
+                  color: '#0F172A',
+                  backgroundColor: '#F8FAFC',
+                  outline: 'none',
+                  boxSizing: 'border-box'
+                }}
+              />
+            </div>
           </div>
         )}
 

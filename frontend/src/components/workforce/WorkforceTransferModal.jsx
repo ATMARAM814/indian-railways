@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { X, Loader, Search } from 'lucide-react';
 import { getWorkforceDetails } from '../../services/workforce.service';
-import SearchableStationSelect from '../common/SearchableStationSelect';
 
 const ROLE_HIERARCHY = {
   'PM': 1,
@@ -272,15 +271,18 @@ const WorkforceTransferModal = ({
             {!isNewRoleTi && (
               <div>
                 <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>Destination Station *</label>
-                <SearchableStationSelect
+                <select
                   name="newStationId"
-                  id="newStationId"
                   value={formData.newStationId}
                   onChange={handleInputChange}
-                  stations={stations}
-                  placeholder="Select Destination Station"
                   required
-                />
+                  style={{ width: '100%', padding: '10px 12px', fontSize: '13.5px', borderRadius: '8px', border: '1px solid #D7E3EF', outline: 'none', cursor: 'pointer' }}
+                >
+                  <option value="">Select Destination Station</option>
+                  {stations.map(st => (
+                    <option key={st.id} value={st.id}>{st.station_name} ({st.station_code})</option>
+                  ))}
+                </select>
               </div>
             )}
 

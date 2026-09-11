@@ -1,6 +1,5 @@
 import React from 'react';
 import { Search, RotateCcw } from 'lucide-react';
-import SearchableStationSelect from '../common/SearchableStationSelect';
 
 export const AssessmentFilterCard = ({
   filters,
@@ -33,20 +32,18 @@ export const AssessmentFilterCard = ({
         </div>
 
         <div className="filter-item">
-          <label className="filter-label">Station</label>
-          <SearchableStationSelect
-            name="stationId"
-            id="stationId"
-            value={filters.stationId || ''}
-            onChange={handleInputChange}
-            stations={stations}
-            disabled={stationsLoading}
-            allowAll={true}
-            allLabel="All Stations"
-            placeholder="All Stations"
-            backgroundColor="#FFFFFF"
-            borderColor="#CBD5E1"
-          />
+          <label className="filter-label">Station Name / Code</label>
+          <div className="search-input-wrapper">
+            <Search className="search-icon" size={16} />
+            <input
+              type="text"
+              name="stationSearch"
+              placeholder="Search station name or code..."
+              value={filters.stationSearch || ''}
+              onChange={handleInputChange}
+              className="filter-input search-input"
+            />
+          </div>
         </div>
 
         <div className="filter-item">

@@ -13,7 +13,6 @@ import {
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { cleanDesignationText } from '../../utils/dashboardMappers';
-import SearchableStationSelect from '../../components/common/SearchableStationSelect';
 import '../../styles/assessments.css';
 
 const roleNameMap = {
@@ -46,6 +45,7 @@ const ApprovalsPage = () => {
   // Filters state
   const [filters, setFilters] = useState({
     search: '',
+    stationSearch: '',
     stationId: '',
     role: '',
     approvalStatus: '', // History only
@@ -139,6 +139,7 @@ const ApprovalsPage = () => {
   const handleResetFilters = () => {
     setFilters({
       search: '',
+      stationSearch: '',
       stationId: '',
       role: '',
       approvalStatus: '',
@@ -158,11 +159,13 @@ const ApprovalsPage = () => {
         if (!nameMatch && !hrmsMatch) return false;
       }
       // Station filter
+      if (filters.stationSearch) {
+        const q = filters.stationSearch.toLowerCase().trim();
+        const codeMatch = item.station_code?.toLowerCase().includes(q);
+        const nameMatch = item.station_name?.toLowerCase().includes(q);
+        if (!codeMatch && !nameMatch) return false;
+      }
       if (filters.stationId) {
-        // Verify station matching (item might have station_name or station_code, wait, getPendingApprovalsForUser joins station code)
-        // Since getStationsList returns ids, let's match station_id or we can do checking.
-        // Let's verify: does item have s.id or station_name? Wait, in the repository we selected s.station_name, s.station_code.
-        // So filters.stationId matches s.id. We can find the selected station object code or match it.
         const stationObj = stations.find(s => s.id === filters.stationId);
         if (stationObj && item.station_code !== stationObj.station_code) return false;
       }
@@ -257,7 +260,10 @@ const ApprovalsPage = () => {
           const matchesSearch = !filters.search || 
             row.assessed_name.toLowerCase().includes(filters.search.toLowerCase()) ||
             row.assessed_hrms_id.toLowerCase().includes(filters.search.toLowerCase());
-          const matchesStation = !filters.stationId || String(row.station_id) === String(filters.stationId);
+          const matchesStation = (!filters.stationSearch ||
+            (row.station_code && row.station_code.toLowerCase().includes(filters.stationSearch.toLowerCase().trim())) ||
+            (row.station_name && row.station_name.toLowerCase().includes(filters.stationSearch.toLowerCase().trim()))) &&
+            (!filters.stationId || String(row.station_id) === String(filters.stationId));
           const matchesRole = !filters.role || row.assessed_role_code === filters.role;
           
           let matchesDate = true;
@@ -488,22 +494,28 @@ const ApprovalsPage = () => {
               </div>
             </div>
 
-            {/* Station Dropdown */}
+            {/* Station Search Input */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '12px', fontWeight: 600, color: '#475569' }}>Station</label>
-              <SearchableStationSelect
-                name="stationId"
-                id="stationId"
-                value={filters.stationId}
-                disabled={stationsLoading}
-                onChange={(e) => handleFilterChange('stationId', e.target.value)}
-                stations={user?.role === 'TI' ? stations.filter(st => !st.hasSupervisor) : stations}
-                allowAll={true}
-                allLabel="All Stations"
-                placeholder="All Stations"
-                backgroundColor="#FFFFFF"
-                borderColor="#CBD5E1"
-              />
+              <label style={{ fontSize: '12px', fontWeight: 600, color: '#475569' }}>Station Name / Code</label>
+              <div style={{ position: 'relative' }}>
+                <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} />
+                <input
+                  type="text"
+                  placeholder="Search station name or code..."
+                  value={filters.stationSearch || ''}
+                  onChange={(e) => handleFilterChange('stationSearch', e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px 10px 36px',
+                    borderRadius: '8px',
+                    border: '1px solid #CBD5E1',
+                    backgroundColor: '#FFFFFF',
+                    fontSize: '13.5px',
+                    outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
             </div>
 
             {/* Role Dropdown */}

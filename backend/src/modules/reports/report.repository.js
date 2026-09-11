@@ -86,6 +86,11 @@ function buildAssessmentsWhere(filters, scope, values) {
     values.push(filters.stationId);
     conditions.push(`ssp.station_id = $${values.length}`);
   }
+  const reportStationSearch = filters.stationSearch || filters.station || filters.stationName || filters.stationCode;
+  if (reportStationSearch) {
+    values.push(`%${reportStationSearch.trim()}%`);
+    conditions.push(`(s.station_name ILIKE $${values.length} OR s.station_code ILIKE $${values.length})`);
+  }
   if (filters.category) {
     values.push(filters.category);
     conditions.push(`sc.category_code = $${values.length}`);
@@ -757,6 +762,11 @@ function buildQueryContext(filters, scope) {
   if (filters.stationId) {
     values.push(filters.stationId);
     filterConditions.push(`ssp.station_id = $${values.length}`);
+  }
+  const wfStationSearch = filters.stationSearch || filters.station || filters.stationName || filters.stationCode;
+  if (wfStationSearch) {
+    values.push(`%${wfStationSearch.trim()}%`);
+    filterConditions.push(`(s.station_name ILIKE $${values.length} OR s.station_code ILIKE $${values.length})`);
   }
   if (filters.category) {
     values.push(filters.category);

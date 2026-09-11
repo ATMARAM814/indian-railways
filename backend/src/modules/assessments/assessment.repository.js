@@ -1041,6 +1041,12 @@ async function getEligibleStaff(assessorId, assessorRole, roleCode, filters = {}
     conditions.push(`s.id = $${values.length}`);
   }
 
+  const activeStationSearch = filters.stationSearch || filters.station || filters.stationName || filters.stationCode;
+  if (activeStationSearch) {
+    values.push(`%${activeStationSearch.trim()}%`);
+    conditions.push(`(s.station_name ILIKE $${values.length} OR s.station_code ILIKE $${values.length})`);
+  }
+
   // Filter: category
   if (category) {
     values.push(category);

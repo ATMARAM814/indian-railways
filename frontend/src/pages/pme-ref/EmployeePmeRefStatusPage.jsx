@@ -6,7 +6,6 @@ import { getEmployeePmeRefStatus } from '../../services/pmeRef.service';
 import { getStationsList } from '../../services/workforce.service';
 import { useAuth } from '../../context/AuthContext';
 import { cleanDesignationText } from '../../utils/dashboardMappers';
-import SearchableStationSelect from '../../components/common/SearchableStationSelect';
 
 const EmployeePmeRefStatusPage = () => {
   const { user } = useAuth();
@@ -23,6 +22,7 @@ const EmployeePmeRefStatusPage = () => {
 
   const [filters, setFilters] = useState({
     search: '',
+    stationSearch: '',
     stationId: '',
     pmeStatus: '',
     refStatus: '',
@@ -87,6 +87,7 @@ const EmployeePmeRefStatusPage = () => {
   const handleResetFilters = () => {
     setFilters({
       search: '',
+      stationSearch: '',
       stationId: '',
       pmeStatus: '',
       refStatus: '',
@@ -214,20 +215,32 @@ const EmployeePmeRefStatusPage = () => {
               </div>
             </div>
 
-            {/* Station Filter */}
+            {/* Station Search Input */}
             {showStationFilter && (
               <div>
-                <label htmlFor="stationId" style={{ display: 'block', fontSize: '12.5px', fontWeight: 600, color: '#475569', marginBottom: '8px' }}>Station</label>
-                <SearchableStationSelect
-                  id="stationId"
-                  name="stationId"
-                  value={filters.stationId}
-                  onChange={handleFilterChange}
-                  stations={stations}
-                  allowAll={true}
-                  allLabel="All Stations"
-                  placeholder="All Stations"
-                />
+                <label htmlFor="stationSearch" style={{ display: 'block', fontSize: '12.5px', fontWeight: 600, color: '#475569', marginBottom: '8px' }}>Station Name / Code</label>
+                <div style={{ position: 'relative' }}>
+                  <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} />
+                  <input
+                    id="stationSearch"
+                    type="text"
+                    name="stationSearch"
+                    placeholder="Search station name or code..."
+                    value={filters.stationSearch || ''}
+                    onChange={handleFilterChange}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px 10px 36px',
+                      fontSize: '13.5px',
+                      borderRadius: '8px',
+                      border: '1px solid #D7E3EF',
+                      color: '#0F172A',
+                      backgroundColor: '#F8FAFC',
+                      outline: 'none',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
               </div>
             )}
 

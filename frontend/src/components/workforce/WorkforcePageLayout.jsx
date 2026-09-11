@@ -40,6 +40,7 @@ const WorkforcePageLayout = ({
 
   const [filters, setFilters] = useState({
     search: '',
+    stationSearch: '',
     stationId: '',
     category: '',
     riskLevel: ''
@@ -66,6 +67,7 @@ const WorkforcePageLayout = ({
   const handleResetFilters = () => {
     setFilters({
       search: '',
+      stationSearch: '',
       stationId: '',
       category: '',
       riskLevel: ''
