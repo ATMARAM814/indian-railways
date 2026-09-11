@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { cleanDesignationText } from '../../utils/dashboardMappers';
+import SearchableStationSelect from '../../components/common/SearchableStationSelect';
 import '../../styles/assessments.css';
 
 const roleNameMap = {
@@ -490,25 +491,19 @@ const ApprovalsPage = () => {
             {/* Station Dropdown */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label style={{ fontSize: '12px', fontWeight: 600, color: '#475569' }}>Station</label>
-              <select
+              <SearchableStationSelect
+                name="stationId"
+                id="stationId"
                 value={filters.stationId}
                 disabled={stationsLoading}
                 onChange={(e) => handleFilterChange('stationId', e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '10px 12px',
-                  borderRadius: '8px',
-                  border: '1px solid #CBD5E1',
-                  backgroundColor: '#FFFFFF',
-                  fontSize: '14px',
-                  outline: 'none'
-                }}
-              >
-                <option value="">All Stations</option>
-                {(user?.role === 'TI' ? stations.filter(st => !st.hasSupervisor) : stations).map(st => (
-                  <option key={st.id} value={st.id}>{st.station_name} ({st.station_code})</option>
-                ))}
-              </select>
+                stations={user?.role === 'TI' ? stations.filter(st => !st.hasSupervisor) : stations}
+                allowAll={true}
+                allLabel="All Stations"
+                placeholder="All Stations"
+                backgroundColor="#FFFFFF"
+                borderColor="#CBD5E1"
+              />
             </div>
 
             {/* Role Dropdown */}

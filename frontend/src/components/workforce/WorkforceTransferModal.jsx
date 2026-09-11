@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { X, Loader } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { X, Loader, Search } from 'lucide-react';
 import { getWorkforceDetails } from '../../services/workforce.service';
+import SearchableStationSelect from '../common/SearchableStationSelect';
 
 const ROLE_HIERARCHY = {
   'PM': 1,
@@ -43,6 +44,7 @@ const WorkforceTransferModal = ({
   const [submitting, setSubmitting] = useState(false);
   const [fullUser, setFullUser] = useState(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
+  const [tiSearchTerm, setTiSearchTerm] = useState('');
 
   useEffect(() => {
     if (isOpen && user) {
@@ -270,18 +272,15 @@ const WorkforceTransferModal = ({
             {!isNewRoleTi && (
               <div>
                 <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>Destination Station *</label>
-                <select
+                <SearchableStationSelect
                   name="newStationId"
+                  id="newStationId"
                   value={formData.newStationId}
                   onChange={handleInputChange}
+                  stations={stations}
+                  placeholder="Select Destination Station"
                   required
-                  style={{ width: '100%', padding: '10px 12px', fontSize: '13.5px', borderRadius: '8px', border: '1px solid #D7E3EF', outline: 'none', cursor: 'pointer' }}
-                >
-                  <option value="">Select Destination Station</option>
-                  {stations.map(st => (
-                    <option key={st.id} value={st.id}>{st.station_name} ({st.station_code})</option>
-                  ))}
-                </select>
+                />
               </div>
             )}
 
@@ -291,6 +290,25 @@ const WorkforceTransferModal = ({
                 <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>
                   TI Area (Select Monitored Stations) *
                 </label>
+                {/* Search Bar for TI Monitored Stations */}
+                <div style={{ position: 'relative', marginBottom: '8px' }}>
+                  <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} />
+                  <input
+                    type="text"
+                    placeholder="Filter stations by code or name (e.g. N, BPQ)..."
+                    value={tiSearchTerm}
+                    onChange={(e) => setTiSearchTerm(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '7px 10px 7px 32px',
+                      fontSize: '12.5px',
+                      borderRadius: '6px',
+                      border: '1px solid #CBD5E1',
+                      outline: 'none',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
                 <div style={{
                   border: '1px solid #D7E3EF',
                   borderRadius: '8px',
@@ -301,20 +319,31 @@ const WorkforceTransferModal = ({
                   flexDirection: 'column',
                   gap: '8px'
                 }}>
-                  {stations.map(st => {
-                    const isChecked = formData.tiAreaStationIds.includes(st.id);
-                    return (
-                      <label key={st.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#334155', cursor: 'pointer' }}>
-                        <input
-                          type="checkbox"
-                          checked={isChecked}
-                          onChange={() => handleStationCheckboxChange(st.id)}
-                          style={{ cursor: 'pointer' }}
-                        />
-                        <span>{st.station_name} ({st.station_code})</span>
-                      </label>
-                    );
-                  })}
+                  {stations
+                    .filter(st => {
+                      if (!tiSearchTerm.trim()) return true;
+                      const q = tiSearchTerm.trim().toLowerCase();
+                      const code = (st.station_code || '').toLowerCase();
+                      const name = (st.station_name || '').toLowerCase();
+                      if (q.length === 1) {
+                        return code.startsWith(q) || name.startsWith(q) || name.split(/\s+/).some(w => w.startsWith(q));
+                      }
+                      return code.includes(q) || name.includes(q);
+                    })
+                    .map(st => {
+                      const isChecked = formData.tiAreaStationIds.includes(st.id);
+                      return (
+                        <label key={st.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#334155', cursor: 'pointer' }}>
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={() => handleStationCheckboxChange(st.id)}
+                            style={{ cursor: 'pointer' }}
+                          />
+                          <span>{st.station_name} ({st.station_code})</span>
+                        </label>
+                      );
+                    })}
                 </div>
               </div>
             )}

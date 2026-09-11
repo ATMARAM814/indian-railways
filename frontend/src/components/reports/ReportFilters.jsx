@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getStationsList } from '../../services/workforce.service';
 import { Search, Calendar, Filter, RotateCcw } from 'lucide-react';
+import SearchableStationSelect from '../common/SearchableStationSelect';
 
 const ReportFilters = ({ filters = {}, onApplyFilters, onResetFilters, userRole }) => {
   const [role, setRole] = useState(filters.role || '');
@@ -138,17 +139,18 @@ const ReportFilters = ({ filters = {}, onApplyFilters, onResetFilters, userRole 
         {['TI', 'AOM', 'SUPER_ADMIN'].includes(userRole) && (
           <div className="filter-item">
             <label className="filter-label">Station</label>
-            <select
-              className="filter-input"
+            <SearchableStationSelect
+              name="stationId"
+              id="stationId"
               value={stationId}
-              onChange={(e) => setStationId(e.target.value)}
-              style={{ cursor: 'pointer' }}
-            >
-              <option value="">All Stations</option>
-              {stations.map(st => (
-                <option key={st.id} value={st.id}>{st.station_code} - {st.station_name}</option>
-              ))}
-            </select>
+              onChange={(e, val) => setStationId(val !== undefined ? val : e.target.value)}
+              stations={stations}
+              allowAll={true}
+              allLabel="All Stations"
+              placeholder="All Stations"
+              backgroundColor="#FFFFFF"
+              borderColor="#CBD5E1"
+            />
           </div>
         )}
 

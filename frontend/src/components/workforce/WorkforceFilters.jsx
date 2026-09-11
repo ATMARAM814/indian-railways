@@ -1,5 +1,6 @@
 import React from 'react';
 import { Search } from 'lucide-react';
+import SearchableStationSelect from '../common/SearchableStationSelect';
 
 const WorkforceFilters = ({
   filters,
@@ -47,28 +48,16 @@ const WorkforceFilters = ({
         {showStation && (
           <div>
             <label htmlFor="stationId" style={{ display: 'block', fontSize: '12.5px', fontWeight: 600, color: '#475569', marginBottom: '8px' }}>Station</label>
-            <select
+            <SearchableStationSelect
               id="stationId"
               name="stationId"
               value={filters.stationId || ''}
               onChange={handleChange}
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                fontSize: '13.5px',
-                borderRadius: '8px',
-                border: '1px solid #D7E3EF',
-                color: '#0F172A',
-                backgroundColor: '#F8FAFC',
-                outline: 'none',
-                cursor: 'pointer'
-              }}
-            >
-              <option value="">All Stations</option>
-              {stations.map(st => (
-                <option key={st.id} value={st.id}>{st.station_name} ({st.station_code})</option>
-              ))}
-            </select>
+              stations={stations}
+              allowAll={true}
+              allLabel="All Stations"
+              placeholder="All Stations"
+            />
           </div>
         )}
 
