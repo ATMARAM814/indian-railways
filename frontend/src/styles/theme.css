@@ -61,6 +61,8 @@ body {
   flex-direction: column;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Prevent Google Translate widget from offsetting body */
+  top: 0px !important;
 }
 
 input, button, select, textarea {
@@ -93,4 +95,12 @@ input, button, select, textarea {
   50% {
     opacity: .5;
   }
+}
+
+/* Hide Google Translate Banner */
+.goog-te-banner-frame.skiptranslate {
+  display: none !important;
+}
+.VIpgJd-ZVi9od-ORHb-OEVmcd {
+  display: none !important;
 }
