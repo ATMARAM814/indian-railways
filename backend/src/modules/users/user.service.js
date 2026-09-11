@@ -24,6 +24,7 @@ const {
   getActiveRolesInScope,
   getEmployeePmeRefStatus,
   countEmployeePmeRefStatus,
+  searchEmployeesDb,
 } = require("./user.repository");
 
 const CREATE_PERMISSIONS = {
@@ -830,6 +831,14 @@ async function getEmployeePmeRefStatusService(creatorUserId, creatorRole, filter
   };
 }
 
+async function searchEmployeeService(creatorRole, query) {
+  if (creatorRole !== "SUPER_ADMIN") {
+    throw new Error("Unauthorized: Only Super Admin can access employee search");
+  }
+
+  return await searchEmployeesDb(query);
+}
+
 module.exports = {
   createUserService,
   listUsersService,
@@ -841,4 +850,5 @@ module.exports = {
   transferUserService,
   getWorkforcePresenceService,
   getEmployeePmeRefStatusService,
+  searchEmployeeService,
 };

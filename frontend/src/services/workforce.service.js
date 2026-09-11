@@ -55,3 +55,8 @@ export const resetWorkforceUserPassword = async (id) => {
   return res.data;
 };
 
+export const searchEmployees = async (query) => {
+  const res = await apiClient.get('/users/search-employee', { params: { query } });
+  return res.data;
+};
+

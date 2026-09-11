@@ -18,7 +18,8 @@ import {
   User,
   ChevronDown,
   ChevronRight,
-  GraduationCap
+  GraduationCap,
+  Search
 } from 'lucide-react';
 
 const Sidebar = ({ isOpen, onClose }) => {
@@ -230,6 +231,11 @@ const Sidebar = ({ isOpen, onClose }) => {
     }
     if (role !== 'SUPER_ADMIN' && role !== 'AOM') {
       main.push({ name: 'My Profile', path: '/profile', icon: <User size={18} /> });
+    }
+
+    // Search Employee directly above Workforce Management for SUPER_ADMIN
+    if (role === 'SUPER_ADMIN') {
+      main.push({ name: 'Search Employee', path: '/search-employee', icon: <Search size={18} /> });
     }
 
     return { main, workforce };

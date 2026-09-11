@@ -9,6 +9,7 @@ const {
   transferUserService,
   getWorkforcePresenceService,
   getEmployeePmeRefStatusService,
+  searchEmployeeService,
 } = require("./user.service");
 
 async function createUserController(
@@ -257,6 +258,27 @@ async function getEmployeePmeRefStatusController(req, res) {
   }
 }
 
+async function searchEmployeeController(req, res) {
+  try {
+    const { query } = req.query;
+    const users = await searchEmployeeService(
+      req.user.role,
+      query || ""
+    );
+
+    return res.status(200).json({
+      success: true,
+      data: users,
+    });
+  } catch (error) {
+    const statusCode = error.message.includes("Unauthorized") ? 403 : 400;
+    return res.status(statusCode).json({
+      success: false,
+      message: error.message,
+    });
+  }
+}
+
 module.exports = {
   createUserController,
   listUsersController,
@@ -268,4 +290,5 @@ module.exports = {
   transferUserController,
   getWorkforcePresenceController,
   getEmployeePmeRefStatusController,
+  searchEmployeeController,
 };

@@ -1446,6 +1446,41 @@ async function countEmployeePmeRefStatus(filters) {
   return parseInt(result.rows[0].count, 10);
 }
 
+async function searchEmployeesDb(searchTerm) {
+  if (!searchTerm || !searchTerm.trim()) {
+    return [];
+  }
+
+  const cleanTerm = searchTerm.trim();
+  const pattern = `%${cleanTerm}%`;
+  const digitsOnly = cleanTerm.replace(/\D/g, "");
+
+  let query = `
+    SELECT 
+      COALESCE(p.hrms_id, '') AS hrms_id,
+      COALESCE(p.full_name, '') AS name,
+      COALESCE(NULLIF(p.designation, ''), r.name, '') AS designation,
+      COALESCE(p.phone, '') AS phone_number
+    FROM profiles p
+    LEFT JOIN roles r ON r.id = p.role_id
+    WHERE 
+      p.hrms_id ILIKE $1
+      OR p.full_name ILIKE $1
+      OR p.phone ILIKE $1
+  `;
+  const values = [pattern];
+
+  if (digitsOnly.length >= 3) {
+    values.push(`%${digitsOnly}%`);
+    query += ` OR regexp_replace(COALESCE(p.phone, ''), '\\D', '', 'g') ILIKE $${values.length}`;
+  }
+
+  query += ` ORDER BY p.full_name ASC LIMIT 200;`;
+
+  const result = await pool.query(query, values);
+  return result.rows;
+}
+
 module.exports = {
   getRoleByName,
   findUserByHrmsId,
@@ -1469,4 +1504,5 @@ module.exports = {
   getActiveRolesInScope,
   getEmployeePmeRefStatus,
   countEmployeePmeRefStatus,
+  searchEmployeesDb,
 };

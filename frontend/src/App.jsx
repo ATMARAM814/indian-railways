@@ -50,6 +50,7 @@ const AuditLogDetailPage = React.lazy(() => import('./pages/audit/AuditLogDetail
 const UploadQuestionsPage = React.lazy(() => import('./pages/admin/question-bank/UploadQuestionsPage'));
 const UploadHistoryPage = React.lazy(() => import('./pages/admin/question-bank/UploadHistoryPage'));
 const QuestionsListPage = React.lazy(() => import('./pages/admin/question-bank/QuestionsListPage'));
+const SearchEmployeePage = React.lazy(() => import('./pages/admin/SearchEmployeePage'));
 
 // Assessment Pages
 const AssessmentsLandingPage = React.lazy(() => import('./pages/assessments/AssessmentsLandingPage'));
@@ -610,6 +611,18 @@ function App() {
               <ProtectedRoute>
                 <RoleRoute allowedRoles={['SUPER_ADMIN']}>
                   <Navigate to="/admin/question-bank/upload" replace />
+                </RoleRoute>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Super Admin Only: Search Employee */}
+          <Route
+            path="/search-employee"
+            element={
+              <ProtectedRoute>
+                <RoleRoute allowedRoles={['SUPER_ADMIN']}>
+                  <SearchEmployeePage />
                 </RoleRoute>
               </ProtectedRoute>
             }
