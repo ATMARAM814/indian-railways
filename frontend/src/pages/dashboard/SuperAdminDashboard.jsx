@@ -4,10 +4,10 @@ import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { getSuperAdminDashboardData, getSuperAdminWorkforceActivity, getSuperAdminHighRiskStaff, getDashboardCategoryCandidates } from '../../api/dashboardApi';
 import HighRiskWatchlist from '../../components/stations/HighRiskWatchlist';
-import { 
-  mapRoleDistribution, 
-  mapCategoryDistribution, 
-  mapStationCategoryDistribution, 
+import {
+  mapRoleDistribution,
+  mapCategoryDistribution,
+  mapStationCategoryDistribution,
   mapMonthlyCompletionTrend,
   mapSafetyCompliance,
   mapStationProgress,
@@ -26,20 +26,20 @@ import LineChartCard from '../../components/charts/LineChartCard';
 import BarChartCard from '../../components/charts/BarChartCard';
 import DonutChartCard from '../../components/charts/DonutChartCard';
 import DrillDownChartModal from '../../components/dashboard/DrillDownChartModal';
-import { 
-  ResponsiveContainer, 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend 
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend
 } from 'recharts';
-import { 
+import {
   Globe,
   Building2,
-  Users, 
+  Users,
   ShieldAlert,
   AlertTriangle,
   Percent,
@@ -49,8 +49,11 @@ import {
   ThumbsUp,
   Inbox,
   ClipboardCheck,
-  FileText
+  FileText,
+  Download
 } from 'lucide-react';
+import { downloadTIWiseExcel } from '../../utils/excelExport';
+import { getWorkforceList } from '../../services/workforce.service';
 
 const SuperAdminDashboard = () => {
   const { user, logout } = useAuth();
@@ -64,6 +67,7 @@ const SuperAdminDashboard = () => {
   const [highRiskStaffData, setHighRiskStaffData] = useState([]);
   const [categoryCWatchlist, setCategoryCWatchlist] = useState([]);
   const [categoryDWatchlist, setCategoryDWatchlist] = useState([]);
+  const [tiExcelDownloading, setTiExcelDownloading] = useState(false);
 
   const fetchDashboardData = async () => {
     setLoading(true);
@@ -178,7 +182,7 @@ const SuperAdminDashboard = () => {
       'Deactivated Users': Number(item.deactivated || 0),
       'Reactivated Users': Number(item.reactivated || 0)
     }));
-    
+
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const last6Months = [];
     const now = new Date();
@@ -186,7 +190,7 @@ const SuperAdminDashboard = () => {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       last6Months.push(`${months[d.getMonth()]} ${d.getFullYear()}`);
     }
-    
+
     const presentMonths = new Set(rawMapped.map(item => item.month));
     const padded = [...rawMapped];
     last6Months.forEach(m => {
@@ -200,7 +204,7 @@ const SuperAdminDashboard = () => {
         });
       }
     });
-    
+
     const monthOrder = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const parseMonthYear = (monthStr) => {
       if (!monthStr || monthStr === 'N/A') return new Date(0);
@@ -212,7 +216,7 @@ const SuperAdminDashboard = () => {
       if (mIndex === -1 || isNaN(year)) return new Date(0);
       return new Date(year, mIndex, 1);
     };
-    
+
     padded.sort((a, b) => parseMonthYear(a.month) - parseMonthYear(b.month));
     return padded;
   })();
@@ -239,7 +243,7 @@ const SuperAdminDashboard = () => {
     const totalCategorized = catA + catB + catC + catD;
     const catAAndB = catA + catB;
     const safetyPercent = totalCategorized > 0 ? Math.round((catAAndB / totalCategorized) * 100) : 100;
-    
+
     return {
       stationName: s.stationName,
       stationCode: s.stationCode || s.stationName,
@@ -294,10 +298,10 @@ const SuperAdminDashboard = () => {
                 <td style={{ padding: '10px 16px', fontSize: '13.5px', fontWeight: 500 }}>
                   {station.safetyPercent}%
                 </td>
-                <td style={{ 
-                  padding: '10px 16px', 
-                  fontSize: '13.5px', 
-                  fontWeight: 600, 
+                <td style={{
+                  padding: '10px 16px',
+                  fontSize: '13.5px',
+                  fontWeight: 600,
                   color: station.highRiskCount > 0 ? '#DC2626' : '#64748B'
                 }}>
                   {station.highRiskCount}
@@ -320,44 +324,74 @@ const SuperAdminDashboard = () => {
   return (
     <DashboardLayout>
       <div className="dashboard-content">
-        <div className="page-header-container">
-          <h1 className="page-title">Super Admin System-wide Dashboard</h1>
-          <p className="page-subtitle">
-            System administration console for <strong>{user?.fullName || user?.full_name || 'Admin User'}</strong>. Global safety metrics, staff audits, and active configurations.
-          </p>
+        <div className="page-header-container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
+          <div>
+            <h1 className="page-title">Super Admin System-wide Dashboard</h1>
+            <p className="page-subtitle">
+              System administration console for <strong>{user?.fullName || user?.full_name || 'Admin User'}</strong>. Global safety metrics, staff audits, and active configurations.
+            </p>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', paddingTop: '4px' }}>
+            <button
+              onClick={() => downloadTIWiseExcel(getWorkforceList, setTiExcelDownloading)}
+              disabled={tiExcelDownloading}
+              title="Download TI-wise employee list as Excel (one sheet per TI)"
+              style={{
+                padding: '10px 18px',
+                fontSize: '13.5px',
+                fontWeight: 600,
+                color: '#15803D',
+                backgroundColor: '#F0FDF4',
+                border: '1.5px solid #86EFAC',
+                borderRadius: '8px',
+                cursor: tiExcelDownloading ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                transition: 'all 0.2s',
+                opacity: tiExcelDownloading ? 0.65 : 1,
+                whiteSpace: 'nowrap'
+              }}
+              onMouseOver={(e) => { if (!tiExcelDownloading) { e.currentTarget.style.backgroundColor = '#DCFCE7'; e.currentTarget.style.borderColor = '#4ADE80'; } }}
+              onMouseOut={(e) => { e.currentTarget.style.backgroundColor = '#F0FDF4'; e.currentTarget.style.borderColor = '#86EFAC'; }}
+            >
+              <Download size={15} />
+              {tiExcelDownloading ? 'Preparing Excel...' : 'TI-wise Employee List (Excel)'}
+            </button>
+          </div>
         </div>
 
         {/* KPI Cards Grid */}
         <div className="kpi-grid">
-          <StatCard 
+          <StatCard
             title="Total Divisions"
             value={summary.totalDivisions}
             icon={<Globe size={20} />}
             type="normal"
             trend="Active operating divisions"
           />
-          <StatCard 
+          <StatCard
             title="Total Stations"
             value={summary.totalStations}
             icon={<Building2 size={20} />}
             type="normal"
             trend="Total stations across divisions"
           />
-          <StatCard 
+          <StatCard
             title="Total Employees"
             value={summary.totalEmployees}
             icon={<Users size={20} />}
             type="normal"
             trend="Total active safety crew"
           />
-          <StatCard 
+          <StatCard
             title="Pending Approvals"
             value={summary.pendingApprovals}
             icon={<Inbox size={20} />}
             type="warning"
             trend="Awaiting review"
           />
-          <StatCard 
+          <StatCard
             title="Total Evaluations"
             value={summary.totalAssessments}
             icon={<ClipboardCheck size={20} />}
@@ -500,7 +534,7 @@ const SuperAdminDashboard = () => {
 
         {/* Row 1: Progress & Average Score Charts */}
         <div className="charts-grid">
-          <BarChartCard 
+          <BarChartCard
             title="Station-wise Evaluation Progress"
             subtitle="Completed vs pending evaluation counts per station"
             data={stationProgress}
@@ -511,7 +545,7 @@ const SuperAdminDashboard = () => {
             ]}
             barSize={12}
             headerAction={
-              <button 
+              <button
                 onClick={() => {
                   setDrillDownType('stationEvaluationProgress');
                   setIsDrillDownOpen(true);
@@ -532,7 +566,7 @@ const SuperAdminDashboard = () => {
             }
           />
 
-          <BarChartCard 
+          <BarChartCard
             title="Station-wise Average Score"
             subtitle="Average safety score percentage across stations"
             data={stationAvgScore}
@@ -542,7 +576,7 @@ const SuperAdminDashboard = () => {
             barColor="#2E7D32"
             barSize={16}
             headerAction={
-              <button 
+              <button
                 onClick={() => {
                   setDrillDownType('stationAverageScore');
                   setIsDrillDownOpen(true);
@@ -566,13 +600,13 @@ const SuperAdminDashboard = () => {
 
         {/* Row 2: Grade/Category Distribution & Safety Compliance Analytics (both half-width) */}
         <div className="charts-grid">
-          <DonutChartCard 
+          <DonutChartCard
             title="Grade/Category Distribution"
             subtitle="Staff grades in your section"
             data={categoryDist}
             colors={['#1B365D', '#2B6CB0', '#D69E2E', '#C53030']}
             headerAction={
-              <button 
+              <button
                 onClick={() => {
                   setDrillDownType('categoryDistribution');
                   setIsDrillDownOpen(true);
@@ -593,7 +627,7 @@ const SuperAdminDashboard = () => {
             }
           />
 
-          <ChartCard 
+          <ChartCard
             title="Safety Compliance Analytics"
             subtitle="Completion rates for safety operations"
           >
@@ -605,7 +639,7 @@ const SuperAdminDashboard = () => {
                     <span className="compliance-value">{item.percentage}%</span>
                   </div>
                   <div className="compliance-bar-bg">
-                    <div 
+                    <div
                       className={`compliance-bar-fill ${getComplianceColorClass(item.percentage)}`}
                       style={{ width: `${item.percentage}%` }}
                     ></div>
@@ -619,7 +653,7 @@ const SuperAdminDashboard = () => {
 
         {/* Row 3: Role-wise Staff Distribution (full-width) */}
         <div className="charts-grid charts-grid-full">
-          <BarChartCard 
+          <BarChartCard
             title="Role-wise Staff Distribution"
             subtitle="Designation breakdown of safety personnel"
             data={roleStaffDist}
@@ -636,7 +670,7 @@ const SuperAdminDashboard = () => {
 
         {/* Row 4: Traffic Inspector Performance (vertical, full-width) */}
         <div className="charts-grid charts-grid-full">
-          <BarChartCard 
+          <BarChartCard
             title="Traffic Inspector Performance"
             subtitle="Average assessment scores achieved across TIs"
             data={tiPerformance}
@@ -651,7 +685,7 @@ const SuperAdminDashboard = () => {
 
         {/* New Row: User Management Activity & High-Risk Staff by Station */}
         <div className="charts-grid">
-          <LineChartCard 
+          <LineChartCard
             title="User Management Activity"
             subtitle="Workforce management activity across the division"
             data={mappedWorkforce}
@@ -663,7 +697,7 @@ const SuperAdminDashboard = () => {
               { key: 'Reactivated Users', color: '#10B981', name: 'Reactivated Users' }
             ]}
             headerAction={
-              <button 
+              <button
                 onClick={() => {
                   setDrillDownType('workforceActivity');
                   setIsDrillDownOpen(true);
@@ -684,7 +718,7 @@ const SuperAdminDashboard = () => {
             }
           />
 
-          <BarChartCard 
+          <BarChartCard
             title="High-Risk Staff by Station"
             subtitle="Stations requiring operational attention and monitoring"
             data={mappedHighRisk}
@@ -695,7 +729,7 @@ const SuperAdminDashboard = () => {
             barSize={32}
             hideLegend={true}
             headerAction={
-              <button 
+              <button
                 onClick={() => {
                   setDrillDownType('highRiskStaff');
                   setIsDrillDownOpen(true);
@@ -719,7 +753,7 @@ const SuperAdminDashboard = () => {
 
         {/* Row 5: Division Performance Trend & Assessment Workflow Trend */}
         <div className="charts-grid">
-          <LineChartCard 
+          <LineChartCard
             title="Division Performance Trend"
             subtitle="Mean division average score change over months"
             data={divisionTrend}
@@ -728,7 +762,7 @@ const SuperAdminDashboard = () => {
             lineColor="#10B981"
           />
 
-          <LineChartCard 
+          <LineChartCard
             title="Assessment Workflow Trend (Last 3 Months)"
             subtitle="Visualize how assessments move through the workflow pipeline over time"
             data={completionTrend.slice(-3)}
@@ -743,16 +777,16 @@ const SuperAdminDashboard = () => {
 
         {/* Row 6: Assessment Pipeline (division-wide premium component) */}
         <div className="charts-grid charts-grid-full">
-          <ChartCard 
+          <ChartCard
             title="Assessment Pipeline"
             subtitle="Division-wide pipeline status and trend"
           >
             <div style={{ display: 'flex', flexDirection: 'column', width: '100%', gap: '24px' }}>
               {/* Pipeline KPI Cards Grid */}
-              <div 
-                style={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', 
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
                   gap: '16px',
                   width: '100%'
                 }}
@@ -764,7 +798,7 @@ const SuperAdminDashboard = () => {
                   </div>
                   <span style={{ fontSize: '20px', fontWeight: 700, color: '#0B2341', marginLeft: '14px' }}>{pipeline.summary?.approved ?? 0}</span>
                 </div>
-                
+
                 <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '8px', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#2563EB' }}></span>
@@ -810,7 +844,7 @@ const SuperAdminDashboard = () => {
 
         {/* Top Performing Stations & Stations Needing Attention */}
         <div className="charts-grid" style={{ marginTop: '24px' }}>
-          <ChartCard 
+          <ChartCard
             title="Top Performing Stations"
             subtitle="Highest average assessment score system-wide"
             style={{ minHeight: 'auto' }}
@@ -819,7 +853,7 @@ const SuperAdminDashboard = () => {
             {renderStationTable(topStations, 'performance')}
           </ChartCard>
 
-          <ChartCard 
+          <ChartCard
             title="Stations Needing Attention"
             subtitle="Stations requiring immediate safety audit system-wide"
             style={{ minHeight: 'auto' }}
@@ -829,10 +863,10 @@ const SuperAdminDashboard = () => {
           </ChartCard>
         </div>
       </div>
-      <DrillDownChartModal 
-        isOpen={isDrillDownOpen} 
-        onClose={() => setIsDrillDownOpen(false)} 
-        graphType={drillDownType} 
+      <DrillDownChartModal
+        isOpen={isDrillDownOpen}
+        onClose={() => setIsDrillDownOpen(false)}
+        graphType={drillDownType}
       />
     </DashboardLayout>
   );

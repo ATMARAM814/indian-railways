@@ -310,3 +310,95 @@ export const downloadAllStationsEmployeesExcel = async (
         if (onLoadingChange) onLoadingChange(false);
     }
 };
+
+/**
+ * Downloads all employees grouped by Traffic Inspector (TI) as a multi-sheet Excel file.
+ * Sheet 1 = Summary (TI name, total, category breakdown)
+ * Sheet per TI = their assigned employees
+ * @param {Function} getWorkforceList - API function to fetch users
+ * @param {Function} onLoadingChange - Callback(bool) to set loading state
+ */
+export const downloadTIWiseExcel = async (
+    getWorkforceList,
+    onLoadingChange = null
+) => {
+    try {
+        if (onLoadingChange) onLoadingChange(true);
+
+        // Step 1: Fetch all TIs
+        const tiRes = await getWorkforceList({ role: 'TI', page: 1, limit: 10000 });
+        if (!tiRes.success || !tiRes.data.users || tiRes.data.users.length === 0) {
+            alert('No Traffic Inspectors found. Cannot generate TI-wise report.');
+            return;
+        }
+        const tiList = tiRes.data.users;
+
+        // Step 2: For each TI, fetch their employees using tiArea filter
+        const tiDataMap = {};
+        await Promise.all(
+            tiList.map(async (ti) => {
+                try {
+                    const empRes = await getWorkforceList({ tiArea: ti.id, page: 1, limit: 10000 });
+                    const employees = (empRes.success && empRes.data.users) ? empRes.data.users : [];
+                    tiDataMap[ti.id] = { tiUser: ti, employees };
+                } catch (e) {
+                    tiDataMap[ti.id] = { tiUser: ti, employees: [] };
+                }
+            })
+        );
+
+        const wb = XLSX.utils.book_new();
+
+        // Step 3: Build summary sheet
+        const summaryRows = tiList.map((ti) => {
+            const { employees } = tiDataMap[ti.id] || { employees: [] };
+            return {
+                'TI HRMS ID': ti.hrms_id || '—',
+                'TI Name': ti.full_name || '—',
+                'TI Designation': ti.designation || '—',
+                'Total Employees': employees.length,
+                'Active': employees.filter((u) => u.status === 'active').length,
+                'Inactive': employees.filter((u) => u.status !== 'active').length,
+                'Cat A': employees.filter((u) => u.category_code === 'A').length,
+                'Cat B': employees.filter((u) => u.category_code === 'B').length,
+                'Cat C': employees.filter((u) => u.category_code === 'C').length,
+                'Cat D': employees.filter((u) => u.category_code === 'D').length,
+                'High Risk': employees.filter((u) => u.risk_level === 'HIGH').length,
+                'Medium Risk': employees.filter((u) => u.risk_level === 'MEDIUM').length,
+                'Low Risk': employees.filter((u) => u.risk_level === 'LOW').length,
+            };
+        });
+
+        const summaryWs = XLSX.utils.json_to_sheet(summaryRows);
+        autoFitColumns(summaryWs, summaryRows);
+        styleHeaderRow(summaryWs, Object.keys(summaryRows[0]).length);
+        XLSX.utils.book_append_sheet(wb, summaryWs, 'Summary');
+
+        // Step 4: One sheet per TI with their employees
+        tiList.forEach((ti) => {
+            const { employees } = tiDataMap[ti.id] || { employees: [] };
+            const sheetLabel = `${ti.hrms_id || ti.id} - ${ti.full_name || 'TI'}`.substring(0, 31);
+
+            if (employees.length === 0) {
+                const emptyWs = XLSX.utils.aoa_to_sheet([['No employees assigned to this TI.']]);
+                XLSX.utils.book_append_sheet(wb, emptyWs, sheetLabel);
+                return;
+            }
+
+            const rows = employees.map(mapUserToRow);
+            const ws = XLSX.utils.json_to_sheet(rows);
+            autoFitColumns(ws, rows);
+            styleHeaderRow(ws, Object.keys(rows[0]).length);
+            XLSX.utils.book_append_sheet(wb, ws, sheetLabel);
+        });
+
+        const filename = `TI_Wise_Employee_List_${new Date().toISOString().split('T')[0]}.xlsx`;
+        XLSX.writeFile(wb, filename);
+    } catch (err) {
+        console.error('TI-wise Excel export error:', err);
+        alert('An error occurred while generating the TI-wise Excel file.');
+    } finally {
+        if (onLoadingChange) onLoadingChange(false);
+    }
+};
+
