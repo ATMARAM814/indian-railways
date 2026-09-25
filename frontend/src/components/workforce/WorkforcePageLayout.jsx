@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, Download, Layers } from 'lucide-react';
 import DashboardLayout from '../layout/DashboardLayout';
 import WorkforceFilters from './WorkforceFilters';
 import WorkforceTable from './WorkforceTable';
@@ -14,6 +14,8 @@ import ErrorState from '../dashboard/ErrorState';
 import { useWorkforce } from '../../hooks/useWorkforce';
 import { useAuth } from '../../context/AuthContext';
 import { TableSkeleton } from '../reports/ReportSkeletons';
+import { downloadAllEmployeesExcel, downloadStationWiseExcel } from '../../utils/excelExport';
+import { getWorkforceList } from '../../services/workforce.service';
 
 const WorkforcePageLayout = ({
   roleCode,
@@ -53,6 +55,7 @@ const WorkforcePageLayout = ({
   const [statusOpen, setStatusOpen] = useState(false);
   const [resetPasswordOpen, setResetPasswordOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [excelDownloading, setExcelDownloading] = useState(false);
 
   // Fetch users whenever filters or page changes
   useEffect(() => {
@@ -145,35 +148,108 @@ const WorkforcePageLayout = ({
   return (
     <DashboardLayout>
       <div style={{ padding: '32px', minHeight: 'calc(100vh - 70px)' }}>
-        
+
         {/* Header Section */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', gap: '16px', flexWrap: 'wrap' }}>
           <div>
             <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#0F172A', margin: 0 }}>{roleTitle}</h1>
             <p style={{ fontSize: '14px', color: '#64748B', margin: '4px 0 0 0' }}>{roleSubtitle}</p>
           </div>
-          <button
-            onClick={openCreate}
-            style={{
-              padding: '10px 18px',
-              fontSize: '13.5px',
-              fontWeight: 600,
-              color: '#FFFFFF',
-              backgroundColor: '#1B365D',
-              border: 'none',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              transition: 'background-color 0.2s'
-            }}
-            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#11223C'}
-            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#1B365D'}
-          >
-            <Plus size={16} />
-            Add New User
-          </button>
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+            {/* Download All Employees Excel */}
+            <button
+              onClick={() =>
+                downloadAllEmployeesExcel(
+                  getWorkforceList,
+                  roleCode,
+                  roleTitle,
+                  filters,
+                  setExcelDownloading
+                )
+              }
+              disabled={excelDownloading}
+              title="Download all employees as Excel"
+              style={{
+                padding: '10px 16px',
+                fontSize: '13.5px',
+                fontWeight: 600,
+                color: '#16A34A',
+                backgroundColor: '#F0FDF4',
+                border: '1.5px solid #86EFAC',
+                borderRadius: '8px',
+                cursor: excelDownloading ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                transition: 'all 0.2s',
+                opacity: excelDownloading ? 0.65 : 1
+              }}
+              onMouseOver={(e) => { if (!excelDownloading) { e.currentTarget.style.backgroundColor = '#DCFCE7'; e.currentTarget.style.borderColor = '#4ADE80'; } }}
+              onMouseOut={(e) => { e.currentTarget.style.backgroundColor = '#F0FDF4'; e.currentTarget.style.borderColor = '#86EFAC'; }}
+            >
+              <Download size={15} />
+              {excelDownloading ? 'Downloading...' : 'Download All (Excel)'}
+            </button>
+
+            {/* Download Station-wise Excel */}
+            <button
+              onClick={() =>
+                downloadStationWiseExcel(
+                  getWorkforceList,
+                  roleCode,
+                  roleTitle,
+                  filters,
+                  setExcelDownloading
+                )
+              }
+              disabled={excelDownloading}
+              title="Download employees grouped by station as Excel"
+              style={{
+                padding: '10px 16px',
+                fontSize: '13.5px',
+                fontWeight: 600,
+                color: '#0369A1',
+                backgroundColor: '#F0F9FF',
+                border: '1.5px solid #7DD3FC',
+                borderRadius: '8px',
+                cursor: excelDownloading ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                transition: 'all 0.2s',
+                opacity: excelDownloading ? 0.65 : 1
+              }}
+              onMouseOver={(e) => { if (!excelDownloading) { e.currentTarget.style.backgroundColor = '#E0F2FE'; e.currentTarget.style.borderColor = '#38BDF8'; } }}
+              onMouseOut={(e) => { e.currentTarget.style.backgroundColor = '#F0F9FF'; e.currentTarget.style.borderColor = '#7DD3FC'; }}
+            >
+              <Layers size={15} />
+              {excelDownloading ? 'Downloading...' : 'Station-wise (Excel)'}
+            </button>
+
+            {/* Add New User */}
+            <button
+              onClick={openCreate}
+              style={{
+                padding: '10px 18px',
+                fontSize: '13.5px',
+                fontWeight: 600,
+                color: '#FFFFFF',
+                backgroundColor: '#1B365D',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                transition: 'background-color 0.2s'
+              }}
+              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#11223C'}
+              onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#1B365D'}
+            >
+              <Plus size={16} />
+              Add New User
+            </button>
+          </div>
         </div>
 
         {/* Filters Card */}

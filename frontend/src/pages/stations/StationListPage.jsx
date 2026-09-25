@@ -7,8 +7,9 @@ import ErrorState from '../../components/dashboard/ErrorState';
 import { getScopedStations, createStation, updateStation } from '../../services/stationIntelligence.service';
 import { getWorkforceList, getDivisionsList } from '../../services/workforce.service';
 import { useAuth } from '../../context/AuthContext';
-import { Building, Search, PlusCircle, LayoutGrid, Eye, ChevronLeft, ChevronRight, X, Edit3 } from 'lucide-react';
+import { Building, Search, PlusCircle, LayoutGrid, ChevronLeft, ChevronRight, X, Edit3, Download, Layers } from 'lucide-react';
 import '../../styles/station-intelligence.css';
+import { downloadStationsExcel, downloadAllStationsEmployeesExcel } from '../../utils/excelExport';
 
 const StationListPage = () => {
   const navigate = useNavigate();
@@ -38,6 +39,7 @@ const StationListPage = () => {
   const [trafficInspectors, setTrafficInspectors] = useState([]);
   const [modalError, setModalError] = useState(null);
   const [modalSubmitting, setModalSubmitting] = useState(false);
+  const [excelDownloading, setExcelDownloading] = useState(false);
 
   // Edit Modal state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -56,7 +58,7 @@ const StationListPage = () => {
     setNewDivisionId('');
     setAssignedSMId('');
     setAssignedTIId('');
-    
+
     try {
       const divRes = await getDivisionsList();
       if (divRes.success) {
@@ -133,7 +135,7 @@ const StationListPage = () => {
     setEditDivisionId(station.divisionId || '');
     setEditAssignedSMId(station.assignedSMId || '');
     setEditAssignedTIId(station.assignedTiId || '');
-    
+
     try {
       const divRes = await getDivisionsList();
       if (divRes.success) {
@@ -262,7 +264,7 @@ const StationListPage = () => {
   return (
     <DashboardLayout>
       <div className="station-intelligence-container">
-        
+
         {/* Hero Header Banner */}
         <div className="station-intelligence-banner">
           <div className="station-intelligence-info">
@@ -340,14 +342,79 @@ const StationListPage = () => {
                 <h3 className="staff-table-title">Operational Stations Roll</h3>
                 <span className="staff-table-badge">Active Stations: {stations.length}</span>
               </div>
-              <button 
-                type="button" 
-                className="btn-open-intel" 
-                style={{ backgroundColor: '#2B5CE6', color: '#FFFFFF', gap: '6px' }}
-                onClick={openCreateModal}
-              >
-                <PlusCircle size={16} /> Add New Station
-              </button>
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                {/* Download Stations List Excel */}
+                <button
+                  type="button"
+                  disabled={excelDownloading}
+                  title="Download station list as Excel"
+                  onClick={() => downloadStationsExcel(
+                    stations,
+                    `Stations_List_${new Date().toISOString().split('T')[0]}.xlsx`
+                  )}
+                  style={{
+                    padding: '8px 14px',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    color: '#16A34A',
+                    backgroundColor: '#F0FDF4',
+                    border: '1.5px solid #86EFAC',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#DCFCE7'; e.currentTarget.style.borderColor = '#4ADE80'; }}
+                  onMouseOut={(e) => { e.currentTarget.style.backgroundColor = '#F0FDF4'; e.currentTarget.style.borderColor = '#86EFAC'; }}
+                >
+                  <Download size={14} /> Download Stations (Excel)
+                </button>
+
+                {/* Download Station-wise Employees Excel */}
+                <button
+                  type="button"
+                  disabled={excelDownloading}
+                  title="Download all employees grouped by station as Excel"
+                  onClick={() =>
+                    downloadAllStationsEmployeesExcel(
+                      stations,
+                      getWorkforceList,
+                      setExcelDownloading
+                    )
+                  }
+                  style={{
+                    padding: '8px 14px',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    color: '#0369A1',
+                    backgroundColor: '#F0F9FF',
+                    border: '1.5px solid #7DD3FC',
+                    borderRadius: '8px',
+                    cursor: excelDownloading ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    transition: 'all 0.2s',
+                    opacity: excelDownloading ? 0.65 : 1
+                  }}
+                  onMouseOver={(e) => { if (!excelDownloading) { e.currentTarget.style.backgroundColor = '#E0F2FE'; e.currentTarget.style.borderColor = '#38BDF8'; } }}
+                  onMouseOut={(e) => { e.currentTarget.style.backgroundColor = '#F0F9FF'; e.currentTarget.style.borderColor = '#7DD3FC'; }}
+                >
+                  <Layers size={14} /> {excelDownloading ? 'Downloading...' : 'Station-wise Employees (Excel)'}
+                </button>
+
+                {/* Add New Station */}
+                <button
+                  type="button"
+                  className="btn-open-intel"
+                  style={{ backgroundColor: '#2B5CE6', color: '#FFFFFF', gap: '6px' }}
+                  onClick={openCreateModal}
+                >
+                  <PlusCircle size={16} /> Add New Station
+                </button>
+              </div>
             </div>
 
             <div className="staff-table-wrapper">
@@ -374,7 +441,7 @@ const StationListPage = () => {
                       </td>
                       <td>
                         {row.assignedTI ? (
-                           <span style={{ fontWeight: 500, color: '#1E293B' }}>{row.assignedTI}</span>
+                          <span style={{ fontWeight: 500, color: '#1E293B' }}>{row.assignedTI}</span>
                         ) : (
                           <span style={{ color: '#94A3B8', fontStyle: 'italic' }}>Unassigned</span>
                         )}
@@ -497,13 +564,13 @@ const StationListPage = () => {
               <form onSubmit={handleCreateStation}>
                 <div className="staff-modal-body" style={{ padding: '24px', maxHeight: '70vh', overflowY: 'auto' }}>
                   {modalError && (
-                    <div style={{ 
-                      padding: '12px 16px', 
-                      backgroundColor: '#FEE2E2', 
-                      color: '#991B1B', 
-                      borderRadius: '8px', 
-                      fontSize: '13px', 
-                      fontWeight: 500, 
+                    <div style={{
+                      padding: '12px 16px',
+                      backgroundColor: '#FEE2E2',
+                      color: '#991B1B',
+                      borderRadius: '8px',
+                      fontSize: '13px',
+                      fontWeight: 500,
                       marginBottom: '16px',
                       border: '1px solid #FCA5A5'
                     }}>
@@ -600,13 +667,13 @@ const StationListPage = () => {
               <form onSubmit={handleUpdateStation}>
                 <div className="staff-modal-body" style={{ padding: '24px', maxHeight: '70vh', overflowY: 'auto' }}>
                   {modalError && (
-                    <div style={{ 
-                      padding: '12px 16px', 
-                      backgroundColor: '#FEE2E2', 
-                      color: '#991B1B', 
-                      borderRadius: '8px', 
-                      fontSize: '13px', 
-                      fontWeight: 500, 
+                    <div style={{
+                      padding: '12px 16px',
+                      backgroundColor: '#FEE2E2',
+                      color: '#991B1B',
+                      borderRadius: '8px',
+                      fontSize: '13px',
+                      fontWeight: 500,
                       marginBottom: '16px',
                       border: '1px solid #FCA5A5'
                     }}>
