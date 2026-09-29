@@ -669,45 +669,72 @@ export const AssessmentStaffTable = ({
 
       {/* ASSESSMENT STATUS MODAL */}
       {showStatusModal && selectedRow && (
-        <div style={{
+        <div className="status-modal-backdrop" style={{
           position: 'fixed',
           top: 0,
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: 'rgba(11, 35, 65, 0.5)',
+          backgroundColor: 'rgba(11, 35, 65, 0.6)',
           backdropFilter: 'blur(4px)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          zIndex: 9999
+          padding: '16px',
+          zIndex: 9999,
+          overflowY: 'auto'
         }}>
-          <div style={{
+          <div className="status-modal-dialog" style={{
             backgroundColor: '#FFFFFF',
-            borderRadius: '8px',
+            borderRadius: '12px',
             boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)',
-            width: '90%',
+            width: '100%',
             maxWidth: '700px',
+            maxHeight: 'calc(100vh - 32px)',
+            display: 'flex',
+            flexDirection: 'column',
             overflow: 'hidden',
-            fontFamily: 'var(--font-family)'
+            fontFamily: 'var(--font-family)',
+            margin: 'auto'
           }}>
             {/* Modal Header */}
             <div style={{
               backgroundColor: '#0B2341',
-              padding: '16px 24px',
+              padding: '16px 20px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              color: '#FFFFFF'
+              color: '#FFFFFF',
+              flexShrink: 0
             }}>
               <h2 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>Assessment Cycle Status</h2>
-              <button onClick={() => setShowStatusModal(false)} style={{ background: 'none', border: 'none', color: '#FFFFFF', cursor: 'pointer' }}>
+              <button
+                type="button"
+                onClick={() => setShowStatusModal(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#FFFFFF',
+                  cursor: 'pointer',
+                  padding: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
                 <X size={20} />
               </button>
             </div>
 
             {/* Modal Body */}
-            <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div style={{
+              padding: '20px 16px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '20px',
+              overflowY: 'auto',
+              flex: 1
+            }}>
               
               {/* Metadata Info */}
               <div className="modal-status-meta-grid" style={{
@@ -717,19 +744,19 @@ export const AssessmentStaffTable = ({
               }}>
                 <div>
                   <div style={{ color: '#64748B', fontSize: '11px', textTransform: 'uppercase', fontWeight: 600 }}>Employee Name</div>
-                  <div style={{ fontWeight: 700, color: '#0F172A', marginTop: '2px' }}>{selectedRow.full_name}</div>
+                  <div style={{ fontWeight: 700, color: '#0F172A', marginTop: '2px', wordBreak: 'break-word' }}>{selectedRow.full_name}</div>
                 </div>
                 <div>
                   <div style={{ color: '#64748B', fontSize: '11px', textTransform: 'uppercase', fontWeight: 600 }}>HRMS ID</div>
-                  <div style={{ fontWeight: 700, color: '#0F172A', marginTop: '2px' }}>{selectedRow.hrms_id}</div>
+                  <div style={{ fontWeight: 700, color: '#0F172A', marginTop: '2px', fontFamily: 'monospace' }}>{selectedRow.hrms_id}</div>
                 </div>
                 <div>
                   <div style={{ color: '#64748B', fontSize: '11px', textTransform: 'uppercase', fontWeight: 600 }}>Designation</div>
-                  <div style={{ fontWeight: 700, color: '#0F172A', marginTop: '2px' }}>{cleanDesignationText(selectedRow.designation)}</div>
+                  <div style={{ fontWeight: 700, color: '#0F172A', marginTop: '2px', wordBreak: 'break-word' }}>{cleanDesignationText(selectedRow.designation)}</div>
                 </div>
                 <div>
                   <div style={{ color: '#64748B', fontSize: '11px', textTransform: 'uppercase', fontWeight: 600 }}>Station</div>
-                  <div style={{ fontWeight: 700, color: '#0F172A', marginTop: '2px' }}>{selectedRow.station_code}</div>
+                  <div style={{ fontWeight: 700, color: '#0F172A', marginTop: '2px' }}>{selectedRow.station_code || selectedRow.station_name || '—'}</div>
                 </div>
                 <div>
                   <div style={{ color: '#64748B', fontSize: '11px', textTransform: 'uppercase', fontWeight: 600 }}>Assessment Cycle</div>
@@ -758,18 +785,18 @@ export const AssessmentStaffTable = ({
                 backgroundColor: '#F8FAFC',
                 border: '1px solid #E2E8F0',
                 borderRadius: '8px',
-                padding: '16px'
+                padding: '14px 16px'
               }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
                     <span style={{ color: '#475569', fontWeight: 500 }}>Assessment Cycle Status:</span>
-                    <span style={{ fontWeight: 700 }}>
+                    <span style={{ fontWeight: 700, color: '#0F172A' }}>
                       {selectedRow.assessment_status ? selectedRow.assessment_status.toUpperCase() : 'NOT STARTED'}
                     </span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
                     <span style={{ color: '#475569', fontWeight: 500 }}>MCQ Exam Status:</span>
-                    <span style={{ fontWeight: 700 }}>
+                    <span style={{ fontWeight: 700, color: '#0F172A' }}>
                       {['mcq_submitted', 'completed', 'evaluated', 'pending_approval', 'approved'].includes(selectedRow.assessment_status) ? 'SUBMITTED' : 'PENDING'}
                     </span>
                   </div>
@@ -777,13 +804,13 @@ export const AssessmentStaffTable = ({
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
                     <span style={{ color: '#475569', fontWeight: 500 }}>Evaluation Status:</span>
-                    <span style={{ fontWeight: 700 }}>
+                    <span style={{ fontWeight: 700, color: '#0F172A' }}>
                       {['completed', 'evaluated', 'pending_approval', 'approved'].includes(selectedRow.assessment_status) ? 'COMPLETED' : 'PENDING'}
                     </span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
                     <span style={{ color: '#475569', fontWeight: 500 }}>Approval Status:</span>
-                    <span style={{ fontWeight: 700 }}>
+                    <span style={{ fontWeight: 700, color: '#0F172A' }}>
                       {selectedRow.approval_status ? selectedRow.approval_status.toUpperCase() : 'PENDING EVALUATION'}
                     </span>
                   </div>
@@ -792,82 +819,77 @@ export const AssessmentStaffTable = ({
 
               {/* Visual Progress Tracker */}
               <div>
-                <h4 style={{ fontSize: '13px', fontWeight: 700, color: '#334155', marginBottom: '16px' }}>Progress Tracker</h4>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', width: '100%', padding: '0 4px' }}>
-                  {/* Background line */}
-                  <div style={{ position: 'absolute', top: '16px', left: '8.3%', right: '8.3%', height: '4px', backgroundColor: '#E2E8F0', zIndex: 1 }}></div>
-                  
-                  {/* Highlighted active line */}
-                  <div style={{
-                    position: 'absolute',
-                    top: '16px',
-                    left: '8.3%',
-                    width: `${Math.max(0, getActiveStepIndex(selectedRow.assessment_status, selectedRow.approval_status) * 16.67)}%`,
-                    height: '4px',
-                    backgroundColor: '#16A34A',
-                    zIndex: 2,
-                    transition: 'width 0.3s ease'
-                  }}></div>
+                <h4 style={{ fontSize: '13px', fontWeight: 700, color: '#334155', marginBottom: '14px' }}>Progress Tracker</h4>
+                <div className="status-tracker-scroll" style={{ width: '100%', overflowX: 'auto', paddingBottom: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', width: '100%', minWidth: '460px', padding: '0 4px' }}>
+                    {/* Background line */}
+                    <div style={{ position: 'absolute', top: '16px', left: '8.3%', right: '8.3%', height: '4px', backgroundColor: '#E2E8F0', zIndex: 1 }}></div>
+                    
+                    {/* Highlighted active line */}
+                    <div style={{
+                      position: 'absolute',
+                      top: '16px',
+                      left: '8.3%',
+                      width: `${Math.max(0, getActiveStepIndex(selectedRow.assessment_status, selectedRow.approval_status) * 16.67)}%`,
+                      height: '4px',
+                      backgroundColor: '#16A34A',
+                      zIndex: 2,
+                      transition: 'width 0.3s ease'
+                    }}></div>
 
-                  {[
-                    { label: 'Scheduled', idx: 0 },
-                    { label: 'MCQ Active', idx: 1 },
-                    { label: 'MCQ Submitted', idx: 2 },
-                    { label: 'Evaluated', idx: 3 },
-                    { label: 'Awaiting Approval', idx: 4 },
-                    { label: 'Approved', idx: 5 }
-                  ].map((step) => {
-                    const isPassed = getActiveStepIndex(selectedRow.assessment_status, selectedRow.approval_status) >= step.idx;
-                    return (
-                      <div key={step.idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', zIndex: 3, width: '16.6%', maxWidth: '80px' }}>
-                        <div style={{
-                          width: '32px',
-                          height: '32px',
-                          borderRadius: '50%',
-                          backgroundColor: isPassed ? '#16A34A' : '#FFFFFF',
-                          border: isPassed ? '2px solid #16A34A' : '2px solid #CBD5E1',
-                          color: isPassed ? '#FFFFFF' : '#64748B',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '12px',
-                          fontWeight: 'bold',
-                          transition: 'all 0.3s ease',
-                          boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
-                        }}>
-                          {isPassed ? <CheckCircle size={16} /> : step.idx + 1}
+                    {[
+                      { label: 'Scheduled', idx: 0 },
+                      { label: 'MCQ Active', idx: 1 },
+                      { label: 'MCQ Submitted', idx: 2 },
+                      { label: 'Evaluated', idx: 3 },
+                      { label: 'Awaiting Approval', idx: 4 },
+                      { label: 'Approved', idx: 5 }
+                    ].map((step) => {
+                      const isPassed = getActiveStepIndex(selectedRow.assessment_status, selectedRow.approval_status) >= step.idx;
+                      return (
+                        <div key={step.idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', zIndex: 3, width: '16.6%', maxWidth: '80px' }}>
+                          <div style={{
+                            width: '32px',
+                            height: '32px',
+                            borderRadius: '50%',
+                            backgroundColor: isPassed ? '#16A34A' : '#FFFFFF',
+                            border: isPassed ? '2px solid #16A34A' : '2px solid #CBD5E1',
+                            color: isPassed ? '#FFFFFF' : '#64748B',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '12px',
+                            fontWeight: 'bold',
+                            transition: 'all 0.3s ease',
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+                          }}>
+                            {isPassed ? <CheckCircle size={16} /> : step.idx + 1}
+                          </div>
+                          <span style={{
+                            fontSize: '9.5px',
+                            fontWeight: 600,
+                            color: isPassed ? '#16A34A' : '#64748B',
+                            marginTop: '6px',
+                            textAlign: 'center',
+                            whiteSpace: 'normal',
+                            lineHeight: '1.25',
+                            wordBreak: 'normal',
+                            maxWidth: '100%',
+                          }}>
+                            {step.label}
+                          </span>
                         </div>
-                        <span style={{
-                          fontSize: '9px',
-                          fontWeight: 600,
-                          color: isPassed ? '#16A34A' : '#64748B',
-                          marginTop: '6px',
-                          textAlign: 'center',
-                          whiteSpace: 'normal',
-                          lineHeight: '1.2',
-                          wordBreak: 'break-word',
-                          maxWidth: '100%',
-                        }}>
-                          {step.label}
-                        </span>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
 
             </div>
 
             {/* Modal Footer with Actions */}
-            <div style={{
-              backgroundColor: '#F8FAFC',
-              padding: '16px 24px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              borderTop: '1px solid #E2E8F0'
-            }}>
-              <div>
+            <div className="status-modal-footer">
+              <div className="status-footer-left">
                 {/* View Form (always visible read-only) */}
                 <button
                   type="button"
@@ -875,90 +897,51 @@ export const AssessmentStaffTable = ({
                     setShowStatusModal(false);
                     navigate(`/assessments/${roleCode}/${selectedRow.assessment_id}/view`);
                   }}
-                  style={{
-                    padding: '0 16px',
-                    height: '40px',
-                    borderRadius: '8px',
-                    border: '1px solid #2B5CE6',
-                    backgroundColor: '#FFFFFF',
-                    color: '#2B5CE6',
-                    fontSize: '13px',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px'
-                  }}
+                  className="status-btn-view"
                 >
-                  <FileText size={14} />
-                  View Form
+                  <FileText size={15} />
+                  <span>View Form</span>
                 </button>
               </div>
 
-              <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+              <div className="status-footer-right">
                 {/* Helper / error message if Evaluate disabled */}
                 {!['mcq_submitted', 'completed', 'evaluated', 'pending_approval', 'approved'].includes(selectedRow.assessment_status) && (
-                  <span style={{ fontSize: '11px', color: '#B45309', fontWeight: 600, maxWidth: '280px', textAlign: 'right' }}>
+                  <span className="status-helper-msg">
                     Evaluation can begin only after the employee submits the MCQ examination.
                   </span>
                 )}
 
-                {/* Evaluate button */}
-                <button
-                  type="button"
-                  disabled={
-                    !['mcq_submitted', 'completed', 'evaluated', 'pending_approval', 'approved'].includes(selectedRow.assessment_status) ||
-                    (selectedRow.assessment_status === 'completed' && selectedRow.approval_status !== 'rejected') ||
-                    selectedRow.approval_status === 'approved'
-                  }
-                  onClick={() => {
-                    setShowStatusModal(false);
-                    navigate(`/assessments/${roleCode}/${selectedRow.assessment_id}/form`);
-                  }}
-                  style={{
-                    padding: '0 20px',
-                    height: '40px',
-                    borderRadius: '8px',
-                    border: 'none',
-                    backgroundColor: (
-                      ['mcq_submitted', 'completed', 'evaluated', 'pending_approval', 'approved'].includes(selectedRow.assessment_status) &&
+                <div className="status-btn-group">
+                  {/* Evaluate button */}
+                  <button
+                    type="button"
+                    disabled={
+                      !['mcq_submitted', 'completed', 'evaluated', 'pending_approval', 'approved'].includes(selectedRow.assessment_status) ||
+                      (selectedRow.assessment_status === 'completed' && selectedRow.approval_status !== 'rejected') ||
+                      selectedRow.approval_status === 'approved'
+                    }
+                    onClick={() => {
+                      setShowStatusModal(false);
+                      navigate(`/assessments/${roleCode}/${selectedRow.assessment_id}/form`);
+                    }}
+                    className={`status-btn-eval ${
+                      (['mcq_submitted', 'completed', 'evaluated', 'pending_approval', 'approved'].includes(selectedRow.assessment_status) &&
                       !(selectedRow.assessment_status === 'completed' && selectedRow.approval_status !== 'rejected') &&
-                      selectedRow.approval_status !== 'approved'
-                    ) ? '#F97316' : '#E2E8F0',
-                    color: (
-                      ['mcq_submitted', 'completed', 'evaluated', 'pending_approval', 'approved'].includes(selectedRow.assessment_status) &&
-                      !(selectedRow.assessment_status === 'completed' && selectedRow.approval_status !== 'rejected') &&
-                      selectedRow.approval_status !== 'approved'
-                    ) ? '#FFFFFF' : '#94A3B8',
-                    fontSize: '13px',
-                    fontWeight: 700,
-                    cursor: (
-                      ['mcq_submitted', 'completed', 'evaluated', 'pending_approval', 'approved'].includes(selectedRow.assessment_status) &&
-                      !(selectedRow.assessment_status === 'completed' && selectedRow.approval_status !== 'rejected') &&
-                      selectedRow.approval_status !== 'approved'
-                    ) ? 'pointer' : 'not-allowed'
-                  }}
-                >
-                  Evaluate
-                </button>
+                      selectedRow.approval_status !== 'approved') ? 'active' : 'disabled'
+                    }`}
+                  >
+                    Evaluate
+                  </button>
 
-                <button
-                  type="button"
-                  onClick={() => setShowStatusModal(false)}
-                  style={{
-                    padding: '0 16px',
-                    height: '40px',
-                    borderRadius: '8px',
-                    border: '1px solid #CBD5E1',
-                    backgroundColor: '#FFFFFF',
-                    color: '#475569',
-                    fontSize: '13px',
-                    fontWeight: 600,
-                    cursor: 'pointer'
-                  }}
-                >
-                  Close
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowStatusModal(false)}
+                    className="status-btn-close"
+                  >
+                    Close
+                  </button>
+                </div>
               </div>
             </div>
 
