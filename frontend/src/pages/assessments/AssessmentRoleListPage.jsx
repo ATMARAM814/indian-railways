@@ -287,68 +287,30 @@ const AssessmentRoleListPage = () => {
       <div className="dashboard-page-container">
         
         {/* Page Header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        {/* Page Header */}
+        <div className="role-list-header-row">
+          <div className="role-list-title-group">
             <button
               onClick={() => navigate('/assessments')}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '36px',
-                height: '36px',
-                borderRadius: '50%',
-                border: '1px solid #CBD5E1',
-                backgroundColor: '#FFFFFF',
-                color: '#475569',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#EFF6FF';
-                e.currentTarget.style.borderColor = '#BFDBFE';
-                e.currentTarget.style.color = '#2B5CE6';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#FFFFFF';
-                e.currentTarget.style.borderColor = '#CBD5E1';
-                e.currentTarget.style.color = '#475569';
-              }}
+              className="header-back-btn circular"
               title="Back to Assessments Console"
             >
               <ArrowLeft size={18} />
             </button>
-            <div>
-              <h1 style={{ fontSize: '24px', fontWeight: 800, color: '#0B2341', marginBottom: '4px' }}>
+            <div className="role-list-title-text">
+              <h1>
                 {friendlyName} Assessments
               </h1>
-              <p style={{ fontSize: '14px', color: '#64748B' }}>
+              <p>
                 Conduct safety checklists, view safety grading logs, and audit scores for {friendlyName}.
               </p>
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '12px' }}>
+          <div className="role-list-actions-group">
             <button
               onClick={handleExportExcel}
-              style={{
-                padding: '0 20px',
-                height: '42px',
-                fontSize: '14px',
-                fontWeight: '700',
-                borderRadius: '8px',
-                border: '1px solid #CBD5E1',
-                backgroundColor: '#FFFFFF',
-                color: '#0B2341',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                boxShadow: '0 1px 2px rgba(11, 35, 65, 0.05)'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#EEF6FC'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FFFFFF'}
+              className="role-action-btn export-btn"
             >
               <Download size={16} />
               <span>Export Excel</span>
@@ -356,23 +318,9 @@ const AssessmentRoleListPage = () => {
             <button
               type="button"
               onClick={handleOpenBulkModal}
-              style={{
-                padding: '0 20px',
-                height: '42px',
-                fontSize: '14px',
-                fontWeight: '700',
-                borderRadius: '8px',
-                border: 'none',
-                backgroundColor: '#2B5CE6',
-                color: '#FFFFFF',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                boxShadow: '0 4px 6px -1px rgba(43, 92, 230, 0.2)'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1E40AF'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#2B5CE6'}
+              className="role-action-btn schedule-btn"
             >
-              Schedule for All {friendlyName}
+              <span>Schedule for All {friendlyName}</span>
             </button>
           </div>
         </div>

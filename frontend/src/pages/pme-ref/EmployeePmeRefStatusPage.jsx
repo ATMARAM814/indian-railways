@@ -522,11 +522,11 @@ const EmployeePmeRefStatusPage = () => {
 
               {/* Pagination Controls */}
               {pagination.totalPages > 1 && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', borderTop: '1px solid #D7E3EF', backgroundColor: '#F8FAFC' }}>
-                  <div style={{ fontSize: '13.5px', color: '#64748B' }}>
+                <div className="pagination-responsive-bar">
+                  <div className="pagination-info-text">
                     Showing <strong style={{ color: '#0F172A' }}>{users.length}</strong> of <strong style={{ color: '#0F172A' }}>{pagination.totalItems}</strong> employees
                   </div>
-                  <div style={{ display: 'flex', gap: '8px' }}>
+                  <div className="pagination-controls-group">
                     <button
                       onClick={() => setActivePage(prev => Math.max(prev - 1, 1))}
                       disabled={activePage === 1}
@@ -546,7 +546,7 @@ const EmployeePmeRefStatusPage = () => {
                     >
                       <ChevronLeft size={18} />
                     </button>
-                    <div style={{ display: 'flex', alignItems: 'center', fontSize: '13.5px', fontWeight: 600, color: '#0F172A', padding: '0 8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', fontSize: '13.5px', fontWeight: 600, color: '#0F172A', padding: '0 8px', whiteSpace: 'nowrap' }}>
                       Page {pagination.currentPage} of {pagination.totalPages}
                     </div>
                     <button

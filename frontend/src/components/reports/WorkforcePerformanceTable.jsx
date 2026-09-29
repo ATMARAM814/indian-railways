@@ -124,11 +124,11 @@ const WorkforcePerformanceTable = ({ workforceList, pagination, onPageChange }) 
 
       {/* Pagination Footer */}
       {totalPages > 1 && (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 24px', borderTop: '1px solid #E2E8F0', backgroundColor: '#FFFFFF' }}>
-          <div style={{ fontSize: '13px', color: '#64748B' }}>
+        <div className="pagination-responsive-bar" style={{ borderTop: '1px solid #E2E8F0', backgroundColor: '#FFFFFF' }}>
+          <div className="pagination-info-text">
             Showing <span style={{ fontWeight: 700, color: '#0F172A' }}>{startIdx}</span> to <span style={{ fontWeight: 700, color: '#0F172A' }}>{endIdx}</span> of <span style={{ fontWeight: 700, color: '#0F172A' }}>{total}</span> employees
           </div>
-          <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+          <div className="pagination-controls-group" style={{ flexWrap: 'wrap', justifyContent: 'center' }}>
             <button
               onClick={() => onPageChange(page - 1)}
               disabled={page === 1}

@@ -478,9 +478,11 @@ const CounselingPage = () => {
           width: '100%'
         }}>
           {/* Header Row */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
             <button
               onClick={handleGoBack}
+              className="header-back-btn"
+              title="Go Back"
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -687,37 +689,15 @@ const CounselingPage = () => {
               </div>
             </div>
           ) : (
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
                 <button
                   onClick={() => {
                     handleTabChange('landing');
                     handleSearchQueryChange('');
                     setStatusFilter('all');
                   }}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundColor: '#FFFFFF',
-                    border: '1px solid #D7E3EF',
-                    borderRadius: '8px',
-                    width: '36px',
-                    height: '36px',
-                    cursor: 'pointer',
-                    color: '#475569',
-                    transition: 'all 0.2s',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#EFF6FF';
-                    e.currentTarget.style.borderColor = '#BFDBFE';
-                    e.currentTarget.style.color = '#2B5CE6';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = '#FFFFFF';
-                    e.currentTarget.style.borderColor = '#D7E3EF';
-                    e.currentTarget.style.color = '#475569';
-                  }}
+                  className="header-back-btn"
                   title="Back to Control Centre"
                 >
                   <ArrowLeft size={18} />
@@ -1159,7 +1139,7 @@ const CounselingPage = () => {
                 backgroundColor: '#FFFFFF',
                 borderRadius: '16px',
                 border: '1px solid #D7E3EF',
-                padding: '24px',
+                padding: 'clamp(14px, 3vw, 24px)',
                 boxShadow: '0 4px 6px -1px rgba(11, 35, 65, 0.05)',
                 display: 'flex',
                 flexDirection: 'column',
@@ -1181,7 +1161,7 @@ const CounselingPage = () => {
                   gap: '16px',
                   flexWrap: 'wrap'
                 }}>
-                  <div style={{ flex: 1, minWidth: '240px', position: 'relative' }}>
+                  <div style={{ flex: 1, minWidth: '200px', width: '100%', maxWidth: '100%', position: 'relative' }}>
                     <Search style={{
                       position: 'absolute',
                       left: '12px',
@@ -1196,6 +1176,7 @@ const CounselingPage = () => {
                       onChange={(e) => handleScheduleNameChange(e.target.value)}
                       style={{
                         width: '100%',
+                        boxSizing: 'border-box',
                         padding: '8px 12px 8px 36px',
                         borderRadius: '8px',
                         border: '1px solid #CBD5E1',
@@ -1207,7 +1188,7 @@ const CounselingPage = () => {
                     />
                   </div>
 
-                  <div style={{ flex: 1, minWidth: '240px', position: 'relative' }}>
+                  <div style={{ flex: 1, minWidth: '200px', width: '100%', maxWidth: '100%', position: 'relative' }}>
                     <Search style={{
                       position: 'absolute',
                       left: '12px',
@@ -1222,6 +1203,7 @@ const CounselingPage = () => {
                       onChange={(e) => handleScheduleStationChange(e.target.value)}
                       style={{
                         width: '100%',
+                        boxSizing: 'border-box',
                         padding: '8px 12px 8px 36px',
                         borderRadius: '8px',
                         border: '1px solid #CBD5E1',
@@ -1238,10 +1220,14 @@ const CounselingPage = () => {
                 <div style={{
                   border: '1px solid #E2E8F0',
                   borderRadius: '12px',
-                  overflow: 'hidden'
+                  overflowX: 'auto',
+                  WebkitOverflowScrolling: 'touch',
+                  width: '100%',
+                  maxWidth: '100%'
                 }}>
                   <table style={{
                     width: '100%',
+                    minWidth: '450px',
                     borderCollapse: 'collapse',
                     textAlign: 'left',
                     fontSize: '13px'
@@ -1336,12 +1322,14 @@ const CounselingPage = () => {
                     Scheduled Counselling Sessions ({scheduledList.length})
                   </h3>
                 </div>
-                <table style={{
-                  width: '100%',
-                  borderCollapse: 'collapse',
-                  textAlign: 'left',
-                  fontSize: '13.5px'
-                }}>
+                <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', width: '100%' }}>
+                  <table style={{
+                    width: '100%',
+                    minWidth: '600px',
+                    borderCollapse: 'collapse',
+                    textAlign: 'left',
+                    fontSize: '13.5px'
+                  }}>
                   <thead>
                     <tr style={{
                       backgroundColor: '#F8FAFC',
@@ -1463,6 +1451,7 @@ const CounselingPage = () => {
                 </table>
               </div>
             </div>
+          </div>
           )}
 
           {/* WATCHLIST TABS (Category C / Category D) */}
@@ -1473,14 +1462,14 @@ const CounselingPage = () => {
                 backgroundColor: '#FFFFFF',
                 borderRadius: '16px',
                 border: '1px solid #D7E3EF',
-                padding: '20px',
+                padding: 'clamp(14px, 3vw, 20px)',
                 boxShadow: '0 4px 6px -1px rgba(11, 35, 65, 0.05)',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '16px',
                 flexWrap: 'wrap'
               }}>
-                <div style={{ flex: 1, minWidth: '280px', position: 'relative' }}>
+                <div style={{ flex: 1, minWidth: '200px', width: '100%', maxWidth: '100%', position: 'relative' }}>
                   <Search style={{
                     position: 'absolute',
                     left: '14px',
@@ -1495,6 +1484,7 @@ const CounselingPage = () => {
                     onChange={(e) => handleSearchQueryChange(e.target.value)}
                     style={{
                       width: '100%',
+                      boxSizing: 'border-box',
                       padding: '10px 14px 10px 42px',
                       borderRadius: '8px',
                       border: '1px solid #CBD5E1',
@@ -1536,12 +1526,14 @@ const CounselingPage = () => {
                 boxShadow: '0 4px 6px -1px rgba(11, 35, 65, 0.05)',
                 overflow: 'hidden'
               }}>
-                <table style={{
-                  width: '100%',
-                  borderCollapse: 'collapse',
-                  textAlign: 'left',
-                  fontSize: '13.5px'
-                }}>
+                <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', width: '100%' }}>
+                  <table style={{
+                    width: '100%',
+                    minWidth: '650px',
+                    borderCollapse: 'collapse',
+                    textAlign: 'left',
+                    fontSize: '13.5px'
+                  }}>
                   <thead>
                     <tr style={{
                       backgroundColor: '#F8FAFC',
@@ -1687,6 +1679,7 @@ const CounselingPage = () => {
                 </table>
               </div>
             </div>
+          </div>
           )}
 
           {/* COUNSELLING & RETEST HISTORY LOG TAB */}
@@ -1697,14 +1690,14 @@ const CounselingPage = () => {
                 backgroundColor: '#FFFFFF',
                 borderRadius: '16px',
                 border: '1px solid #D7E3EF',
-                padding: '20px',
+                padding: 'clamp(14px, 3vw, 20px)',
                 boxShadow: '0 4px 6px -1px rgba(11, 35, 65, 0.05)',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '16px',
                 flexWrap: 'wrap'
               }}>
-                <div style={{ flex: 1, minWidth: '280px', position: 'relative' }}>
+                <div style={{ flex: 1, minWidth: '200px', width: '100%', maxWidth: '100%', position: 'relative' }}>
                   <Search style={{
                     position: 'absolute',
                     left: '14px',
@@ -1719,6 +1712,7 @@ const CounselingPage = () => {
                     onChange={(e) => handleSearchQueryChange(e.target.value)}
                     style={{
                       width: '100%',
+                      boxSizing: 'border-box',
                       padding: '10px 14px 10px 42px',
                       borderRadius: '8px',
                       border: '1px solid #CBD5E1',
@@ -1739,12 +1733,14 @@ const CounselingPage = () => {
                 boxShadow: '0 4px 6px -1px rgba(11, 35, 65, 0.05)',
                 overflow: 'hidden'
               }}>
-                <table style={{
-                  width: '100%',
-                  borderCollapse: 'collapse',
-                  textAlign: 'left',
-                  fontSize: '13.5px'
-                }}>
+                <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', width: '100%' }}>
+                  <table style={{
+                    width: '100%',
+                    minWidth: '650px',
+                    borderCollapse: 'collapse',
+                    textAlign: 'left',
+                    fontSize: '13.5px'
+                  }}>
                   <thead>
                     <tr style={{
                       backgroundColor: '#F8FAFC',
@@ -1847,6 +1843,7 @@ const CounselingPage = () => {
                 </table>
               </div>
             </div>
+          </div>
           )}
 
           {/* MANAGE SUBJECTS TAB */}
@@ -1943,12 +1940,14 @@ const CounselingPage = () => {
                     No counseling subjects registered for this role.
                   </div>
                 ) : (
-                  <table style={{
-                    width: '100%',
-                    borderCollapse: 'collapse',
-                    textAlign: 'left',
-                    fontSize: '13.5px'
-                  }}>
+                  <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', width: '100%' }}>
+                    <table style={{
+                      width: '100%',
+                      minWidth: '550px',
+                      borderCollapse: 'collapse',
+                      textAlign: 'left',
+                      fontSize: '13.5px'
+                    }}>
                     <thead>
                       <tr style={{
                         backgroundColor: '#F8FAFC',
@@ -2033,8 +2032,9 @@ const CounselingPage = () => {
                       ))}
                     </tbody>
                   </table>
-                )}
-              </div>
+                </div>
+              )}
+            </div>
 
               {/* Add/Edit Modal */}
               {subjectFormOpen && (
@@ -2375,9 +2375,11 @@ const CounselingPage = () => {
         width: '100%'
       }}>
         {/* Header Row */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
           <button
             onClick={handleGoBack}
+            className="header-back-btn"
+            title="Go Back"
             style={{
               display: 'flex',
               alignItems: 'center',

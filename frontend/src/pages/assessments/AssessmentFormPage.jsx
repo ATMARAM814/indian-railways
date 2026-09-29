@@ -310,8 +310,9 @@ const AssessmentFormPage = () => {
       <div style={{ padding: '24px 32px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
         
         {/* Page Header */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
           <button
+            className="header-back-btn circular"
             onClick={() => {
               if (fromSource === 'counseling') {
                 const backParams = new URLSearchParams(searchParams);

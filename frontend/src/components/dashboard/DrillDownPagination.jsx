@@ -77,7 +77,7 @@ const DrillDownPagination = ({ pagination, onPageChange }) => {
         Show <strong>{startIdx}</strong>-<strong>{endIdx}</strong> / <strong>{total}</strong>
       </div>
 
-      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+      <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
         <button
           onClick={handlePrev}
           disabled={page === 1}

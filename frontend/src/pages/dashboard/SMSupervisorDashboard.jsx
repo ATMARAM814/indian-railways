@@ -181,20 +181,15 @@ const SMSupervisorDashboard = () => {
   const renderPaginationControls = (currentPage, totalPages, totalCount, onPageChange) => {
     if (totalPages <= 1) return null;
     return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
+      <div className="pagination-responsive-bar" style={{
         marginTop: '16px',
-        padding: '10px 16px',
-        backgroundColor: '#FFFFFF',
         borderRadius: '8px',
         border: '1px solid #D7E3EF'
       }}>
-        <span style={{ fontSize: '13px', color: '#64748B' }}>
+        <span className="pagination-info-text">
           Showing <strong style={{ color: '#0F172A' }}>{((currentPage - 1) * pageSize) + 1}</strong> to <strong style={{ color: '#0F172A' }}>{Math.min(currentPage * pageSize, totalCount)}</strong> of <strong style={{ color: '#0F172A' }}>{totalCount}</strong> records
         </span>
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div className="pagination-controls-group">
           <button
             onClick={() => onPageChange(currentPage - 1)}
             disabled={currentPage === 1}

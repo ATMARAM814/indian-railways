@@ -284,20 +284,11 @@ const WorkforcePageLayout = ({
 
             {/* Pagination Controls */}
             {pagination.totalPages > 1 && (
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginTop: '20px',
-                padding: '12px 24px',
-                backgroundColor: '#FFFFFF',
-                borderRadius: '8px',
-                border: '1px solid #D7E3EF'
-              }}>
-                <span style={{ fontSize: '13px', color: '#64748B' }}>
+              <div className="pagination-responsive-bar" style={{ marginTop: '20px', borderRadius: '8px', border: '1px solid #D7E3EF' }}>
+                <span className="pagination-info-text">
                   Showing <strong style={{ color: '#0F172A' }}>{((activePage - 1) * 10) + 1}</strong> to <strong style={{ color: '#0F172A' }}>{Math.min(activePage * 10, pagination.total)}</strong> of <strong style={{ color: '#0F172A' }}>{pagination.total}</strong> records
                 </span>
-                <div style={{ display: 'flex', gap: '8px' }}>
+                <div className="pagination-controls-group">
                   <button
                     onClick={() => handlePageChange(activePage - 1)}
                     disabled={activePage === 1}

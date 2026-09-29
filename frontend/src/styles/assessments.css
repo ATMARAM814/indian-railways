@@ -2489,3 +2489,135 @@
   }
 }
 
+/* =========================================================
+   RESPONSIVE ROLE LIST HEADER & ACTION BUTTONS
+   ========================================================= */
+.role-list-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.role-list-title-group {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  flex: 1;
+  min-width: 260px;
+}
+
+.role-list-title-text h1 {
+  font-size: 24px;
+  font-weight: 800;
+  color: #0B2341;
+  margin-bottom: 4px;
+  line-height: 1.25;
+}
+
+.role-list-title-text p {
+  font-size: 14px;
+  color: #64748B;
+  line-height: 1.4;
+}
+
+.role-list-actions-group {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.role-action-btn {
+  height: 42px;
+  padding: 0 20px;
+  font-size: 14px;
+  font-weight: 700;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.role-action-btn.export-btn {
+  border: 1px solid #CBD5E1;
+  background-color: #FFFFFF;
+  color: #0B2341;
+  box-shadow: 0 1px 2px rgba(11, 35, 65, 0.05);
+}
+
+.role-action-btn.export-btn:hover {
+  background-color: #EEF6FC;
+}
+
+.role-action-btn.schedule-btn {
+  border: none;
+  background-color: #2B5CE6;
+  color: #FFFFFF;
+  box-shadow: 0 4px 6px -1px rgba(43, 92, 230, 0.2);
+}
+
+.role-action-btn.schedule-btn:hover {
+  background-color: #1E40AF;
+}
+
+@media (max-width: 768px) {
+  .role-list-header-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+
+  .role-list-title-group {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .role-list-title-text h1 {
+    font-size: 20px;
+  }
+
+  .role-list-title-text p {
+    font-size: 13px;
+  }
+
+  .role-list-actions-group {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1.35fr;
+    gap: 10px;
+  }
+
+  .role-action-btn {
+    width: 100%;
+    height: 38px;
+    padding: 0 10px;
+    font-size: 12.5px;
+    white-space: normal;
+    text-align: center;
+    line-height: 1.2;
+  }
+}
+
+@media (max-width: 480px) {
+  .role-list-title-text h1 {
+    font-size: 18px;
+  }
+
+  .role-list-actions-group {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .role-action-btn {
+    height: 36px;
+    padding: 0 6px;
+    font-size: 11.5px;
+  }
+}
+
