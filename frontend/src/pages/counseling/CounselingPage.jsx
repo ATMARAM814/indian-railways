@@ -467,15 +467,15 @@ const CounselingPage = () => {
   if (error) {
     return (
       <DashboardLayout>
-        <div style={{
-          padding: '24px 32px',
+        <div className="counseling-page-container" style={{
           fontFamily: "'Poppins', 'Inter', sans-serif",
           display: 'flex',
           flexDirection: 'column',
           gap: '24px',
           maxWidth: '1200px',
           margin: '0 auto',
-          width: '100%'
+          width: '100%',
+          boxSizing: 'border-box'
         }}>
           {/* Header Row */}
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
@@ -644,13 +644,13 @@ const CounselingPage = () => {
 
     return (
       <DashboardLayout>
-        <div style={{
-          padding: '24px 32px',
+        <div className="counseling-page-container" style={{
           fontFamily: "'Poppins', 'Inter', sans-serif",
           display: 'flex',
           flexDirection: 'column',
           gap: '24px',
-          width: '100%'
+          width: '100%',
+          boxSizing: 'border-box'
         }}>
           {/* Header Row */}
           {currentTab === 'landing' ? (

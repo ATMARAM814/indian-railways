@@ -20,21 +20,20 @@ export const CategoryDistributionChart = ({ data }) => {
   }));
 
   return (
-    <div style={{
-      backgroundColor: '#FFFFFF',
-      border: '1px solid #D7E3EF',
-      borderRadius: '16px',
-      padding: '24px',
-      boxShadow: '0 1px 3px rgba(11, 35, 65, 0.05)',
+    <div className="trend-card-full" style={{
       display: 'flex',
       flexDirection: 'column',
       height: '100%',
-      minHeight: '300px'
+      minHeight: '300px',
+      minWidth: 0,
+      maxWidth: '100%',
+      boxSizing: 'border-box',
+      overflow: 'hidden'
     }}>
       <h3 style={{ margin: '0 0 20px 0', fontSize: '15px', fontWeight: 700, color: '#0F172A' }}>
         Staff Category Distribution
       </h3>
-      <div style={{ flex: 1, width: '100%', minHeight: '200px' }}>
+      <div style={{ flex: 1, width: '100%', minHeight: '200px', minWidth: 0, maxWidth: '100%', overflow: 'hidden' }}>
         <div className="chart-scroll-container">
           <div style={{ minWidth: isMobile ? `${Math.max(800, chartData.length * 130)}px` : 'auto', width: '100%' }}>
             <ResponsiveContainer width="100%" height={200}>
