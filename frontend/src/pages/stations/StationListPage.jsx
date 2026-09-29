@@ -337,7 +337,7 @@ const StationListPage = () => {
           <ErrorState title="Error Loading Stations" message={error} />
         ) : (
           <div className="staff-table-card">
-            <div className="staff-table-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="staff-table-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <h3 className="staff-table-title">Operational Stations Roll</h3>
                 <span className="staff-table-badge">Active Stations: {stations.length}</span>
