@@ -20,17 +20,17 @@
     const user = await findUserByHrmsId(hrmsId);
 
     if (!user) {
-      throw new Error("User not found");
+      throw new Error("Invalid HRMS ID or password");
     }
 
     if (user.status !== "active") {
-      throw new Error("User account is inactive");
+      throw new Error("Invalid HRMS ID or password");
     }
     const credential =
       await findCredentialByHrmsId(hrmsId);
 
     if (!credential) {
-      throw new Error("Credentials not found");
+      throw new Error("Invalid HRMS ID or password");
     }
 
     const isPasswordValid =
@@ -40,7 +40,7 @@
       );
 
     if (!isPasswordValid) {
-      throw new Error("Invalid password");
+      throw new Error("Invalid HRMS ID or password");
     }
 
     const token = jwt.sign(
