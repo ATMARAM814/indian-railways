@@ -903,6 +903,77 @@
   border: 1px solid #E2E8F0;
 }
 
+/* Marks entry cell and single input */
+.marks-entry-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.marks-box-input {
+  width: 58px;
+  height: 38px;
+  padding: 4px 6px;
+  font-size: 1rem;
+  font-weight: 700;
+  text-align: center;
+  border: 1.5px solid #CBD5E1;
+  border-radius: 8px;
+  color: #0F172A;
+  background: #FFFFFF;
+  outline: none;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.marks-box-input:focus {
+  border-color: #2B5CE6;
+  box-shadow: 0 0 0 3px rgba(43, 92, 230, 0.18);
+  background: #FFFFFF;
+}
+
+.marks-box-input::placeholder {
+  color: #94A3B8;
+  font-weight: 500;
+}
+
+.marks-box-input.marks-box-error {
+  border-color: #EF4444 !important;
+  background-color: #FEF2F2 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
+}
+
+.marks-out-of-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #475569;
+  white-space: nowrap;
+}
+
+.marks-display-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  border-radius: 6px;
+}
+
+.marks-display-pill .marks-val {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #1D4ED8;
+}
+
+.marks-display-pill .marks-denom {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #64748B;
+}
+
 /* Operational details styles */
 .operational-details-section {
   background: #FFFFFF;

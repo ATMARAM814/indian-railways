@@ -84,6 +84,8 @@ const AssessmentFormPage = () => {
           const questionsRes = await handleGetYesNoQuestions(detailsRes.data.assessed_role_code);
           if (questionsRes.success) {
             setYesNoQuestions(questionsRes.data);
+            const qMap = new Map();
+            questionsRes.data.forEach((q) => qMap.set(q.question_id, q));
 
             if (isViewMode || detailsRes.data.status === 'completed') {
               // Read-only or completed mode - fetch submitted answers
@@ -91,7 +93,15 @@ const AssessmentFormPage = () => {
               if (answersRes.success) {
                 const ansDict = {};
                 answersRes.data.forEach((a) => {
-                  ansDict[a.question_id] = a.answer;
+                  const q = qMap.get(a.question_id);
+                  const maxMarks = q?.marks_per_question || 0;
+                  if (a.marks_awarded !== undefined && a.marks_awarded !== null) {
+                    ansDict[a.question_id] = Number(a.marks_awarded);
+                  } else if (a.answer === true) {
+                    ansDict[a.question_id] = maxMarks;
+                  } else if (a.answer === false) {
+                    ansDict[a.question_id] = 0;
+                  }
                 });
                 setAnswers(ansDict);
               }
@@ -101,7 +111,13 @@ const AssessmentFormPage = () => {
               if (draftRes.success && draftRes.data.length > 0) {
                 const ansDict = {};
                 draftRes.data.forEach((d) => {
-                  ansDict[d.question_id] = d.answer;
+                  const q = qMap.get(d.question_id);
+                  const maxMarks = q?.marks_per_question || 0;
+                  if (d.marks_awarded !== undefined && d.marks_awarded !== null && d.marks_awarded !== '') {
+                    ansDict[d.question_id] = Number(d.marks_awarded);
+                  } else if (d.answer === true) {
+                    ansDict[d.question_id] = maxMarks;
+                  }
                 });
                 setAnswers(ansDict);
               }
@@ -155,8 +171,9 @@ const AssessmentFormPage = () => {
   const calculateChecklistScore = () => {
     let score = 0;
     yesNoQuestions.forEach((q) => {
-      if (answers[q.question_id] === true) {
-        score += q.marks_per_question || 0;
+      const val = answers[q.question_id];
+      if (val !== undefined && val !== null && val !== '') {
+        score += Math.min(q.marks_per_question || 0, Math.max(0, Number(val) || 0));
       }
     });
     return score;
@@ -166,8 +183,11 @@ const AssessmentFormPage = () => {
     let score = 0;
     yesNoQuestions.forEach((q) => {
       const sec = (q.section_code || '').toUpperCase();
-      if ((sec === 'ALERTNESS' || sec.includes('ALERT')) && answers[q.question_id] === true) {
-        score += q.marks_per_question || 0;
+      if (sec === 'ALERTNESS' || sec.includes('ALERT')) {
+        const val = answers[q.question_id];
+        if (val !== undefined && val !== null && val !== '') {
+          score += Math.min(q.marks_per_question || 0, Math.max(0, Number(val) || 0));
+        }
       }
     });
     return score;
@@ -178,12 +198,13 @@ const AssessmentFormPage = () => {
     setSavingDraft(true);
 
     const answersPayload = yesNoQuestions.map((q) => {
-      const answerVal = answers[q.question_id];
-      const marksAwarded = answerVal === true ? q.marks_per_question : 0;
+      const rawVal = answers[q.question_id];
+      const hasVal = rawVal !== undefined && rawVal !== null && rawVal !== '';
+      const marksAwarded = hasVal ? Math.min(q.marks_per_question || 0, Math.max(0, Number(rawVal) || 0)) : null;
       return {
         questionId: q.question_id,
         sectionCode: q.section_code,
-        answer: answerVal === undefined ? null : answerVal,
+        answer: hasVal ? marksAwarded > 0 : null,
         marksAwarded
       };
     });
@@ -201,8 +222,11 @@ const AssessmentFormPage = () => {
   const onSubmit = async () => {
     setFeedback(null);
 
-    // 1. Validate that all Yes/No checklist questions are answered
-    const unanswered = yesNoQuestions.filter((q) => answers[q.question_id] === undefined);
+    // 1. Validate that all checklist questions have valid marks entered
+    const unanswered = yesNoQuestions.filter((q) => {
+      const val = answers[q.question_id];
+      return val === undefined || val === null || val === '' || isNaN(Number(val));
+    });
 
     // 2. Validate mandatory Phase 3 operational fields
     const isMcqMissing = mcqScore === '' || mcqScore === null || mcqScore === undefined || isNaN(Number(mcqScore));
@@ -220,7 +244,7 @@ const AssessmentFormPage = () => {
       if (unanswered.length > 0) {
         const firstMissing = unanswered[0];
         const count = unanswered.length;
-        const msg = `Evaluation cannot be submitted: ${count} checklist question${count > 1 ? 's are' : ' is'} unanswered. Auto-scrolled to the first missing question. Please answer all questions.`;
+        const msg = `Evaluation cannot be submitted: ${count} question${count > 1 ? 's do' : ' does'} not have marks entered. Auto-scrolled to the first missing question. Please enter marks for all questions.`;
 
         setFeedback({
           type: 'error',
@@ -231,8 +255,8 @@ const AssessmentFormPage = () => {
           const el = document.getElementById(`question-row-${firstMissing.question_id}`);
           if (el) {
             el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            const btn = el.querySelector('button');
-            if (btn) btn.focus();
+            const input = el.querySelector('input');
+            if (input) input.focus();
           } else {
             window.scrollTo({ top: 400, behavior: 'smooth' });
           }
@@ -279,10 +303,12 @@ const AssessmentFormPage = () => {
     setSubmitting(true);
 
     const answersPayload = yesNoQuestions.map((q) => {
-      const answerVal = answers[q.question_id];
+      const val = answers[q.question_id];
+      const marksAwarded = Math.min(q.marks_per_question || 0, Math.max(0, Number(val) || 0));
       return {
         questionId: q.question_id,
-        answer: answerVal === true
+        answer: marksAwarded > 0,
+        marksAwarded
       };
     });
 
@@ -358,7 +384,7 @@ const AssessmentFormPage = () => {
             <p style={{ fontSize: '14px', color: '#64748B' }}>
               {isViewMode 
                 ? 'Read-only archived evaluation log.' 
-                : 'Fill yes/no performance metrics and set operational indicators.'}
+                : 'Fill evaluation marks across critical safety parameters and set operational indicators.'}
             </p>
           </div>
         </div>
@@ -416,11 +442,11 @@ const AssessmentFormPage = () => {
                 <div className="section-header" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
                   <ClipboardCheck size={18} style={{ color: '#64748B' }} />
                   <h3 className="section-title" style={{ fontSize: '16px', fontWeight: 700, color: '#0B2341', margin: 0 }}>
-                    Phase 2: Yes/No Evaluation Checklist (75 Marks)
+                    Phase 2: Performance Evaluation Marks (75 Marks)
                   </h3>
                 </div>
                 <p style={{ fontSize: '13px', color: '#64748B', margin: '0 0 12px 30px' }}>
-                  Fill yes/no performance metrics across critical safety parameters.
+                  Fill evaluation marks across critical safety parameters.
                 </p>
                 <div style={{
                   display: 'flex',
