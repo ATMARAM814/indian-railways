@@ -14,7 +14,7 @@ const ROLE_OPTIONS = [
   { value: 'PM', label: 'Pointsman (PM)' },
   { value: 'SM', label: 'Station Master (SM)' },
   { value: 'TM', label: 'Train Manager (TM)' },
-  { value: 'SS', label: 'SM Supervisor (SS)' },
+  { value: 'SS', label: 'SM Incharge (SS)' },
   { value: 'SMS', label: 'Station Master Supervisor (SMS)' },
   { value: 'CABIN MASTER', label: 'Cabin Master' },
   { value: 'SHM', label: 'Shunting Master (SHM)' },

@@ -7,7 +7,7 @@ const ROLES = [
   { code: 'SM', name: 'Station Master (SM)' },
   { code: 'TI', name: 'Traffic Inspector (TI)' },
   { code: 'TM', name: 'Train Manager (TM)' },
-  { code: 'SS', name: 'SM Incharge' },
+  { code: 'SS', name: 'SM Incharge (SS)' },
   { code: 'SMS', name: 'Station Master Supervisor (SMS)' },
   { code: 'Cabin Master', name: 'Cabin Master' },
   { code: 'SHM', name: 'Shunting Master (SHM)' }
