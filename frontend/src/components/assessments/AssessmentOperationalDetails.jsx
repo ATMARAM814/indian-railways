@@ -121,7 +121,6 @@ export const AssessmentOperationalDetails = ({
                 <option value="">Select Status</option>
                 <option value="Fit">Fit</option>
                 <option value="Unfit">Unfit</option>
-                <option value="Pending">Pending</option>
               </select>
               {details.pmeStatus === 'Unfit' && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#B45309', backgroundColor: '#FEF3C7', padding: '6px 10px', borderRadius: '6px', fontSize: '11.5px', fontWeight: 600, marginTop: '6px', border: '1px solid #FCD34D' }}>
