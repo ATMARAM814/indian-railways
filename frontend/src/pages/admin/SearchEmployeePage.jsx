@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, X, Loader2, Users, AlertCircle } from 'lucide-react';
+import { Search, X, Loader2, Users, AlertCircle, Download } from 'lucide-react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
-import { searchEmployees } from '../../services/workforce.service';
+import { searchEmployees, getWorkforceList } from '../../services/workforce.service';
 import { cleanDesignationText } from '../../utils/dashboardMappers';
+import { downloadTIWiseExcel } from '../../utils/excelExport';
 
 const SearchEmployeePage = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -10,6 +11,7 @@ const SearchEmployeePage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [hasSearched, setHasSearched] = useState(false);
+  const [tiExcelDownloading, setTiExcelDownloading] = useState(false);
 
   const debounceTimeoutRef = useRef(null);
 
@@ -95,13 +97,42 @@ const SearchEmployeePage = () => {
     <DashboardLayout>
       <div style={{ padding: '24px 32px', maxWidth: '1200px', margin: '0 auto', width: '100%' }}>
         {/* Page Header */}
-        <div style={{ marginBottom: '24px' }}>
-          <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#0F172A', margin: 0 }}>
-            Search Employee
-          </h1>
-          <p style={{ fontSize: '14px', color: '#64748B', margin: '6px 0 0 0' }}>
-            Look up registered employee records across the system by HRMS ID, Phone Number, or Name.
-          </p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '24px' }}>
+          <div>
+            <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#0F172A', margin: 0 }}>
+              Search Employee
+            </h1>
+            <p style={{ fontSize: '14px', color: '#64748B', margin: '6px 0 0 0' }}>
+              Look up registered employee records across the system by HRMS ID, Phone Number, or Name.
+            </p>
+          </div>
+          <button
+            onClick={() => downloadTIWiseExcel(getWorkforceList, setTiExcelDownloading)}
+            disabled={tiExcelDownloading}
+            title="Download TI-wise employee list as Excel (one sheet per TI)"
+            style={{
+              padding: '10px 18px',
+              fontSize: '13.5px',
+              fontWeight: 600,
+              color: '#15803D',
+              backgroundColor: '#F0FDF4',
+              border: '1.5px solid #86EFAC',
+              borderRadius: '8px',
+              cursor: tiExcelDownloading ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              transition: 'all 0.2s',
+              opacity: tiExcelDownloading ? 0.65 : 1,
+              whiteSpace: 'nowrap',
+              boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
+            }}
+            onMouseOver={(e) => { if (!tiExcelDownloading) { e.currentTarget.style.backgroundColor = '#DCFCE7'; e.currentTarget.style.borderColor = '#4ADE80'; } }}
+            onMouseOut={(e) => { e.currentTarget.style.backgroundColor = '#F0FDF4'; e.currentTarget.style.borderColor = '#86EFAC'; }}
+          >
+            <Download size={15} />
+            <span>{tiExcelDownloading ? 'Preparing Excel...' : 'TI-wise Employee List (Excel)'}</span>
+          </button>
         </div>
 
         {/* Search Bar Card */}
