@@ -106,20 +106,42 @@ const AssessmentFormPage = () => {
                 setAnswers(ansDict);
               }
             } else {
-              // Edit/Conduct mode - fetch draft answers if exists
-              const draftRes = await handleGetDraft(assessmentId);
-              if (draftRes.success && draftRes.data.length > 0) {
-                const ansDict = {};
-                draftRes.data.forEach((d) => {
-                  const q = qMap.get(d.question_id);
-                  const maxMarks = q?.marks_per_question || 0;
-                  if (d.marks_awarded !== undefined && d.marks_awarded !== null && d.marks_awarded !== '') {
-                    ansDict[d.question_id] = Number(d.marks_awarded);
-                  } else if (d.answer === true) {
-                    ansDict[d.question_id] = maxMarks;
+              // Edit/Conduct mode - check localStorage first, then backend draft
+              let restoredFromLocal = false;
+              try {
+                const localDraftRaw = localStorage.getItem(`res_assessment_draft_${assessmentId}`);
+                if (localDraftRaw) {
+                  const localDraft = JSON.parse(localDraftRaw);
+                  if (localDraft && typeof localDraft.answers === 'object') {
+                    setAnswers(localDraft.answers || {});
+                    if (localDraft.operationalDetails) {
+                      setOperationalDetails((prev) => ({ ...prev, ...localDraft.operationalDetails }));
+                    }
+                    if (localDraft.mcqScore !== undefined && localDraft.mcqScore !== null) {
+                      setMcqScore(localDraft.mcqScore);
+                    }
+                    restoredFromLocal = true;
                   }
-                });
-                setAnswers(ansDict);
+                }
+              } catch (e) {
+                console.warn('Failed to parse local draft:', e);
+              }
+
+              if (!restoredFromLocal) {
+                const draftRes = await handleGetDraft(assessmentId);
+                if (draftRes.success && draftRes.data.length > 0) {
+                  const ansDict = {};
+                  draftRes.data.forEach((d) => {
+                    const q = qMap.get(d.question_id);
+                    const maxMarks = q?.marks_per_question || 0;
+                    if (d.marks_awarded !== undefined && d.marks_awarded !== null && d.marks_awarded !== '') {
+                      ansDict[d.question_id] = Number(d.marks_awarded);
+                    } else if (d.answer === true) {
+                      ansDict[d.question_id] = maxMarks;
+                    }
+                  });
+                  setAnswers(ansDict);
+                }
               }
             }
           }
@@ -138,6 +160,46 @@ const AssessmentFormPage = () => {
       loadFormInfo();
     }
   }, [user, assessmentId, isViewMode]);
+
+  // Auto-save to localStorage on every change
+  useEffect(() => {
+    if (!isReadOnly && !loading && assessmentId) {
+      try {
+        const draftState = {
+          answers,
+          operationalDetails,
+          mcqScore,
+          updatedAt: Date.now()
+        };
+        localStorage.setItem(`res_assessment_draft_${assessmentId}`, JSON.stringify(draftState));
+      } catch (e) {
+        console.warn('Failed to save draft to localStorage', e);
+      }
+    }
+  }, [answers, operationalDetails, mcqScore, isReadOnly, loading, assessmentId]);
+
+  // Debounced auto-save to backend API so work is preserved on server
+  useEffect(() => {
+    if (isReadOnly || loading || !assessmentId || yesNoQuestions.length === 0) return;
+
+    const timer = setTimeout(() => {
+      const answersPayload = yesNoQuestions.map((q) => {
+        const answerVal = answers[q.question_id];
+        const marksAwarded = answerVal === true ? q.marks_per_question : 0;
+        return {
+          questionId: q.question_id,
+          sectionCode: q.section_code,
+          answer: answerVal === undefined ? null : answerVal,
+          marksAwarded
+        };
+      });
+      handleSaveDraft(assessmentId, answersPayload, { ...operationalDetails, mcqScore }).catch((e) => {
+        console.warn('Background auto-save failed:', e);
+      });
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, [answers, operationalDetails, mcqScore, isReadOnly, loading, assessmentId, yesNoQuestions]);
 
   if (!user) return <Navigate to="/login" replace />;
 
@@ -165,6 +227,11 @@ const AssessmentFormPage = () => {
       setAnswers({});
       setUnansweredIds([]);
       setOperationalErrors({});
+      try {
+        localStorage.removeItem(`res_assessment_draft_${assessmentId}`);
+      } catch (e) {
+        console.warn('Failed to clear local draft', e);
+      }
     }
   };
 
@@ -192,6 +259,29 @@ const AssessmentFormPage = () => {
     });
     return score;
   };
+
+  const allChecklistAnswered = yesNoQuestions.length > 0 && yesNoQuestions.every((q) => answers[q.question_id] !== undefined);
+  const isMcqValid = mcqScore !== '' && mcqScore !== null && mcqScore !== undefined && !isNaN(Number(mcqScore)) && Number(mcqScore) >= 0 && Number(mcqScore) <= 25;
+  const isAlcoholicValid = Boolean(operationalDetails.alcoholicStatus);
+  const isPmeFit = (operationalDetails.pmeStatus || '').toLowerCase() === 'fit';
+  const isPmeUnfit = (operationalDetails.pmeStatus || '').toLowerCase() === 'unfit';
+
+  const allMarksFilled = allChecklistAnswered && isMcqValid;
+  const isFormSubmittable = allChecklistAnswered && isMcqValid && isAlcoholicValid && isPmeFit;
+
+  let submittableValidationMsg = '';
+  if (!allChecklistAnswered) {
+    const unansweredCount = yesNoQuestions.filter((q) => answers[q.question_id] === undefined).length;
+    submittableValidationMsg = `${unansweredCount} checklist question${unansweredCount > 1 ? 's' : ''} still need${unansweredCount === 1 ? 's' : ''} to be answered.`;
+  } else if (!isMcqValid) {
+    submittableValidationMsg = 'Knowledge Marks (MCQ Test) must be filled between 0 and 25.';
+  } else if (!isAlcoholicValid) {
+    submittableValidationMsg = 'Alcoholic Status must be selected (Alcoholic or Non-Alcoholic).';
+  } else if (isPmeUnfit) {
+    submittableValidationMsg = 'Candidate is marked as PME Unfit. Evaluation submission is locked and marked Pending until PME status is updated to Fit.';
+  } else if (!isPmeFit) {
+    submittableValidationMsg = 'PME Status must be selected as "Fit" to activate submission.';
+  }
 
   const onSave = async () => {
     setFeedback(null);
@@ -231,13 +321,15 @@ const AssessmentFormPage = () => {
     // 2. Validate mandatory Phase 3 operational fields
     const isMcqMissing = mcqScore === '' || mcqScore === null || mcqScore === undefined || isNaN(Number(mcqScore));
     const isAlcoholicMissing = !operationalDetails.alcoholicStatus;
+    const isPmeMissingOrNotFit = !isPmeFit;
 
-    if (unanswered.length > 0 || isMcqMissing || isAlcoholicMissing) {
+    if (unanswered.length > 0 || isMcqMissing || isAlcoholicMissing || isPmeMissingOrNotFit) {
       const missingQIds = unanswered.map((q) => q.question_id);
       setUnansweredIds(missingQIds);
       setOperationalErrors({
         mcqScore: isMcqMissing,
-        alcoholicStatus: isAlcoholicMissing
+        alcoholicStatus: isAlcoholicMissing,
+        pmeStatus: isPmeMissingOrNotFit
       });
 
       // Priority 1: Unanswered checklist questions
@@ -295,6 +387,25 @@ const AssessmentFormPage = () => {
         }, 50);
         return;
       }
+
+      // Priority 4: PME Status not Fit
+      if (isPmeMissingOrNotFit) {
+        const pmeMsg = isPmeUnfit
+          ? 'Cannot submit evaluation: Candidate is PME Unfit. Evaluation remains in Pending status until medical fitness is certified as Fit.'
+          : 'Cannot submit evaluation: PME Status is mandatory and must be selected as "Fit".';
+        setFeedback({
+          type: 'error',
+          message: pmeMsg
+        });
+        setTimeout(() => {
+          const el = document.getElementById('pme-status-select');
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            el.focus();
+          }
+        }, 50);
+        return;
+      }
     }
 
     // Clear any previous errors
@@ -314,6 +425,11 @@ const AssessmentFormPage = () => {
 
     const res = await handleSubmitFinal(assessmentId, answersPayload, { ...operationalDetails, mcqScore });
     if (res.success) {
+      try {
+        localStorage.removeItem(`res_assessment_draft_${assessmentId}`);
+      } catch (e) {
+        console.warn('Failed to clear local draft', e);
+      }
       setFeedback({
         type: 'success',
         message: 'Evaluation submitted successfully! Scoped manager will review safety categories.'
@@ -552,6 +668,12 @@ const AssessmentFormPage = () => {
                 approvalRemark={assessmentResult?.approval_remark}
                 assessment={assessmentResult}
                 alcoholicStatus={operationalDetails.alcoholicStatus}
+                pmeStatus={operationalDetails.pmeStatus}
+                isFormSubmittable={isFormSubmittable}
+                submittableValidationMsg={submittableValidationMsg}
+                allMarksFilled={allMarksFilled}
+                answeredCount={yesNoQuestions.filter((q) => answers[q.question_id] !== undefined).length}
+                totalQuestionsCount={yesNoQuestions.length}
                 feedback={feedback}
               />
             )}

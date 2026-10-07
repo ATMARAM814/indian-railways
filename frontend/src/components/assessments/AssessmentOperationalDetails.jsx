@@ -105,21 +105,37 @@ export const AssessmentOperationalDetails = ({
 
         {/* PME Status */}
         <div className="op-item">
-          <label className="op-label">PME Status</label>
+          <label className="op-label">PME Status *</label>
           {readOnly ? (
             <div className="op-value-readonly">{details.pmeStatus || 'Not Specified'}</div>
           ) : (
-            <select
-              name="pmeStatus"
-              value={details.pmeStatus || ''}
-              onChange={handleInputChange}
-              className="op-input"
-            >
-              <option value="">Select Status</option>
-              <option value="Fit">Fit</option>
-              <option value="Unfit">Unfit</option>
-              <option value="Pending">Pending</option>
-            </select>
+            <>
+              <select
+                id="pme-status-select"
+                name="pmeStatus"
+                value={details.pmeStatus || ''}
+                onChange={handleInputChange}
+                className={`op-input ${errors.pmeStatus ? 'op-input-error' : ''} ${details.pmeStatus === 'Unfit' ? 'border-amber-400 bg-amber-50' : ''}`}
+                required
+              >
+                <option value="">Select Status</option>
+                <option value="Fit">Fit</option>
+                <option value="Unfit">Unfit</option>
+                <option value="Pending">Pending</option>
+              </select>
+              {details.pmeStatus === 'Unfit' && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#B45309', backgroundColor: '#FEF3C7', padding: '6px 10px', borderRadius: '6px', fontSize: '11.5px', fontWeight: 600, marginTop: '6px', border: '1px solid #FCD34D' }}>
+                  <AlertCircle size={14} style={{ flexShrink: 0, color: '#D97706' }} />
+                  <span>Candidate is PME Unfit. Evaluation submission is locked and marked PENDING until status is updated to Fit.</span>
+                </div>
+              )}
+              {errors.pmeStatus && (
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#DC2626', fontSize: '11.5px', fontWeight: 700, marginTop: '4px' }}>
+                  <AlertCircle size={13} style={{ flexShrink: 0 }} />
+                  PME Status is mandatory and must be 'Fit' to submit.
+                </span>
+              )}
+            </>
           )}
         </div>
 

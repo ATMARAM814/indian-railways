@@ -8,6 +8,9 @@ async function getPendingApprovalsForUser(userId, role) {
       a.approval_status,
       a.assessed_role_code,
       a.assessor_role_code,
+      COALESCE(NULLIF(assessor.designation, ''), (CASE WHEN a.assessor_role_code = 'TI' AND s_assessor.station_code IS NOT NULL THEN 'TI ' || s_assessor.station_code ELSE a.assessor_role_code END)) as assessor_designation,
+      s_assessor.station_code as assessor_station_code,
+      s_assessor.station_name as assessor_station_name,
 
       assessed.full_name as assessed_name,
       assessed.hrms_id as assessed_hrms_id,
@@ -32,6 +35,10 @@ async function getPendingApprovalsForUser(userId, role) {
       ON ssp.profile_id = assessed.id AND ssp.is_current = true
     LEFT JOIN stations s
       ON s.id = ssp.station_id
+    LEFT JOIN staff_station_postings ssp_assessor
+      ON ssp_assessor.profile_id = assessor.id AND ssp_assessor.is_current = true
+    LEFT JOIN stations s_assessor
+      ON s_assessor.id = ssp_assessor.station_id
     WHERE a.status = 'completed'
       AND a.approval_status = 'pending_approval'
       AND (

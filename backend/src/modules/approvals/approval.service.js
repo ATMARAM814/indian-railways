@@ -119,34 +119,38 @@ async function approveAssessmentService(
     );
   }
 
-  let categoryCode = 'D';
-  const pct = Number(assessment.percentage || 0);
-  const mcqScore = Number(assessment.mcq_score || 0);
-  const alertnessScore = Number(assessment.alertness_score || 0);
+  const isPmeUnfit = (assessment.pme_status || '').toLowerCase() === 'unfit';
 
-  if (assessment.alcoholic_status === 'Alcoholic' || pct <= 25) {
-    categoryCode = 'D';
-  } else if (mcqScore < 15 || alertnessScore < 15) {
-    categoryCode = 'C';
-  } else {
-    if (pct >= 80) {
-      categoryCode = 'A';
-    } else if (pct >= 50) {
-      categoryCode = 'B';
-    } else if (pct >= 26) {
+  if (!isPmeUnfit) {
+    let categoryCode = 'D';
+    const pct = Number(assessment.percentage || 0);
+    const mcqScore = Number(assessment.mcq_score || 0);
+    const alertnessScore = Number(assessment.alertness_score || 0);
+
+    if (assessment.alcoholic_status === 'Alcoholic' || pct <= 25) {
+      categoryCode = 'D';
+    } else if (mcqScore < 15 || alertnessScore < 15) {
       categoryCode = 'C';
     } else {
-      categoryCode = 'D';
+      if (pct >= 80) {
+        categoryCode = 'A';
+      } else if (pct >= 50) {
+        categoryCode = 'B';
+      } else if (pct >= 26) {
+        categoryCode = 'C';
+      } else {
+        categoryCode = 'D';
+      }
     }
-  }
 
-  const catObj = await getCategoryByCode(categoryCode);
-  if (catObj) {
-    await assignUserCategory({
-      profileId: assessment.assessed_user_id,
-      categoryId: catObj.id,
-      assignedBy: approverId,
-    });
+    const catObj = await getCategoryByCode(categoryCode);
+    if (catObj) {
+      await assignUserCategory({
+        profileId: assessment.assessed_user_id,
+        categoryId: catObj.id,
+        assignedBy: approverId,
+      });
+    }
   }
 
   // Auto-archive counseling checklist if all subjects are completed

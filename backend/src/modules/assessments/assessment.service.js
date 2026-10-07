@@ -290,6 +290,17 @@ async function submitEvaluation(assessmentId, userId, submittedAnswers, operatio
     );
   }
 
+  if (!operationalDetails || (operationalDetails.pmeStatus || '').toLowerCase() !== 'fit') {
+    throw new Error(
+      "Cannot submit evaluation: PME status must be 'Fit'. If candidate is Unfit, evaluation remains in Pending draft status."
+    );
+  }
+
+  if (!operationalDetails.alcoholicStatus) {
+    throw new Error(
+      "Cannot submit evaluation: Alcoholic status is mandatory."
+    );
+  }
   const roleCode = assessment.assessed_role_code;
 
   const questions =
