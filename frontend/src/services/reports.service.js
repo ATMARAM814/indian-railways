@@ -34,3 +34,9 @@ export const getStaffPerformanceReport = async (params = {}) => {
   const res = await apiClient.get('/reports/staff-performance', { params });
   return res.data;
 };
+
+export const getAssessmentsReport = async (params = {}) => {
+  const res = await apiClient.get('/reports/assessments', { params });
+  return res.data;
+};
+

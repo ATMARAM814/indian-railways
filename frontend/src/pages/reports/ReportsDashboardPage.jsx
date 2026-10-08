@@ -11,16 +11,20 @@ import WorkforcePerformanceTable from '../../components/reports/WorkforcePerform
 import StationPerformanceTable from '../../components/reports/StationPerformanceTable';
 import AssessmentCycleTable from '../../components/reports/AssessmentCycleTable';
 import { KpiCardsSkeleton, ChartsSkeleton, TableSkeleton } from '../../components/reports/ReportSkeletons';
-import { FileSpreadsheet, Download } from 'lucide-react';
-import { getStaffPerformanceReport } from '../../services/reports.service';
+import { Download } from 'lucide-react';
+import { 
+  getStaffPerformanceReport, 
+  getReportsHighRisk, 
+  getReportsStations, 
+  getReportsCycles 
+} from '../../services/reports.service';
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 const ReportsDashboardPage = () => {
   const { user } = useAuth();
   const {
-    loading,
     summaryLoading,
     performanceLoading,
     tableLoading,
@@ -52,27 +56,29 @@ const ReportsDashboardPage = () => {
       
       if (activeTab === 'workforce') {
         filename = 'Workforce_Performance_Report.xlsx';
-        const res = await getStaffPerformanceReport({ ...filters, limit: 10000 });
+        const res = await getStaffPerformanceReport({ ...filters, limit: 10000, page: 1 });
         const records = res?.data?.records || [];
         dataToExport = records.map(emp => ({
-          'Employee Name': emp.fullName,
-          'HRMS ID': emp.hrmsId,
-          'Role': emp.role,
+          'Employee Name': emp.fullName || 'N/A',
+          'HRMS ID': emp.hrmsId || 'N/A',
+          'Role': emp.role || 'N/A',
           'Station': emp.stationName || 'N/A',
           'Category': emp.category ? `Category ${emp.category}` : 'N/A',
-          'Latest Score': emp.latestScore ? `${Number(emp.latestScore).toFixed(1)}%` : '-',
-          'Average Score': emp.averageScore ? `${Number(emp.averageScore).toFixed(1)}%` : '-',
+          'Latest Score': emp.latestScore != null ? `${Number(emp.latestScore).toFixed(1)}%` : '-',
+          'Average Score': emp.averageScore != null ? `${Number(emp.averageScore).toFixed(1)}%` : '-',
           'Last Assessed': emp.lastAssessmentDate ? new Date(emp.lastAssessmentDate).toLocaleDateString('en-GB') : '-',
           'Approval Status': emp.approvalStatus || '-'
         }));
       } else if (activeTab === 'high-risk') {
         filename = 'High_Risk_Staff_Report.xlsx';
-        dataToExport = highRisk.map(staff => ({
-          'Employee Name': staff.fullName,
-          'HRMS ID': staff.hrmsId,
-          'Role': staff.role,
-          'Station': staff.stationCode || 'N/A',
-          'Latest Score': staff.latestScore ? `${Number(staff.latestScore).toFixed(1)}%` : '0.0%',
+        const res = await getReportsHighRisk(filters);
+        const records = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : highRisk);
+        dataToExport = records.map(staff => ({
+          'Employee Name': staff.fullName || 'N/A',
+          'HRMS ID': staff.hrmsId || 'N/A',
+          'Role': staff.role || 'N/A',
+          'Station': staff.stationCode || staff.stationName || 'N/A',
+          'Latest Score': staff.latestScore != null ? `${Number(staff.latestScore).toFixed(1)}%` : '0.0%',
           'Category': staff.category || 'D',
           'Assessor': staff.assessorName || 'System',
           'Reporting Authority': staff.reportingAuthority || 'N/A',
@@ -80,11 +86,13 @@ const ReportsDashboardPage = () => {
         }));
       } else if (activeTab === 'stations') {
         filename = 'Station_Performance_Report.xlsx';
-        dataToExport = stations.map(st => ({
-          'Station Code': st.stationCode,
-          'Station Name': st.stationName,
+        const res = await getReportsStations(filters);
+        const records = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : stations);
+        dataToExport = records.map(st => ({
+          'Station Code': st.stationCode || 'N/A',
+          'Station Name': st.stationName || 'N/A',
           'Total Employees': st.totalEmployees || 0,
-          'Average Score': st.averageScore ? `${Number(st.averageScore).toFixed(1)}%` : '0.0%',
+          'Average Score': st.averageScore != null ? `${Number(st.averageScore).toFixed(1)}%` : '0.0%',
           'Category A Count': st.categoryA || 0,
           'Category B Count': st.categoryB || 0,
           'Category C Count': st.categoryC || 0,
@@ -94,14 +102,17 @@ const ReportsDashboardPage = () => {
         }));
       } else if (activeTab === 'cycles') {
         filename = 'Assessment_Cycle_Report.xlsx';
-        dataToExport = cycles.map(cy => ({
-          'Cycle Name': cy.cycleName,
+        const res = await getReportsCycles(filters);
+        const records = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : cycles);
+        dataToExport = records.map(cy => ({
+          'Cycle Name': cy.cycleName || 'Annual Assessment',
+          'Assessment Type': cy.assessmentType || 'Periodic Assessment',
           'Total Assessments': cy.totalAssessments || 0,
           'Completed Assessments': cy.completedCount || 0,
           'Pending Assessments': cy.pendingCount || 0,
           'Approved Assessments': cy.approvedCount || 0,
           'Rejected Assessments': cy.rejectedCount || 0,
-          'Average Score': cy.averageScore ? `${Number(cy.averageScore).toFixed(1)}%` : '0.0%'
+          'Average Score': cy.averageScore != null ? `${Number(cy.averageScore).toFixed(1)}%` : '0.0%'
         }));
       }
 
@@ -144,30 +155,32 @@ const ReportsDashboardPage = () => {
       if (activeTab === 'workforce') {
         title = 'Workforce Performance Report';
         filename = 'Workforce_Performance_Report.pdf';
-        const res = await getStaffPerformanceReport({ ...filters, limit: 10000 });
+        const res = await getStaffPerformanceReport({ ...filters, limit: 10000, page: 1 });
         const records = res?.data?.records || [];
         headers = ['Employee Name', 'HRMS ID', 'Role', 'Station', 'Category', 'Latest Score', 'Average Score', 'Last Assessed', 'Approval Status'];
         rows = records.map(emp => [
-          emp.fullName,
-          emp.hrmsId,
-          emp.role,
+          emp.fullName || 'N/A',
+          emp.hrmsId || 'N/A',
+          emp.role || 'N/A',
           emp.stationName || 'N/A',
           emp.category ? `Category ${emp.category}` : 'N/A',
-          emp.latestScore ? `${Number(emp.latestScore).toFixed(1)}%` : '-',
-          emp.averageScore ? `${Number(emp.averageScore).toFixed(1)}%` : '-',
+          emp.latestScore != null ? `${Number(emp.latestScore).toFixed(1)}%` : '-',
+          emp.averageScore != null ? `${Number(emp.averageScore).toFixed(1)}%` : '-',
           emp.lastAssessmentDate ? new Date(emp.lastAssessmentDate).toLocaleDateString('en-GB') : '-',
           emp.approvalStatus || '-'
         ]);
       } else if (activeTab === 'high-risk') {
         title = 'High Risk Staff Monitoring Report';
         filename = 'High_Risk_Staff_Report.pdf';
+        const res = await getReportsHighRisk(filters);
+        const records = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : highRisk);
         headers = ['Employee Name', 'HRMS ID', 'Role', 'Station', 'Latest Score', 'Category', 'Assessor', 'Reporting Authority', 'Last Assessed'];
-        rows = highRisk.map(staff => [
-          staff.fullName,
-          staff.hrmsId,
-          staff.role,
-          staff.stationCode || 'N/A',
-          staff.latestScore ? `${Number(staff.latestScore).toFixed(1)}%` : '0.0%',
+        rows = records.map(staff => [
+          staff.fullName || 'N/A',
+          staff.hrmsId || 'N/A',
+          staff.role || 'N/A',
+          staff.stationCode || staff.stationName || 'N/A',
+          staff.latestScore != null ? `${Number(staff.latestScore).toFixed(1)}%` : '0.0%',
           staff.category || 'D',
           staff.assessorName || 'System',
           staff.reportingAuthority || 'N/A',
@@ -176,12 +189,14 @@ const ReportsDashboardPage = () => {
       } else if (activeTab === 'stations') {
         title = 'Station Performance Analytics';
         filename = 'Station_Performance_Report.pdf';
+        const res = await getReportsStations(filters);
+        const records = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : stations);
         headers = ['Station Code', 'Station Name', 'Total Employees', 'Average Score', 'Cat A', 'Cat B', 'Cat C', 'Cat D', 'High Risk', 'Pending Appr.'];
-        rows = stations.map(st => [
-          st.stationCode,
-          st.stationName,
+        rows = records.map(st => [
+          st.stationCode || 'N/A',
+          st.stationName || 'N/A',
           st.totalEmployees || 0,
-          st.averageScore ? `${Number(st.averageScore).toFixed(1)}%` : '0.0%',
+          st.averageScore != null ? `${Number(st.averageScore).toFixed(1)}%` : '0.0%',
           st.categoryA || 0,
           st.categoryB || 0,
           st.categoryC || 0,
@@ -192,15 +207,18 @@ const ReportsDashboardPage = () => {
       } else if (activeTab === 'cycles') {
         title = 'Assessment Cycle Analytics';
         filename = 'Assessment_Cycle_Report.pdf';
-        headers = ['Cycle Name', 'Total Assessments', 'Completed', 'Pending', 'Approved', 'Rejected', 'Average Score'];
-        rows = cycles.map(cy => [
-          cy.cycleName,
+        const res = await getReportsCycles(filters);
+        const records = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : cycles);
+        headers = ['Cycle Name', 'Assessment Type', 'Total Assessments', 'Completed', 'Pending', 'Approved', 'Rejected', 'Average Score'];
+        rows = records.map(cy => [
+          cy.cycleName || 'Annual Assessment',
+          cy.assessmentType || 'Periodic Assessment',
           cy.totalAssessments || 0,
           cy.completedCount || 0,
           cy.pendingCount || 0,
           cy.approvedCount || 0,
           cy.rejectedCount || 0,
-          cy.averageScore ? `${Number(cy.averageScore).toFixed(1)}%` : '0.0%'
+          cy.averageScore != null ? `${Number(cy.averageScore).toFixed(1)}%` : '0.0%'
         ]);
       }
 
@@ -220,16 +238,22 @@ const ReportsDashboardPage = () => {
       doc.setTextColor(100, 116, 139);
       doc.text(`Generated on: ${new Date().toLocaleDateString('en-GB')} | Total Records: ${rows.length}`, 14, 22);
 
-      doc.autoTable({
+      const tableOptions = {
         head: [headers],
         body: rows,
         startY: 28,
         theme: 'grid',
-        headStyles: { fillColor: [11, 35, 65], textColor: [255, 255, 255], fontSize: 9 },
+        headStyles: { fillColor: [11, 35, 65], textColor: [255, 255, 255], fontSize: 9, fontStyle: 'bold' },
         bodyStyles: { fontSize: 8, textColor: [51, 65, 85] },
         alternateRowStyles: { fillColor: [248, 250, 252] },
         margin: { top: 30 }
-      });
+      };
+
+      if (typeof doc.autoTable === 'function') {
+        doc.autoTable(tableOptions);
+      } else {
+        autoTable(doc, tableOptions);
+      }
 
       doc.save(filename);
     } catch (err) {
@@ -355,18 +379,12 @@ const ReportsDashboardPage = () => {
               } else if (kpiTitle === 'Total Assessments') {
                 targetFilters = {};
                 targetTab = 'workforce';
-              } else if (kpiTitle === 'Pending Approvals') {
-                targetFilters = { assessmentStatus: 'pending_approval' };
-                targetTab = 'workforce';
               } else if (kpiTitle === 'Category A Staff') {
                 targetFilters = { category: 'A' };
                 targetTab = 'workforce';
-              } else if (kpiTitle === 'Category D (High Risk) Staff' || kpiTitle === 'High Risk Staff') {
+              } else if (kpiTitle === 'Category D (High Risk) Staff') {
                 targetFilters = { category: 'D' };
                 targetTab = 'high-risk';
-              } else if (kpiTitle === 'Active Stations') {
-                targetFilters = {};
-                targetTab = 'stations';
               } else if (kpiTitle === 'Completed Cycles') {
                 targetFilters = {};
                 targetTab = 'cycles';

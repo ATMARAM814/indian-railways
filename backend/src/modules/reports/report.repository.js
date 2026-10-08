@@ -114,6 +114,14 @@ function buildAssessmentsWhere(filters, scope, values) {
     values.push(filters.approvalStatus);
     conditions.push(`a.approval_status = $${values.length}`);
   }
+  if (filters.cycle || filters.assessmentCycle || filters.cycleName) {
+    values.push(filters.cycle || filters.assessmentCycle || filters.cycleName);
+    conditions.push(`a.assessment_cycle = $${values.length}`);
+  }
+  if (filters.assessmentType || filters.type) {
+    values.push(filters.assessmentType || filters.type);
+    conditions.push(`a.assessment_type = $${values.length}`);
+  }
   if (filters.fromDate) {
     values.push(filters.fromDate);
     conditions.push(`a.created_at >= $${values.length}::timestamp`);
@@ -149,6 +157,7 @@ async function getAssessmentsReport(filters, scope) {
       assessed.hrms_id as "hrmsId",
       a.assessed_role_code as "role",
       s.station_name as "stationName",
+      s.station_code as "stationCode",
       sc.category_code as "category",
       CASE
         WHEN sc.category_code = 'A' THEN 'LOW'
@@ -163,6 +172,8 @@ async function getAssessmentsReport(filters, scope) {
       a.evaluation_score as "evaluationScore",
       a.total_score as "totalScore",
       a.percentage as "percentage",
+      a.assessment_cycle as "assessmentCycle",
+      a.assessment_type as "assessmentType",
       a.created_at as "createdAt",
       a.evaluated_at as "completedAt",
       a.approved_at as "approvedAt",
@@ -1214,7 +1225,8 @@ async function getReportsCyclesDb(filters, scope) {
       ${whereProfileClause}
     )
     SELECT
-      COALESCE(a.assessment_cycle, 'General Assessment') as "cycleName",
+      COALESCE(a.assessment_cycle, 'Annual Assessment') as "cycleName",
+      COALESCE(a.assessment_type, 'Periodic Assessment') as "assessmentType",
       COUNT(a.id)::int as "totalAssessments",
       COUNT(a.id) FILTER (WHERE a.status = 'completed')::int as "completedCount",
       COUNT(a.id) FILTER (WHERE a.status NOT IN ('completed', 'cancelled', 'invalid_test_record'))::int as "pendingCount",
@@ -1224,8 +1236,8 @@ async function getReportsCyclesDb(filters, scope) {
     FROM assessments a
     JOIN scoped_profiles sp ON sp.id = a.assessed_user_id
     WHERE a.status NOT IN ('cancelled', 'invalid_test_record')
-    GROUP BY a.assessment_cycle
-    ORDER BY "cycleName" ASC;
+    GROUP BY a.assessment_cycle, a.assessment_type
+    ORDER BY "cycleName" ASC, "assessmentType" ASC;
   `;
 
   const result = await pool.query(query, values.slice(0, profileValuesCount));
