@@ -10,16 +10,15 @@ export const StationIntelligenceSkeleton = () => {
       {/* Command Header Skeleton */}
       <div className="skeleton-card" style={{ height: '90px', borderRadius: '16px' }}></div>
 
-      {/* KPI Grid Skeleton */}
-      <div className="station-overview-grid" style={{ display: 'grid', gap: '16px' }}>
-        {Array.from({ length: 6 }).map((_, idx) => (
-          <div key={idx} className="skeleton-card" style={{ height: '80px', borderRadius: '12px' }}></div>
+      {/* Role Stat Grid Skeleton */}
+      <div className="role-stat-grid-5">
+        {Array.from({ length: 5 }).map((_, idx) => (
+          <div key={idx} className="skeleton-card" style={{ height: '90px', borderRadius: '12px' }}></div>
         ))}
       </div>
 
-      {/* Two Column Grid */}
-      <div className="distribution-grid" style={{ display: 'grid', gap: '24px' }}>
-        <div className="skeleton-card" style={{ height: '300px', borderRadius: '16px' }}></div>
+      {/* Distribution Chart Skeleton */}
+      <div style={{ width: '100%' }}>
         <div className="skeleton-card" style={{ height: '300px', borderRadius: '16px' }}></div>
       </div>
 

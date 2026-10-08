@@ -1,96 +1,105 @@
 // StationOverviewCards.jsx
 import React from 'react';
-import { Users, Clock, CheckCircle2, ShieldAlert, Award, AlertTriangle } from 'lucide-react';
+import { Users, UserCog, UserCheck, Building2, Compass } from 'lucide-react';
 
-export const StationOverviewCards = ({ overview }) => {
-  if (!overview) return null;
-
-  const cards = [
-    {
-      title: 'Total Workforce',
-      value: overview.totalWorkforce || 0,
-      icon: <Users size={20} />,
-      color: '#3B82F6',
-      bg: '#EFF6FF',
-    },
-    {
-      title: 'Pending Assessments',
-      value: overview.pendingAssessments || 0,
-      icon: <Clock size={20} />,
-      color: '#D97706',
-      bg: '#FFFBEB',
-    },
-    {
-      title: 'Completed Assessments',
-      value: overview.completedAssessments || 0,
-      icon: <CheckCircle2 size={20} />,
-      color: '#10B981',
-      bg: '#ECFDF5',
-    },
-    {
-      title: 'Safety Compliance %',
-      value: `${overview.safetyCompliance || 100}%`,
-      icon: <Award size={20} />,
-      color: '#1E3A8A',
-      bg: '#EEF2F6',
-    },
-    {
-      title: 'High Risk Staff',
-      value: overview.highRiskStaff || 0,
-      icon: <AlertTriangle size={20} />,
-      color: '#DC2626',
-      bg: '#FEF2F2',
-    },
-    {
-      title: 'Category D Staff',
-      value: overview.categoryDStaff || 0,
-      icon: <ShieldAlert size={20} />,
-      color: '#991B1B',
-      bg: '#FFF1F2',
-    },
+export const StationOverviewCards = ({ workforce = [], onRoleClick, selectedRole }) => {
+  const roleConfig = [
+    { key: 'PM', title: 'Pointsmen', className: 'pm', desc: 'Active field safety staff', icon: <Users size={18} /> },
+    { key: 'SHM', title: 'Shunting Masters', className: 'shm', desc: 'Shunt and yard staff', icon: <UserCog size={18} /> },
+    { key: 'CM', title: 'Cabin Masters', className: 'tnc', desc: 'Cabin staff', icon: <Users size={18} /> },
+    { key: 'SM', title: 'Station Masters', className: 'sm', desc: 'Station operations team', icon: <UserCheck size={18} /> },
+    { key: 'SS', title: 'SM Incharges', className: 'ss', desc: 'Station admin heads', icon: <Building2 size={18} /> },
+    { key: 'TM', title: 'Train Managers', className: 'tm', desc: 'Guard and line controllers', icon: <UserCog size={18} /> },
+    { key: 'SMS', title: 'SM Supervisors', className: 'sms', desc: 'Senior station officials', icon: <Users size={18} /> },
+    { key: 'TI', title: 'Traffic Inspectors', className: 'ti', desc: 'Safety & compliance team', icon: <Compass size={18} /> },
+    { key: 'AOM', title: 'AOM', className: 'aom', desc: 'Division supervisors', icon: <UserCog size={18} /> },
   ];
 
+  const normalizeRoleKey = (roleStr) => {
+    const r = (roleStr || '').toUpperCase().trim();
+    if (r === 'PM' || r === 'POINTSMAN' || r === 'POINTSMEN') return 'PM';
+    if (r === 'SM' || r === 'STATION MASTER' || r === 'STATION MASTERS') return 'SM';
+    if (r === 'TM' || r === 'TRAIN MANAGER' || r === 'TRAIN MANAGERS') return 'TM';
+    if (r === 'SMS' || r === 'STATION MASTER SUPERVISOR' || r === 'STATION MASTER SUPERVISIOR' || r === 'STATION MASTER SUPERVISIO') return 'SMS';
+    if (r === 'CM' || r === 'CABIN MASTER' || r === 'CABIN_MASTER' || r === 'TNC') return 'CM';
+    if (r === 'SHM' || r === 'SHUNTING MASTER' || r === 'SHUNTING_MASTER') return 'SHM';
+    if (r === 'SS' || r === 'STATION MASTER INCHARGE' || r === 'STATION_MASTER_INCHARGE' || r === 'SM INCHARGE') return 'SS';
+    if (r === 'TI' || r === 'TRAFFIC INSPECTOR' || r === 'TRAFFIC INSPECTORS') return 'TI';
+    if (r === 'AOM' || r === 'ASSISTANT OPERATIONS MANAGER') return 'AOM';
+    return r;
+  };
+
+  const list = Array.isArray(workforce) ? workforce : [];
+  const totalCount = list.length;
+
+  const roleCounts = {};
+  list.forEach((item) => {
+    const key = normalizeRoleKey(item.role);
+    roleCounts[key] = (roleCounts[key] || 0) + 1;
+  });
+
+  // Only show roles that have at least 1 employee (count > 0)
+  const availableRoleCards = roleConfig
+    .map(cfg => ({ ...cfg, count: roleCounts[cfg.key] || 0 }))
+    .filter(cfg => cfg.count > 0);
+
   return (
-    <div className="station-overview-grid" style={{
-      display: 'grid',
-      gap: '16px'
-    }}>
-      {cards.map((card, idx) => (
-        <div
-          key={idx}
-          style={{
-            backgroundColor: '#FFFFFF',
-            border: '1px solid #D7E3EF',
-            borderRadius: '12px',
-            padding: '18px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '10px',
-            boxShadow: '0 1px 3px rgba(11, 35, 65, 0.05)'
-          }}
+    <div className="role-stat-grid-5" style={{ marginBottom: '24px' }}>
+      {/* Total Staff Card */}
+      <div 
+        className="role-stat-card"
+        onClick={() => onRoleClick && onRoleClick('')}
+        style={{
+          borderLeft: '4px solid #1B365D',
+          cursor: onRoleClick ? 'pointer' : 'default',
+          backgroundColor: !selectedRole ? '#F8FAFC' : '#FFFFFF',
+          outline: !selectedRole && onRoleClick ? '2px solid #1B365D' : 'none'
+        }}
+      >
+        <div className="role-stat-info">
+          <div className="role-stat-title-container">
+            <span className="role-stat-title">Total Staff</span>
+          </div>
+          <span className="role-stat-value">{totalCount}</span>
+          <span className="role-stat-desc">Total station workforce</span>
+        </div>
+        <div 
+          className="role-stat-icon-container"
+          style={{ backgroundColor: 'rgba(27, 54, 93, 0.08)', color: '#1B365D' }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-            <span style={{ fontSize: '12.5px', fontWeight: 600, color: '#64748B' }}>
-              {card.title}
-            </span>
-            <div style={{
-              padding: '6px',
-              borderRadius: '6px',
-              color: card.color,
-              backgroundColor: card.bg,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}>
-              {card.icon}
+          <Users size={18} />
+        </div>
+      </div>
+
+      {/* Available Role Cards (count > 0 only) */}
+      {availableRoleCards.map(cfg => {
+        const isSelected = selectedRole === cfg.key;
+        return (
+          <div
+            key={cfg.key}
+            className={`role-stat-card ${cfg.className}`}
+            onClick={() => onRoleClick && onRoleClick(isSelected ? '' : cfg.key)}
+            style={{
+              cursor: onRoleClick ? 'pointer' : 'default',
+              backgroundColor: isSelected ? '#F8FAFC' : '#FFFFFF',
+              outline: isSelected ? '2px solid #2563EB' : 'none'
+            }}
+          >
+            <div className="role-stat-info">
+              <div className="role-stat-title-container">
+                <span className="role-stat-title">{cfg.title}</span>
+              </div>
+              <span className="role-stat-value">{cfg.count}</span>
+              <span className="role-stat-desc">{cfg.desc}</span>
+            </div>
+            <div className="role-stat-icon-container">
+              {cfg.icon}
             </div>
           </div>
-          <div style={{ fontSize: '24px', fontWeight: 700, color: '#0F172A' }}>
-            {card.value}
-          </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 };
+
 export default StationOverviewCards;

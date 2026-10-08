@@ -6,14 +6,11 @@ import { useStationIntelligence } from '../../hooks/useStationIntelligence';
 import { StationCommandHeader } from '../../components/stations/StationCommandHeader';
 import { StationOverviewCards } from '../../components/stations/StationOverviewCards';
 import { CategoryDistributionChart } from '../../components/stations/CategoryDistributionChart';
-import { RiskDistributionChart } from '../../components/stations/RiskDistributionChart';
 import { PerformanceTrendChart } from '../../components/stations/PerformanceTrendChart';
-import { RoleDistributionChart } from '../../components/stations/RoleDistributionChart';
 import { OperationalReadinessCards } from '../../components/stations/OperationalReadinessCards';
 import { WorkforceFilters } from '../../components/stations/WorkforceFilters';
 import { WorkforceTable } from '../../components/stations/WorkforceTable';
 import { HighRiskWatchlist } from '../../components/stations/HighRiskWatchlist';
-import { RecentActivityFeed } from '../../components/stations/RecentActivityFeed';
 import { StationIntelligenceSkeleton } from '../../components/stations/StationIntelligenceSkeleton';
 import { EmptyState } from '../../components/stations/EmptyState';
 import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -41,34 +38,6 @@ const StationIntelligencePage = () => {
   const totalPages = Math.ceil(totalRecords / limit);
   const paginatedWorkforce = filteredWorkforce ? filteredWorkforce.slice((activePage - 1) * limit, activePage * limit) : [];
 
-  // Compute role distribution from data.workforce
-  const computeRoleDistribution = (workforce) => {
-    const rolesOrder = ["PM", "SM", "TM", "SMS", "Cabin Master", "SHM", "SS", "TI", "AOM"];
-    const counts = { PM: 0, SM: 0, TM: 0, SMS: 0, "Cabin Master": 0, SHM: 0, SS: 0, TI: 0, AOM: 0 };
-    if (Array.isArray(workforce)) {
-      workforce.forEach((item) => {
-        const r = (item.role || '').toUpperCase().trim();
-        if (r === 'PM') counts.PM++;
-        else if (r === 'SM') counts.SM++;
-        else if (r === 'TM') counts.TM++;
-        else if (r === 'STATION MASTER SUPERVISOR' || r === 'SMS') counts.SMS++;
-        else if (r === 'CABIN MASTER' || r === 'CM' || r === 'TNC') counts["Cabin Master"]++;
-        else if (r === 'SHUNTING MASTER' || r === 'SHM') counts.SHM++;
-        else if (r === 'SS') counts.SS++;
-        else if (r === 'TI') counts.TI++;
-        else if (r === 'AOM') counts.AOM++;
-      });
-    }
-    return rolesOrder
-      .map((role) => ({
-        role,
-        Count: counts[role],
-      }))
-      .filter((item) => item.Count > 0);
-  };
-
-  const roleDistributionData = data?.workforce ? computeRoleDistribution(data.workforce) : [];
-
   return (
     <DashboardLayout>
       <div className="station-intelligence-container">
@@ -94,23 +63,24 @@ const StationIntelligencePage = () => {
               assignedTI={data.assignedTI} 
             />
 
-            {/* SECTION 2 — STATION OVERVIEW */}
+            {/* SECTION 2 — STATION OVERVIEW: Role Headcount Cards (Available roles + Total count) */}
             <StationOverviewCards 
-              overview={data.overview} 
+              workforce={data.workforce}
+              onRoleClick={(roleKey) => {
+                handleFilterChange('role', roleKey);
+                setActivePage(1);
+              }}
+              selectedRole={filters.role}
             />
 
-            {/* DISTRIBUTION CHARTS (SECTION 3 & SECTION 4 Side-By-Side) */}
-            <div className="distribution-grid">
-              {/* SECTION 3 — CATEGORY DISTRIBUTION */}
+            {/* SECTION 3 — CATEGORY DISTRIBUTION */}
+            <div style={{ width: '100%', marginBottom: '24px' }}>
               <CategoryDistributionChart 
                 data={data.categoryDistribution} 
               />
-              {/* SECTION 4 — RISK DISTRIBUTION */}
-              <RiskDistributionChart 
-                data={data.riskDistribution} 
-              />
             </div>
-            {/* SECTION 5 — PERFORMANCE TREND */}
+
+            {/* SECTION 4 — PERFORMANCE TREND */}
             <PerformanceTrendChart 
               data={data.performanceTrend} 
             />
@@ -192,14 +162,9 @@ const StationIntelligencePage = () => {
               )}
             </div>
 
-            {/* SECTION 8 — HIGH RISK WATCHLIST */}
+            {/* SECTION 7 — HIGH RISK WATCHLIST */}
             <HighRiskWatchlist 
               list={data.highRiskWatchlist || []} 
-            />
-
-            {/* SECTION 9 — RECENT STATION ACTIVITY */}
-            <RecentActivityFeed 
-              activities={data.recentActivities} 
             />
           </>
         )}
