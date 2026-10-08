@@ -274,7 +274,7 @@ const AOMDashboard = () => {
           />
           <StatCard
             title="TI Wise Status"
-            value={summary.pendingApprovals}
+            value="View"
             icon={<Inbox size={20} />}
             type="warning"
             link="/reports/ti-approvals"
