@@ -2,8 +2,6 @@ import React from 'react';
 import { 
   FileText, 
   ClipboardCheck, 
-  Award, 
-  ShieldAlert, 
   CalendarDays
 } from 'lucide-react';
 
@@ -24,18 +22,6 @@ const ReportKpiCards = ({ summary, userRole, onKpiClick }) => {
       bg: 'bg-emerald-50/50',
     },
     {
-      title: 'Category A Staff',
-      value: summary.categoryAEmployees || 0,
-      icon: <Award size={20} className="text-emerald-600" />,
-      bg: 'bg-emerald-50/50',
-    },
-    {
-      title: 'Category D (High Risk) Staff',
-      value: summary.categoryDEmployees || 0,
-      icon: <ShieldAlert size={20} className="text-rose-600" />,
-      bg: 'bg-rose-50/50',
-    },
-    {
       title: 'Completed Cycles',
       value: summary.assessmentCyclesCompleted || 0,
       icon: <CalendarDays size={20} className="text-indigo-600" />,
@@ -44,13 +30,11 @@ const ReportKpiCards = ({ summary, userRole, onKpiClick }) => {
   ];
 
   return (
-    <div className="kpi-grid" style={{ marginBottom: '24px' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginBottom: '24px' }}>
       {kpis.map((kpi, idx) => {
         const isClickable = [
           'Total Assessments',
           'Completed Assessments',
-          'Category A Staff',
-          'Category D (High Risk) Staff',
           'Completed Cycles'
         ].includes(kpi.title);
 

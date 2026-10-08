@@ -374,10 +374,10 @@ const DrillDownChartModal = ({ isOpen, onClose, graphType }) => {
           flexWrap: 'wrap'
         }}>
           {[
-            { id: 'A', label: 'Category A', color: '#0369A1', bg: '#E0F2FE', activeBg: '#0284C7', desc: 'Score ≥ 80%' },
-            { id: 'B', label: 'Category B', color: '#6B21A8', bg: '#F3E8FF', activeBg: '#7E22CE', desc: 'Score 50-79%' },
-            { id: 'C', label: 'Category C', color: '#B45309', bg: '#FEF3C7', activeBg: '#D97706', desc: 'Score 26-49%' },
-            { id: 'D', label: 'Category D', color: '#B91C1C', bg: '#FEE2E2', activeBg: '#DC2626', desc: 'Score ≤ 25% / Alcoholic' }
+            { id: 'A', label: 'Category A', color: '#0284C7', bg: '#F0F9FF', border: '#0284C7', ring: '#BAE6FD', desc: 'Score ≥ 80%' },
+            { id: 'B', label: 'Category B', color: '#7E22CE', bg: '#FAF5FF', border: '#7E22CE', ring: '#E9D5FF', desc: 'Score 50-79%' },
+            { id: 'C', label: 'Category C', color: '#D97706', bg: '#FFFBEB', border: '#D97706', ring: '#FDE68A', desc: 'Score 26-49%' },
+            { id: 'D', label: 'Category D', color: '#DC2626', bg: '#FEF2F2', border: '#DC2626', ring: '#FECACA', desc: 'Score ≤ 25% / Alcoholic' }
           ].map(cat => {
             const isActive = selectedCategory === cat.id;
             return (
@@ -392,29 +392,30 @@ const DrillDownChartModal = ({ isOpen, onClose, graphType }) => {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '8px',
-                  padding: '10px 22px',
+                  padding: '9px 20px',
                   borderRadius: '10px',
                   fontSize: '14px',
-                  fontWeight: 700,
+                  fontWeight: isActive ? 700 : 600,
                   cursor: 'pointer',
-                  border: isActive ? `2px solid ${cat.activeBg}` : '1px solid #CBD5E1',
-                  backgroundColor: isActive ? cat.activeBg : '#FFFFFF',
-                  color: isActive ? '#FFFFFF' : '#334155',
-                  boxShadow: isActive ? '0 4px 14px rgba(0,0,0,0.12)' : '0 1px 2px rgba(0,0,0,0.05)',
+                  border: isActive ? `2px solid ${cat.border}` : '1.5px solid #E2E8F0',
+                  backgroundColor: isActive ? cat.bg : '#FFFFFF',
+                  color: isActive ? cat.color : '#475569',
+                  boxShadow: isActive ? `0 0 0 3px ${cat.ring}, 0 2px 4px rgba(0,0,0,0.04)` : '0 1px 2px rgba(0,0,0,0.03)',
                   transition: 'all 0.15s ease',
                 }}
               >
                 <span style={{
-                  width: '10px',
-                  height: '10px',
+                  width: '9px',
+                  height: '9px',
                   borderRadius: '50%',
-                  backgroundColor: isActive ? '#FFFFFF' : cat.color
+                  backgroundColor: cat.color
                 }} />
                 {cat.label}
                 <span style={{
                   fontSize: '12px',
                   fontWeight: 500,
-                  opacity: isActive ? 0.9 : 0.6,
+                  color: isActive ? cat.color : '#94A3B8',
+                  opacity: isActive ? 0.95 : 0.75,
                   marginLeft: '4px'
                 }}>
                   ({cat.desc})

@@ -2,8 +2,8 @@ import React from 'react';
 
 export const KpiCardsSkeleton = () => {
   return (
-    <div className="kpi-grid" style={{ marginBottom: '24px' }}>
-      {Array.from({ length: 4 }).map((_, i) => (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginBottom: '24px' }}>
+      {Array.from({ length: 3 }).map((_, i) => (
         <div key={i} className="stat-card animate-pulse" style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <div style={{ height: '12px', backgroundColor: '#E2E8F0', borderRadius: '4px', width: '60%' }}></div>

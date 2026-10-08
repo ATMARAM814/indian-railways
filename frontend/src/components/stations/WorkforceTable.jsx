@@ -1,11 +1,7 @@
 // WorkforceTable.jsx
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Eye, History, User } from 'lucide-react';
 
 export const WorkforceTable = ({ workforce }) => {
-  const navigate = useNavigate();
-
   // Format Date helper
   const formatDate = (dateStr) => {
     if (!dateStr) return '—';
@@ -87,7 +83,6 @@ export const WorkforceTable = ({ workforce }) => {
               <th style={{ padding: '14px 20px' }}>Latest Status</th>
               <th style={{ padding: '14px 20px' }}>Latest Score</th>
               <th style={{ padding: '14px 20px' }}>Last Assessment Date</th>
-              <th style={{ padding: '14px 20px' }} className="text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -127,23 +122,12 @@ export const WorkforceTable = ({ workforce }) => {
                   <td style={{ padding: '14px 20px', fontSize: '13.5px', color: '#64748B' }}>
                     {formatDate(row.lastAssessmentDate)}
                   </td>
-                  <td style={{ padding: '14px 20px' }} className="text-right">
-                    <button
-                      type="button"
-                      onClick={() => navigate(`/workforce/profile/${row.userId}`)}
-                      className="back-btn"
-                      style={{ height: '32px', padding: '0 10px', gap: '4px' }}
-                      title="View Profile"
-                    >
-                      <User size={14} /> Profile
-                    </button>
-                  </td>
                 </tr>
               );
             })}
             {workforce.length === 0 && (
               <tr>
-                <td colSpan={8} style={{ textAlign: 'center', color: '#94A3B8', padding: '36px', fontSize: '13.5px', fontWeight: 500 }}>
+                <td colSpan={7} style={{ textAlign: 'center', color: '#94A3B8', padding: '36px', fontSize: '13.5px', fontWeight: 500 }}>
                   No workforce members match current filters.
                 </td>
               </tr>
