@@ -459,56 +459,21 @@ const StationListPage = () => {
                           <span style={{ color: '#94A3B8' }}>0 Pending</span>
                         )}
                       </td>
-                      <td className="text-right" style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', alignItems: 'center' }}>
+                      <td className="text-right" style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                         <button
                           type="button"
                           onClick={() => openEditModal(row)}
                           className="btn-open-intel"
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            padding: '6px 12px',
-                            fontSize: '12px',
-                            fontWeight: 600,
-                            borderRadius: '6px',
-                            backgroundColor: '#F59E0B',
-                            color: '#FFFFFF',
-                            border: 'none',
-                            cursor: 'pointer',
-                            transition: 'all 0.15s ease'
-                          }}
-                          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#D97706'; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#F59E0B'; }}
-                          title="Edit Station Details"
+                          style={{ backgroundColor: '#F59E0B', color: '#FFFFFF', gap: '6px' }}
                         >
-                          <Edit3 size={13} />
-                          <span>Edit</span>
+                          <Edit3 size={14} /> Edit
                         </button>
                         <button
                           type="button"
                           onClick={() => navigate(`/stations/${row.stationId}`)}
                           className="btn-open-intel"
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            padding: '6px 12px',
-                            fontSize: '12px',
-                            fontWeight: 600,
-                            borderRadius: '6px',
-                            backgroundColor: '#2563EB',
-                            color: '#FFFFFF',
-                            border: 'none',
-                            cursor: 'pointer',
-                            transition: 'all 0.15s ease'
-                          }}
-                          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#1D4ED8'; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#2563EB'; }}
-                          title="View Station Details & Intelligence"
                         >
-                          <Eye size={13} />
-                          <span>View Detail</span>
+                          <LayoutGrid size={14} /> Open Intelligence Center
                         </button>
                       </td>
                     </tr>
