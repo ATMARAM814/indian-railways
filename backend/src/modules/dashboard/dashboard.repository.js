@@ -1515,6 +1515,7 @@ async function getDashboardCategoryCandidatesDb({
   category,
   search,
   stationSearch,
+  targetRole,
   limit
 }) {
   let conditions = [];
@@ -1532,10 +1533,21 @@ async function getDashboardCategoryCandidatesDb({
     conditions.push(`s.division_id = $${values.length}`);
   }
   
-  if (category === 'C') {
-    conditions.push(`COALESCE(sc.category_code, CASE WHEN lca.alcoholic_status = 'Alcoholic' OR lca.percentage <= 25 THEN 'D' WHEN lca.mcq_score < 15 OR lca.alertness_score < 15 THEN 'C' WHEN lca.percentage >= 26 AND lca.percentage < 50 THEN 'C' ELSE NULL END) = 'C'`);
-  } else if (category === 'D') {
-    conditions.push(`COALESCE(sc.category_code, CASE WHEN lca.alcoholic_status = 'Alcoholic' OR lca.percentage <= 25 THEN 'D' ELSE NULL END) = 'D'`);
+  if (category) {
+    values.push(category.toUpperCase());
+    conditions.push(`COALESCE(sc.category_code, CASE 
+      WHEN lca.alcoholic_status = 'Alcoholic' OR lca.percentage <= 25 THEN 'D' 
+      WHEN lca.mcq_score < 15 OR lca.alertness_score < 15 THEN 'C' 
+      WHEN lca.percentage >= 80 THEN 'A' 
+      WHEN lca.percentage >= 50 THEN 'B' 
+      WHEN lca.percentage >= 26 THEN 'C' 
+      ELSE NULL 
+    END) = $${values.length}`);
+  }
+
+  if (targetRole && targetRole.trim()) {
+    values.push(targetRole.trim());
+    conditions.push(`r.name = $${values.length}`);
   }
   
   if (search && search.trim()) {
@@ -1552,8 +1564,16 @@ async function getDashboardCategoryCandidatesDb({
     SELECT 
       p.id as "userId",
       p.full_name as "fullName",
+      p.hrms_id as "hrmsId",
       r.name as "role",
-      COALESCE(sc.category_code, CASE WHEN lca.alcoholic_status = 'Alcoholic' OR lca.percentage <= 25 THEN 'D' WHEN lca.mcq_score < 15 OR lca.alertness_score < 15 THEN 'C' WHEN lca.percentage >= 80 THEN 'A' WHEN lca.percentage >= 50 THEN 'B' WHEN lca.percentage >= 26 THEN 'C' ELSE NULL END) as "category",
+      COALESCE(sc.category_code, CASE 
+        WHEN lca.alcoholic_status = 'Alcoholic' OR lca.percentage <= 25 THEN 'D' 
+        WHEN lca.mcq_score < 15 OR lca.alertness_score < 15 THEN 'C' 
+        WHEN lca.percentage >= 80 THEN 'A' 
+        WHEN lca.percentage >= 50 THEN 'B' 
+        WHEN lca.percentage >= 26 THEN 'C' 
+        ELSE NULL 
+      END) as "category",
       lca.percentage as "latestScore",
       lca.evaluated_at as "lastAssessmentDate",
       s.station_name as "stationName",
@@ -1561,11 +1581,15 @@ async function getDashboardCategoryCandidatesDb({
       CASE
         WHEN sc.category_code = 'D' THEN 'Category D / Critical Risk'
         WHEN sc.category_code = 'C' THEN 'Category C / Medium Risk'
+        WHEN sc.category_code = 'B' THEN 'Category B / Normal'
+        WHEN sc.category_code = 'A' THEN 'Category A / Excellent'
         WHEN lca.alcoholic_status = 'Alcoholic' THEN 'Alcoholic Status'
         WHEN lca.percentage <= 25 THEN 'Low Assessment Score (<= 25%)'
         WHEN lca.mcq_score < 15 OR lca.alertness_score < 15 THEN 'Score < 60% in Critical Parameter(s)'
+        WHEN lca.percentage >= 80 THEN 'Assessment Score >= 80%'
+        WHEN lca.percentage >= 50 THEN 'Assessment Score 50-79%'
         WHEN lca.percentage >= 26 AND lca.percentage < 50 THEN 'Medium Assessment Score (26-49%)'
-        ELSE 'Risk Watchlist'
+        ELSE 'Assigned Category'
       END as "reason"
     FROM staff_station_postings ssp
     JOIN stations s ON s.id = ssp.station_id

@@ -1283,6 +1283,7 @@ async function getDashboardCategoryCandidatesService({
   category,
   search,
   stationSearch,
+  targetRole,
   limit
 }) {
   return await db.getDashboardCategoryCandidatesDb({
@@ -1291,6 +1292,7 @@ async function getDashboardCategoryCandidatesService({
     category,
     search,
     stationSearch,
+    targetRole,
     limit
   });
 }

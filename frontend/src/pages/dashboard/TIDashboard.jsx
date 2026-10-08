@@ -432,23 +432,7 @@ const TIDashboard = () => {
           />
         </div>
 
-        {/* Second Screenshot: Role-wise Staff Distribution */}
-        <div className="charts-grid charts-grid-full">
-          <BarChartCard 
-            title="Role-wise Staff Distribution"
-            subtitle="Staff count per role in your section"
-            data={roleStaffDist}
-            xKey="role"
-            yKey="Count"
-            yKeyName="Staff Count"
-            barColor="#1B365D"
-            barSize={40}
-            yInterval={150}
-            height={350}
-          />
-        </div>
-
-        {/* Third Screenshot: Grade/Category Distribution and Safety Compliance */}
+        {/* Grade/Category Distribution */}
         <div className="charts-grid">
           <DonutChartCard 
             title="Grade/Category Distribution"
@@ -476,41 +460,6 @@ const TIDashboard = () => {
               </button>
             }
           />
-
-          <ChartCard 
-            title="Safety Compliance Analytics"
-            subtitle="Section compliance rates across categories"
-          >
-            <div className="compliance-list">
-              {safetyCompliance.map((item, index) => {
-                const getComplianceColor = (label) => {
-                  if (label.includes("Overall") || label.includes("Disciplinary")) return '#2E7D32'; // Green
-                  if (label.includes("PME")) return '#2563EB'; // Blue
-                  if (label.includes("REF")) return '#8B5CF6'; // Purple
-                  if (label.includes("Incident")) return '#0D9488'; // Teal
-                  return '#64748B'; // Grey default
-                };
-                return (
-                  <div key={index} className="compliance-item">
-                    <div className="compliance-info">
-                      <span className="compliance-label">{item.label}</span>
-                      <span className="compliance-value">{item.percentage}%</span>
-                    </div>
-                    <div className="compliance-bar-bg">
-                      <div 
-                        className="compliance-bar-fill"
-                        style={{ 
-                          width: `${item.percentage}%`,
-                          backgroundColor: getComplianceColor(item.label)
-                        }}
-                      ></div>
-                    </div>
-                    {item.note && <span className="compliance-note">{item.note}</span>}
-                  </div>
-                );
-              })}
-            </div>
-          </ChartCard>
         </div>
 
         {/* Third Screenshot: Section-wide Performance & Safety Trend (Last 6 Months) */}

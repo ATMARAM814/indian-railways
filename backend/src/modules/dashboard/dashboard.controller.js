@@ -175,11 +175,11 @@ async function getSmSupervisorDashboard(req, res) {
 
 async function getDashboardCategoryCandidates(req, res) {
   try {
-    const { category, search, stationSearch, limit } = req.query;
-    if (!category || !["C", "D"].includes(category.toUpperCase())) {
+    const { category, search, stationSearch, role: targetRole, limit } = req.query;
+    if (!category || !["A", "B", "C", "D"].includes(category.toUpperCase())) {
       return res.status(400).json({
         success: false,
-        message: "Invalid or missing category parameter. Must be 'C' or 'D'."
+        message: "Invalid or missing category parameter. Must be 'A', 'B', 'C' or 'D'."
       });
     }
     const data = await getDashboardCategoryCandidatesService({
@@ -188,6 +188,7 @@ async function getDashboardCategoryCandidates(req, res) {
       category: category.toUpperCase(),
       search,
       stationSearch,
+      targetRole,
       limit: limit ? parseInt(limit, 10) : null
     });
     return res.status(200).json({

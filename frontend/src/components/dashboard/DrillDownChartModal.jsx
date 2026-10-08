@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { getStationSummaryReport } from '../../api/reportsApi';
-import { getSuperAdminWorkforceActivity, getSuperAdminHighRiskStaff } from '../../api/dashboardApi';
+import { getSuperAdminWorkforceActivity, getSuperAdminHighRiskStaff, getDashboardCategoryCandidates } from '../../api/dashboardApi';
 import { normalizeStationSummaryData } from '../../utils/drillDownMappers';
 import DrillDownFilters from './DrillDownFilters';
 import DrillDownTable from './DrillDownTable';
@@ -41,6 +41,7 @@ const DrillDownChartModal = ({ isOpen, onClose, graphType }) => {
   const role = user?.role || 'TI';
 
   const [data, setData] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState('A');
   const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 10, totalPages: 1 });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -73,7 +74,7 @@ const DrillDownChartModal = ({ isOpen, onClose, graphType }) => {
       case 'stationAverageScore':
         return 'Station-wise Average Score';
       case 'categoryDistribution':
-        return 'Grade / Category Distribution';
+        return 'Category-wise People Distribution';
       case 'workforceActivity':
         return 'User Management Activity Analytics';
       case 'highRiskStaff':
@@ -90,7 +91,7 @@ const DrillDownChartModal = ({ isOpen, onClose, graphType }) => {
       case 'stationAverageScore':
         return 'Average assessment score comparison across stations';
       case 'categoryDistribution':
-        return 'Station-wise staff category distribution';
+        return `Staff members classified under Category ${selectedCategory}`;
       case 'workforceActivity':
         return 'Comprehensive workforce movement and staff administration activity';
       case 'highRiskStaff':
@@ -113,7 +114,32 @@ const DrillDownChartModal = ({ isOpen, onClose, graphType }) => {
         }
       });
 
-      if (graphType === 'workforceActivity') {
+      if (graphType === 'categoryDistribution') {
+        const catRes = await getDashboardCategoryCandidates({
+          category: selectedCategory,
+          search: filters.search || '',
+          stationSearch: filters.stationName || '',
+          role: filters.role || '',
+        });
+        if (catRes.success && catRes.data) {
+          const allRecords = catRes.data || [];
+          const totalRecords = allRecords.length;
+          const page = filters.page || 1;
+          const limit = filters.limit || 8;
+          const paginatedRecords = allRecords.slice((page - 1) * limit, page * limit);
+          setData(paginatedRecords);
+          setKpis(null);
+          setExtraChartData([]);
+          setPagination({
+            total: totalRecords,
+            page,
+            limit,
+            totalPages: Math.max(1, Math.ceil(totalRecords / limit))
+          });
+        } else {
+          throw new Error(catRes.message || 'Failed to fetch category distribution data');
+        }
+      } else if (graphType === 'workforceActivity') {
         const res = await getSuperAdminWorkforceActivity(params);
         if (res.success && res.data) {
           setData(res.data.records || []);
@@ -249,7 +275,7 @@ const DrillDownChartModal = ({ isOpen, onClose, graphType }) => {
   // Trigger fetch on filter or page changes
   useEffect(() => {
     fetchData();
-  }, [filters, isOpen]);
+  }, [filters, selectedCategory, isOpen]);
 
   const handleFilterChange = (key, value) => {
     setFilters((prev) => ({
@@ -337,6 +363,67 @@ const DrillDownChartModal = ({ isOpen, onClose, graphType }) => {
           Close Zoom View
         </button>
       </div>
+
+      {/* Category Selection Buttons for Category-wise People Distribution */}
+      {graphType === 'categoryDistribution' && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          marginBottom: '20px',
+          flexWrap: 'wrap'
+        }}>
+          {[
+            { id: 'A', label: 'Category A', color: '#0369A1', bg: '#E0F2FE', activeBg: '#0284C7', desc: 'Score ≥ 80%' },
+            { id: 'B', label: 'Category B', color: '#6B21A8', bg: '#F3E8FF', activeBg: '#7E22CE', desc: 'Score 50-79%' },
+            { id: 'C', label: 'Category C', color: '#B45309', bg: '#FEF3C7', activeBg: '#D97706', desc: 'Score 26-49%' },
+            { id: 'D', label: 'Category D', color: '#B91C1C', bg: '#FEE2E2', activeBg: '#DC2626', desc: 'Score ≤ 25% / Alcoholic' }
+          ].map(cat => {
+            const isActive = selectedCategory === cat.id;
+            return (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => {
+                  setSelectedCategory(cat.id);
+                  setFilters(prev => ({ ...prev, page: 1 }));
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '10px 22px',
+                  borderRadius: '10px',
+                  fontSize: '14px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  border: isActive ? `2px solid ${cat.activeBg}` : '1px solid #CBD5E1',
+                  backgroundColor: isActive ? cat.activeBg : '#FFFFFF',
+                  color: isActive ? '#FFFFFF' : '#334155',
+                  boxShadow: isActive ? '0 4px 14px rgba(0,0,0,0.12)' : '0 1px 2px rgba(0,0,0,0.05)',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                <span style={{
+                  width: '10px',
+                  height: '10px',
+                  borderRadius: '50%',
+                  backgroundColor: isActive ? '#FFFFFF' : cat.color
+                }} />
+                {cat.label}
+                <span style={{
+                  fontSize: '12px',
+                  fontWeight: 500,
+                  opacity: isActive ? 0.9 : 0.6,
+                  marginLeft: '4px'
+                }}>
+                  ({cat.desc})
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* Reusable filters component */}
       <DrillDownFilters 
@@ -617,185 +704,162 @@ const DrillDownChartModal = ({ isOpen, onClose, graphType }) => {
           </div>
         ) : (
           <>
-            {/* Chart section */}
-            <ChartCard 
-              title={getGraphSubtitle()} 
-              subtitle={
-                graphType === 'workforceActivity' 
-                  ? 'Historical division-wide workforce actions' 
-                  : graphType === 'highRiskStaff' 
-                    ? 'High-risk employee station concentration' 
-                    : `Showing up to ${filters.limit} stations on this page`
-              }
-              bodyStyle={{ display: 'flex', flexDirection: 'column', width: '100%' }}
-            >
-              {(data.length === 0 && graphType !== 'highRiskStaff' && graphType !== 'workforceActivity') ? (
-                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '280px', color: '#64748B' }}>
-                  No records found for selected filters.
+            {/* Chart section - hidden for categoryDistribution as per requirements */}
+            {graphType !== 'categoryDistribution' && (
+              <ChartCard 
+                title={getGraphSubtitle()} 
+                subtitle={
+                  graphType === 'workforceActivity' 
+                    ? 'Historical division-wide workforce actions' 
+                    : graphType === 'highRiskStaff' 
+                      ? 'High-risk employee station concentration' 
+                      : `Showing up to ${filters.limit} stations on this page`
+                }
+                bodyStyle={{ display: 'flex', flexDirection: 'column', width: '100%' }}
+              >
+                {(data.length === 0 && graphType !== 'highRiskStaff' && graphType !== 'workforceActivity') ? (
+                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '280px', color: '#64748B' }}>
+                    No records found for selected filters.
+                  </div>
+                ) : (
+                  <div className="chart-scroll-container">
+                    <div style={{ minWidth: isMobile ? `${Math.max(800, ((graphType === 'highRiskStaff' || graphType === 'workforceActivity' ? extraChartData.length : data.length) || 0) * 130)}px` : 'auto', width: '100%' }}>
+                      <ResponsiveContainer width="100%" height={320}>
+                        {graphType === 'stationEvaluationProgress' && (
+                      <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: data.length > 5 ? 25 : 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
+                        <XAxis 
+                          dataKey="stationCode" 
+                          stroke="#64748B" 
+                          fontSize={11} 
+                          tickLine={false} 
+                          axisLine={false} 
+                          dy={10} 
+                          interval={0}
+                          angle={0}
+                          textAnchor="middle"
+                          height={30}
+                        />
+                        <YAxis stroke="#64748B" fontSize={11} tickLine={false} axisLine={false} dx={-5} allowDecimals={false} />
+                        <Tooltip />
+                        <Legend verticalAlign="bottom" height={36} iconType="circle" iconSize={8} />
+                        <Bar dataKey="completed" name="Completed Evaluations" fill={completedColor} barSize={16} radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="pending" name="Pending Evaluations" fill={pendingColor} barSize={16} radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    )}
+
+                    {graphType === 'stationAverageScore' && (
+                      <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: data.length > 5 ? 25 : 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
+                        <XAxis 
+                          dataKey="stationCode" 
+                          stroke="#64748B" 
+                          fontSize={11} 
+                          tickLine={false} 
+                          axisLine={false} 
+                          dy={10} 
+                          interval={0}
+                          angle={0}
+                          textAnchor="middle"
+                          height={30}
+                        />
+                        <YAxis stroke="#64748B" fontSize={11} tickLine={false} axisLine={false} dx={-5} allowDecimals={false} />
+                        <Tooltip />
+                        <Legend verticalAlign="bottom" height={36} iconType="circle" iconSize={8} />
+                        <Bar dataKey="averageScore" name="Average Evaluation Score" fill={averageScoreColor} barSize={24} radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    )}
+
+                    {graphType === 'workforceActivity' && (
+                      <LineChart data={extraChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
+                        <XAxis dataKey="month" stroke="#64748B" fontSize={11} tickLine={false} axisLine={false} dy={10} interval={0} />
+                        <YAxis stroke="#64748B" fontSize={11} tickLine={false} axisLine={false} dx={-5} allowDecimals={false} />
+                        <Tooltip />
+                        <Legend verticalAlign="bottom" height={36} iconType="circle" iconSize={8} />
+                        <Line type="monotone" dataKey="Created Users" stroke="#3B82F6" strokeWidth={2} activeDot={{ r: 6 }} />
+                        <Line type="monotone" dataKey="Transferred Users" stroke="#F59E0B" strokeWidth={2} activeDot={{ r: 6 }} />
+                        <Line type="monotone" dataKey="Deactivated Users" stroke="#EF4444" strokeWidth={2} activeDot={{ r: 6 }} />
+                        <Line type="monotone" dataKey="Reactivated Users" stroke="#10B981" strokeWidth={2} activeDot={{ r: 6 }} />
+                      </LineChart>
+                    )}
+
+                    {graphType === 'highRiskStaff' && (
+                      <BarChart data={extraChartData.slice((highRiskChartPage - 1) * highRiskChartLimit, highRiskChartPage * highRiskChartLimit)} margin={{ top: 10, right: 10, left: -20, bottom: 25 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
+                        <XAxis 
+                          dataKey="stationCode" 
+                          stroke="#64748B" 
+                          fontSize={11} 
+                          tickLine={false} 
+                          axisLine={false} 
+                          dy={10} 
+                          interval={0}
+                          angle={0}
+                          textAnchor="middle"
+                          height={30}
+                        />
+                        <YAxis stroke="#64748B" fontSize={11} tickLine={false} axisLine={false} dx={-5} allowDecimals={false} />
+                        <Tooltip />
+                        <Bar dataKey="Count" name="High-Risk Staff Count" fill="#EF5350" barSize={32} radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    )}
+                  </ResponsiveContainer>
                 </div>
-              ) : (
-                <div className="chart-scroll-container">
-                  <div style={{ minWidth: isMobile ? `${Math.max(800, ((graphType === 'highRiskStaff' || graphType === 'workforceActivity' ? extraChartData.length : data.length) || 0) * 130)}px` : 'auto', width: '100%' }}>
-                    <ResponsiveContainer width="100%" height={320}>
-                      {graphType === 'stationEvaluationProgress' && (
-                    <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: data.length > 5 ? 25 : 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
-                      <XAxis 
-                        dataKey="stationCode" 
-                        stroke="#64748B" 
-                        fontSize={11} 
-                        tickLine={false} 
-                        axisLine={false} 
-                        dy={10} 
-                        interval={0}
-                        angle={0}
-                        textAnchor="middle"
-                        height={30}
-                      />
-                      <YAxis stroke="#64748B" fontSize={11} tickLine={false} axisLine={false} dx={-5} allowDecimals={false} />
-                      <Tooltip />
-                      <Legend verticalAlign="bottom" height={36} iconType="circle" iconSize={8} />
-                      <Bar dataKey="completed" name="Completed Evaluations" fill={completedColor} barSize={16} radius={[4, 4, 0, 0]} />
-                      <Bar dataKey="pending" name="Pending Evaluations" fill={pendingColor} barSize={16} radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  )}
-
-                  {graphType === 'stationAverageScore' && (
-                    <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: data.length > 5 ? 25 : 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
-                      <XAxis 
-                        dataKey="stationCode" 
-                        stroke="#64748B" 
-                        fontSize={11} 
-                        tickLine={false} 
-                        axisLine={false} 
-                        dy={10} 
-                        interval={0}
-                        angle={0}
-                        textAnchor="middle"
-                        height={30}
-                      />
-                      <YAxis stroke="#64748B" fontSize={11} tickLine={false} axisLine={false} dx={-5} allowDecimals={false} />
-                      <Tooltip />
-                      <Legend verticalAlign="bottom" height={36} iconType="circle" iconSize={8} />
-                      <Bar dataKey="averageScore" name="Average Evaluation Score" fill={averageScoreColor} barSize={24} radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  )}
-
-                  {graphType === 'categoryDistribution' && (
-                    <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: data.length > 5 ? 25 : 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
-                      <XAxis 
-                        dataKey="stationCode" 
-                        stroke="#64748B" 
-                        fontSize={11} 
-                        tickLine={false} 
-                        axisLine={false} 
-                        dy={10} 
-                        interval={0}
-                        angle={0}
-                        textAnchor="middle"
-                        height={30}
-                      />
-                      <YAxis stroke="#64748B" fontSize={11} tickLine={false} axisLine={false} dx={-5} allowDecimals={false} />
-                      <Tooltip />
-                      <Legend verticalAlign="bottom" height={36} iconType="circle" iconSize={8} />
-                      <Bar dataKey="categoryA" name="Category A" fill="#1B365D" barSize={9} radius={[2, 2, 0, 0]} />
-                      <Bar dataKey="categoryB" name="Category B" fill="#2B6CB0" barSize={9} radius={[2, 2, 0, 0]} />
-                      <Bar dataKey="categoryC" name="Category C" fill="#D69E2E" barSize={9} radius={[2, 2, 0, 0]} />
-                      <Bar dataKey="categoryD" name="Category D" fill="#C53030" barSize={9} radius={[2, 2, 0, 0]} />
-                    </BarChart>
-                  )}
-
-                  {graphType === 'workforceActivity' && (
-                    <LineChart data={extraChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
-                      <XAxis dataKey="month" stroke="#64748B" fontSize={11} tickLine={false} axisLine={false} dy={10} interval={0} />
-                      <YAxis stroke="#64748B" fontSize={11} tickLine={false} axisLine={false} dx={-5} allowDecimals={false} />
-                      <Tooltip />
-                      <Legend verticalAlign="bottom" height={36} iconType="circle" iconSize={8} />
-                      <Line type="monotone" dataKey="Created Users" stroke="#3B82F6" strokeWidth={2} activeDot={{ r: 6 }} />
-                      <Line type="monotone" dataKey="Transferred Users" stroke="#F59E0B" strokeWidth={2} activeDot={{ r: 6 }} />
-                      <Line type="monotone" dataKey="Deactivated Users" stroke="#EF4444" strokeWidth={2} activeDot={{ r: 6 }} />
-                      <Line type="monotone" dataKey="Reactivated Users" stroke="#10B981" strokeWidth={2} activeDot={{ r: 6 }} />
-                    </LineChart>
-                  )}
-
-                  {graphType === 'highRiskStaff' && (
-                    <BarChart data={extraChartData.slice((highRiskChartPage - 1) * highRiskChartLimit, highRiskChartPage * highRiskChartLimit)} margin={{ top: 10, right: 10, left: -20, bottom: 25 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
-                      <XAxis 
-                        dataKey="stationCode" 
-                        stroke="#64748B" 
-                        fontSize={11} 
-                        tickLine={false} 
-                        axisLine={false} 
-                        dy={10} 
-                        interval={0}
-                        angle={0}
-                        textAnchor="middle"
-                        height={30}
-                      />
-                      <YAxis stroke="#64748B" fontSize={11} tickLine={false} axisLine={false} dx={-5} allowDecimals={false} />
-                      <Tooltip />
-                      <Bar dataKey="Count" name="High-Risk Staff Count" fill="#EF5350" barSize={32} radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  )}
-                </ResponsiveContainer>
               </div>
-            </div>
-          )}
-              
-              {graphType === 'highRiskStaff' && extraChartData.length > highRiskChartLimit && (
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  gap: '16px',
-                  marginTop: '16px',
-                  marginBottom: '8px',
-                  width: '100%'
-                }}>
-                  <button
-                    type="button"
-                    onClick={() => setHighRiskChartPage(p => Math.max(p - 1, 1))}
-                    disabled={highRiskChartPage === 1}
-                    style={{
-                      padding: '6px 12px',
-                      fontSize: '12px',
-                      fontWeight: 600,
-                      backgroundColor: highRiskChartPage === 1 ? '#F1F5F9' : '#1B365D',
-                      color: highRiskChartPage === 1 ? '#94A3B8' : '#FFFFFF',
-                      border: '1px solid #E2E8F0',
-                      borderRadius: '6px',
-                      cursor: highRiskChartPage === 1 ? 'not-allowed' : 'pointer'
-                    }}
-                  >
-                    &larr; Prev Stations
-                  </button>
-                  <span style={{ fontSize: '12px', color: '#64748B', fontWeight: 600 }}>
-                    Page {highRiskChartPage} of {Math.ceil(extraChartData.length / highRiskChartLimit)} ({extraChartData.length} stations total)
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setHighRiskChartPage(p => Math.min(p + 1, Math.ceil(extraChartData.length / highRiskChartLimit)))}
-                    disabled={highRiskChartPage === Math.ceil(extraChartData.length / highRiskChartLimit)}
-                    style={{
-                      padding: '6px 12px',
-                      fontSize: '12px',
-                      fontWeight: 600,
-                      backgroundColor: highRiskChartPage === Math.ceil(extraChartData.length / highRiskChartLimit) ? '#F1F5F9' : '#1B365D',
-                      color: highRiskChartPage === Math.ceil(extraChartData.length / highRiskChartLimit) ? '#94A3B8' : '#FFFFFF',
-                      border: '1px solid #E2E8F0',
-                      borderRadius: '6px',
-                      cursor: highRiskChartPage === Math.ceil(extraChartData.length / highRiskChartLimit) ? 'not-allowed' : 'pointer'
-                    }}
-                  >
-                    Next Stations &rarr;
-                  </button>
-                </div>
-              )}
-            </ChartCard>
+            )}
+                
+                {graphType === 'highRiskStaff' && extraChartData.length > highRiskChartLimit && (
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    gap: '16px',
+                    marginTop: '16px',
+                    marginBottom: '8px',
+                    width: '100%'
+                  }}>
+                    <button
+                      type="button"
+                      onClick={() => setHighRiskChartPage(p => Math.max(p - 1, 1))}
+                      disabled={highRiskChartPage === 1}
+                      style={{
+                        padding: '6px 12px',
+                        fontSize: '12px',
+                        fontWeight: 600,
+                        backgroundColor: highRiskChartPage === 1 ? '#F1F5F9' : '#1B365D',
+                        color: highRiskChartPage === 1 ? '#94A3B8' : '#FFFFFF',
+                        border: '1px solid #E2E8F0',
+                        borderRadius: '6px',
+                        cursor: highRiskChartPage === 1 ? 'not-allowed' : 'pointer'
+                      }}
+                    >
+                      &larr; Prev Stations
+                    </button>
+                    <span style={{ fontSize: '12px', color: '#64748B', fontWeight: 600 }}>
+                      Page {highRiskChartPage} of {Math.ceil(extraChartData.length / highRiskChartLimit)} ({extraChartData.length} stations total)
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setHighRiskChartPage(p => Math.min(p + 1, Math.ceil(extraChartData.length / highRiskChartLimit)))}
+                      disabled={highRiskChartPage === Math.ceil(extraChartData.length / highRiskChartLimit)}
+                      style={{
+                        padding: '6px 12px',
+                        fontSize: '12px',
+                        fontWeight: 600,
+                        backgroundColor: highRiskChartPage === Math.ceil(extraChartData.length / highRiskChartLimit) ? '#F1F5F9' : '#1B365D',
+                        color: highRiskChartPage === Math.ceil(extraChartData.length / highRiskChartLimit) ? '#94A3B8' : '#FFFFFF',
+                        border: '1px solid #E2E8F0',
+                        borderRadius: '6px',
+                        cursor: highRiskChartPage === Math.ceil(extraChartData.length / highRiskChartLimit) ? 'not-allowed' : 'pointer'
+                      }}
+                    >
+                      Next Stations &rarr;
+                    </button>
+                  </div>
+                )}
+              </ChartCard>
+            )}
 
             {/* Table section */}
             <DrillDownTable data={data} graphType={graphType} />

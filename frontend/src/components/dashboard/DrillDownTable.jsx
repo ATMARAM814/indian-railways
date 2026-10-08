@@ -102,18 +102,31 @@ const DrillDownTable = ({ data = [], graphType }) => {
     }
 
     if (graphType === 'categoryDistribution') {
-      const headers = ['Station Name', 'Code', 'Category A', 'Category B', 'Category C', 'Category D', 'Dominant Category', 'Risk Level', 'Last Updated'];
-      const rows = data.map((r) => [
-        <strong style={{ color: '#0F172A' }}>{r.stationName}</strong>,
-        r.stationCode,
-        r.categoryA,
-        r.categoryB,
-        r.categoryC,
-        r.categoryD,
-        renderCategoryBadge(r.dominantCategory),
-        renderRiskBadge(r.riskLevel),
-        <span style={{ color: '#64748B' }}>{r.lastUpdated}</span>
-      ]);
+      const headers = ['Employee Name', 'HRMS ID', 'Role', 'Station', 'Category', 'Score', 'Last Assessed'];
+      const rows = data.map((r) => {
+        let formattedDate = r.lastAssessmentDate;
+        if (r.lastAssessmentDate) {
+          const d = new Date(r.lastAssessmentDate);
+          if (!isNaN(d.getTime())) {
+            const day = String(d.getDate()).padStart(2, '0');
+            const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            const month = months[d.getMonth()];
+            const year = d.getFullYear();
+            formattedDate = `${day}-${month}-${year}`;
+          }
+        }
+        return [
+          <strong key="name" style={{ color: '#0F172A' }}>{r.fullName || r.employeeName || '—'}</strong>,
+          <span key="hrms" style={{ fontFamily: 'monospace', fontWeight: 600, color: '#334155' }}>{r.hrmsId || '—'}</span>,
+          r.role || '—',
+          <span key="stn">{r.stationName ? `${r.stationName} (${r.stationCode})` : (r.stationCode || '—')}</span>,
+          renderCategoryBadge(r.category || r.dominantCategory),
+          <span key="score" style={{ fontWeight: 600, color: (r.latestScore ?? 0) >= 80 ? '#16A34A' : (r.latestScore ?? 0) >= 50 ? '#D97706' : '#DC2626' }}>
+            {r.latestScore !== null && r.latestScore !== undefined ? `${r.latestScore}%` : '—'}
+          </span>,
+          <span key="date" style={{ color: '#64748B' }}>{formattedDate || '—'}</span>
+        ];
+      });
       return { headers, rows };
     }
 

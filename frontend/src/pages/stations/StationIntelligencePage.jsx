@@ -115,10 +115,7 @@ const StationIntelligencePage = () => {
               data={data.performanceTrend} 
             />
 
-            {/* ROLE-WISE STAFF DISTRIBUTION */}
-            <RoleDistributionChart 
-              data={roleDistributionData} 
-            />
+
 
             {/* SECTION 6 — OPERATIONAL READINESS */}
             <OperationalReadinessCards 

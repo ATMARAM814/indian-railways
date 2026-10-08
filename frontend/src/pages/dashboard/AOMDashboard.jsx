@@ -478,7 +478,7 @@ const AOMDashboard = () => {
           />
         </div>
 
-        {/* Row 2: Grade/Category Distribution & Safety Compliance Analytics (both half-width) */}
+        {/* Row 2: Grade/Category Distribution */}
         <div className="charts-grid">
           <DonutChartCard 
             title="Grade/Category Distribution"
@@ -505,46 +505,6 @@ const AOMDashboard = () => {
                 View Full Screen
               </button>
             }
-          />
-
-          <ChartCard 
-            title="Safety Compliance Analytics"
-            subtitle="Completion rates for safety operations"
-          >
-            <div className="compliance-list">
-              {safetyCompliance.map((item, index) => (
-                <div key={index} className="compliance-item">
-                  <div className="compliance-info">
-                    <span className="compliance-label">{item.label}</span>
-                    <span className="compliance-value">{item.percentage}%</span>
-                  </div>
-                  <div className="compliance-bar-bg">
-                    <div 
-                      className={`compliance-bar-fill ${getComplianceColorClass(item.percentage)}`}
-                      style={{ width: `${item.percentage}%` }}
-                    ></div>
-                  </div>
-                  {item.note && <span className="compliance-note">{item.note}</span>}
-                </div>
-              ))}
-            </div>
-          </ChartCard>
-        </div>
-
-        {/* Row 3: Role-wise Staff Distribution (full-width) */}
-        <div className="charts-grid charts-grid-full">
-          <BarChartCard 
-            title="Role-wise Staff Distribution"
-            subtitle="Designation breakdown of safety personnel"
-            data={roleStaffDist}
-            xKey="role"
-            yKey="Count"
-            yKeyName="Staff Count"
-            barColor="#0B2341"
-            barSize={40}
-            hideLegend={true}
-            yInterval={150}
-            height={350}
           />
         </div>
 

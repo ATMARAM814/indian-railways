@@ -418,21 +418,7 @@ const SMSupervisorDashboard = () => {
           />
         </div>
 
-        <div className="charts-grid charts-grid-full">
-          <BarChartCard 
-            title="Role-wise Staff Distribution"
-            subtitle={`Staff headcount count per role at ${station?.name || 'Assigned Station'}`}
-            data={roleStaffDist}
-            xKey="role"
-            yKey="Count"
-            yKeyName="Staff Count"
-            barColor="#1B365D"
-            barSize={40}
-            hideLegend={true}
-            yInterval={150}
-            height={350}
-          />
-        </div>
+
 
         <div className="charts-grid charts-grid-full">
           <LineChartCard 

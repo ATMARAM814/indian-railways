@@ -41,6 +41,7 @@ const DrillDownFilters = ({ filters, onFilterChange, onReset, graphType }) => {
     setLocalStationCode(filters.stationCode || '');
   }, [filters.search, filters.stationName, filters.stationCode]);
 
+  const isCategoryDist = graphType === 'categoryDistribution';
   const showStationFilters = graphType !== 'workforceActivity' && graphType !== 'highRiskStaff';
   const showWorkforceFilters = graphType === 'workforceActivity';
   const showHighRiskFilters = graphType === 'highRiskStaff';
@@ -58,7 +59,7 @@ const DrillDownFilters = ({ filters, onFilterChange, onReset, graphType }) => {
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span style={{ fontSize: '11px', color: '#64748B', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase' }}>
-          {graphType === 'workforceActivity' ? 'WORKFORCE MOVEMENT FILTER CONSOLE' : graphType === 'highRiskStaff' ? 'HIGH-RISK CONCENTRATION FILTER CONSOLE' : 'OPERATIONAL SEARCH & DIAGNOSTICS FILTERS'}
+          {graphType === 'workforceActivity' ? 'WORKFORCE MOVEMENT FILTER CONSOLE' : graphType === 'highRiskStaff' ? 'HIGH-RISK CONCENTRATION FILTER CONSOLE' : isCategoryDist ? 'CATEGORY-WISE STAFF SEARCH & FILTERS' : 'OPERATIONAL SEARCH & DIAGNOSTICS FILTERS'}
         </span>
         <button 
           onClick={onReset}
@@ -86,11 +87,11 @@ const DrillDownFilters = ({ filters, onFilterChange, onReset, graphType }) => {
         {graphType !== 'highRiskStaff' && graphType !== 'workforceActivity' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             <label style={{ fontSize: '11px', fontWeight: 600, color: '#64748B' }}>
-              Quick Search
+              {isCategoryDist ? 'Search Staff / HRMS' : 'Quick Search'}
             </label>
             <input 
               type="text"
-              placeholder="Search station..."
+              placeholder={isCategoryDist ? 'Name or HRMS ID...' : 'Search station...'}
               value={localSearch}
               onChange={(e) => setLocalSearch(e.target.value)}
               style={{
@@ -106,7 +107,7 @@ const DrillDownFilters = ({ filters, onFilterChange, onReset, graphType }) => {
           </div>
         )}
 
-        {/* Station name or Station Code for Workforce / HighRisk */}
+        {/* Station name or Station Code for Workforce / HighRisk / CategoryDist */}
         {(showStationFilters || showWorkforceFilters || showHighRiskFilters) && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             <label style={{ fontSize: '11px', fontWeight: 600, color: '#64748B' }}>Station</label>
@@ -129,7 +130,7 @@ const DrillDownFilters = ({ filters, onFilterChange, onReset, graphType }) => {
         )}
 
         {/* Station Code for defaults */}
-        {showStationFilters && (
+        {showStationFilters && !isCategoryDist && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             <label style={{ fontSize: '11px', fontWeight: 600, color: '#64748B' }}>Station Code</label>
             <input 
@@ -150,8 +151,8 @@ const DrillDownFilters = ({ filters, onFilterChange, onReset, graphType }) => {
           </div>
         )}
 
-        {/* Role Filter for Workforce and HighRisk */}
-        {(showWorkforceFilters || showHighRiskFilters) && (
+        {/* Role Filter for Workforce, HighRisk, and CategoryDistribution */}
+        {(showWorkforceFilters || showHighRiskFilters || isCategoryDist) && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             <label style={{ fontSize: '11px', fontWeight: 600, color: '#64748B' }}>Role</label>
             <select 
@@ -210,7 +211,7 @@ const DrillDownFilters = ({ filters, onFilterChange, onReset, graphType }) => {
         )}
 
         {/* Category */}
-        {graphType !== 'highRiskStaff' && (
+        {graphType !== 'highRiskStaff' && !isCategoryDist && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             <label style={{ fontSize: '11px', fontWeight: 600, color: '#64748B' }}>Category</label>
             <select 
@@ -237,7 +238,7 @@ const DrillDownFilters = ({ filters, onFilterChange, onReset, graphType }) => {
         )}
 
         {/* Risk Level Filter (For default and HighRisk) */}
-        {showStationFilters && (
+        {showStationFilters && !isCategoryDist && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             <label style={{ fontSize: '11px', fontWeight: 600, color: '#64748B' }}>Risk Level</label>
             <select 
