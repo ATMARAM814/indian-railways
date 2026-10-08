@@ -459,7 +459,32 @@ const StationListPage = () => {
                           <span style={{ color: '#94A3B8' }}>0 Pending</span>
                         )}
                       </td>
-                      <td className="text-right" style={{ textAlign: 'right' }}>
+                      <td className="text-right" style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', alignItems: 'center' }}>
+                        <button
+                          type="button"
+                          onClick={() => openEditModal(row)}
+                          className="btn-open-intel"
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            padding: '6px 12px',
+                            fontSize: '12px',
+                            fontWeight: 600,
+                            borderRadius: '6px',
+                            backgroundColor: '#F59E0B',
+                            color: '#FFFFFF',
+                            border: 'none',
+                            cursor: 'pointer',
+                            transition: 'all 0.15s ease'
+                          }}
+                          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#D97706'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#F59E0B'; }}
+                          title="Edit Station Details"
+                        >
+                          <Edit3 size={13} />
+                          <span>Edit</span>
+                        </button>
                         <button
                           type="button"
                           onClick={() => navigate(`/stations/${row.stationId}`)}
@@ -468,8 +493,8 @@ const StationListPage = () => {
                             display: 'inline-flex',
                             alignItems: 'center',
                             gap: '6px',
-                            padding: '6px 14px',
-                            fontSize: '12.5px',
+                            padding: '6px 12px',
+                            fontSize: '12px',
                             fontWeight: 600,
                             borderRadius: '6px',
                             backgroundColor: '#2563EB',
@@ -482,7 +507,7 @@ const StationListPage = () => {
                           onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#2563EB'; }}
                           title="View Station Details & Intelligence"
                         >
-                          <Eye size={14} />
+                          <Eye size={13} />
                           <span>View Detail</span>
                         </button>
                       </td>
