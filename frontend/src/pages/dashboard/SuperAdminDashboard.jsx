@@ -352,11 +352,10 @@ const SuperAdminDashboard = () => {
           />
           <div style={{ cursor: 'pointer' }} onClick={() => navigate('/reports/ti-approvals')}>
             <StatCard
-              title="Pending Approvals"
+              title="TI Approvals"
               value={summary.pendingApprovals}
               icon={<Inbox size={20} />}
               type="warning"
-              trend="Awaiting review"
             />
           </div>
           <StatCard
@@ -502,37 +501,6 @@ const SuperAdminDashboard = () => {
 
         {/* Row 1: Progress & Average Score Charts */}
         <div className="charts-grid">
-          <BarChartCard
-            title="Station-wise Evaluation Progress"
-            subtitle="Completed vs pending evaluation counts per station"
-            data={stationProgress}
-            xKey="stationCode"
-            bars={[
-              { key: 'Completed', color: '#1B365D', name: 'Completed' },
-              { key: 'Pending', color: '#D69E2E', name: 'Pending' }
-            ]}
-            barSize={12}
-            headerAction={
-              <button
-                onClick={() => {
-                  setDrillDownType('stationEvaluationProgress');
-                  setIsDrillDownOpen(true);
-                }}
-                style={{
-                  backgroundColor: '#1B365D',
-                  color: '#FFFFFF',
-                  border: 'none',
-                  borderRadius: '6px',
-                  padding: '6px 12px',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  cursor: 'pointer'
-                }}
-              >
-                View Full Screen
-              </button>
-            }
-          />
 
           <BarChartCard
             title="Station-wise Average Score"
