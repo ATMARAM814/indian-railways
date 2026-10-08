@@ -7,7 +7,7 @@ import ErrorState from '../../components/dashboard/ErrorState';
 import { getScopedStations, createStation, updateStation } from '../../services/stationIntelligence.service';
 import { getWorkforceList, getDivisionsList } from '../../services/workforce.service';
 import { useAuth } from '../../context/AuthContext';
-import { Building, Search, PlusCircle, LayoutGrid, ChevronLeft, ChevronRight, X, Edit3, Download, Layers } from 'lucide-react';
+import { Building, Search, PlusCircle, LayoutGrid, ChevronLeft, ChevronRight, X, Edit3, Download, Layers, Eye } from 'lucide-react';
 import '../../styles/station-intelligence.css';
 import { downloadStationsExcel, downloadAllStationsEmployeesExcel } from '../../utils/excelExport';
 
@@ -459,21 +459,31 @@ const StationListPage = () => {
                           <span style={{ color: '#94A3B8' }}>0 Pending</span>
                         )}
                       </td>
-                      <td className="text-right" style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                        <button
-                          type="button"
-                          onClick={() => openEditModal(row)}
-                          className="btn-open-intel"
-                          style={{ backgroundColor: '#F59E0B', color: '#FFFFFF', gap: '6px' }}
-                        >
-                          <Edit3 size={14} /> Edit
-                        </button>
+                      <td className="text-right" style={{ textAlign: 'right' }}>
                         <button
                           type="button"
                           onClick={() => navigate(`/stations/${row.stationId}`)}
                           className="btn-open-intel"
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            padding: '6px 14px',
+                            fontSize: '12.5px',
+                            fontWeight: 600,
+                            borderRadius: '6px',
+                            backgroundColor: '#2563EB',
+                            color: '#FFFFFF',
+                            border: 'none',
+                            cursor: 'pointer',
+                            transition: 'all 0.15s ease'
+                          }}
+                          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#1D4ED8'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#2563EB'; }}
+                          title="View Station Details & Intelligence"
                         >
-                          <LayoutGrid size={14} /> Open Intelligence Center
+                          <Eye size={14} />
+                          <span>View Detail</span>
                         </button>
                       </td>
                     </tr>
