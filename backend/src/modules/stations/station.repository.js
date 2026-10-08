@@ -167,16 +167,30 @@ async function getStationsListDb(userId, role, filters) {
         SELECT p_sm.id FROM staff_station_postings ssp_sm
         JOIN profiles p_sm ON p_sm.id = ssp_sm.profile_id
         JOIN roles r_sm ON r_sm.id = p_sm.role_id
-        WHERE ssp_sm.station_id = s.id AND ssp_sm.is_current = true AND r_sm.name = 'SM'
+        WHERE ssp_sm.station_id = s.id AND ssp_sm.is_current = true AND (r_sm.name = 'SM' OR r_sm.name = 'SS')
         LIMIT 1
       ) as "assignedSMId",
       (
         SELECT p_sm.full_name FROM staff_station_postings ssp_sm
         JOIN profiles p_sm ON p_sm.id = ssp_sm.profile_id
         JOIN roles r_sm ON r_sm.id = p_sm.role_id
-        WHERE ssp_sm.station_id = s.id AND ssp_sm.is_current = true AND r_sm.name = 'SM'
+        WHERE ssp_sm.station_id = s.id AND ssp_sm.is_current = true AND (r_sm.name = 'SM' OR r_sm.name = 'SS')
         LIMIT 1
       ) as "assignedSMName",
+      (
+        SELECT COALESCE(array_agg(p_sm.id::text), ARRAY[]::text[])
+        FROM staff_station_postings ssp_sm
+        JOIN profiles p_sm ON p_sm.id = ssp_sm.profile_id
+        JOIN roles r_sm ON r_sm.id = p_sm.role_id
+        WHERE ssp_sm.station_id = s.id AND ssp_sm.is_current = true AND (r_sm.name = 'SM' OR r_sm.name = 'SS')
+      ) as "assignedSMIds",
+      (
+        SELECT COALESCE(string_agg(p_sm.full_name, ', '), '')
+        FROM staff_station_postings ssp_sm
+        JOIN profiles p_sm ON p_sm.id = ssp_sm.profile_id
+        JOIN roles r_sm ON r_sm.id = p_sm.role_id
+        WHERE ssp_sm.station_id = s.id AND ssp_sm.is_current = true AND (r_sm.name = 'SM' OR r_sm.name = 'SS')
+      ) as "assignedSMNames",
       ti.full_name as "assignedTI",
       ti.id as "assignedTiId",
       COUNT(DISTINCT p.id)::int as "totalStaff",

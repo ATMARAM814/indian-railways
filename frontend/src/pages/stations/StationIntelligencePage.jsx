@@ -6,7 +6,6 @@ import { useStationIntelligence } from '../../hooks/useStationIntelligence';
 import { StationCommandHeader } from '../../components/stations/StationCommandHeader';
 import { StationOverviewCards } from '../../components/stations/StationOverviewCards';
 import { CategoryDistributionChart } from '../../components/stations/CategoryDistributionChart';
-import { PerformanceTrendChart } from '../../components/stations/PerformanceTrendChart';
 import { OperationalReadinessCards } from '../../components/stations/OperationalReadinessCards';
 import { WorkforceFilters } from '../../components/stations/WorkforceFilters';
 import { WorkforceTable } from '../../components/stations/WorkforceTable';
@@ -80,14 +79,7 @@ const StationIntelligencePage = () => {
               />
             </div>
 
-            {/* SECTION 4 — PERFORMANCE TREND */}
-            <PerformanceTrendChart 
-              data={data.performanceTrend} 
-            />
-
-
-
-            {/* SECTION 6 — OPERATIONAL READINESS */}
+            {/* SECTION 4 — OPERATIONAL READINESS */}
             <OperationalReadinessCards 
               data={data.operationalReadiness} 
             />

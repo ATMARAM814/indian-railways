@@ -22,8 +22,6 @@ export const StationIntelligenceSkeleton = () => {
         <div className="skeleton-card" style={{ height: '300px', borderRadius: '16px' }}></div>
       </div>
 
-      {/* Trend Skeleton */}
-      <div className="skeleton-card" style={{ height: '340px', borderRadius: '16px' }}></div>
 
       {/* Readiness Skeleton */}
       <div className="skeleton-card" style={{ height: '180px', borderRadius: '16px' }}></div>

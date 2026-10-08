@@ -1056,6 +1056,8 @@
   border-top: 1px solid var(--border-light, #D7E3EF);
   display: flex;
   justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
   flex-shrink: 0;
 }
 

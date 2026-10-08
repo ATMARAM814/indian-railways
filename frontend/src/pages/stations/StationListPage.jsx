@@ -48,6 +48,8 @@ const StationListPage = () => {
   const [editStationCode, setEditStationCode] = useState('');
   const [editDivisionId, setEditDivisionId] = useState('');
   const [editAssignedSMId, setEditAssignedSMId] = useState('');
+  const [editAssignedSMIds, setEditAssignedSMIds] = useState([]);
+  const [assignedSMIds, setAssignedSMIds] = useState([]);
   const [editAssignedTIId, setEditAssignedTIId] = useState('');
 
   const openCreateModal = async () => {
@@ -57,6 +59,7 @@ const StationListPage = () => {
     setNewStationCode('');
     setNewDivisionId('');
     setAssignedSMId('');
+    setAssignedSMIds([]);
     setAssignedTIId('');
 
     try {
@@ -107,7 +110,8 @@ const StationListPage = () => {
         stationName: newStationName.trim(),
         stationCode: newStationCode.trim().toUpperCase(),
         divisionId: newDivisionId || undefined,
-        assignedSMId: assignedSMId || undefined,
+        assignedSMIds: assignedSMIds,
+        assignedSMId: assignedSMIds[0] || assignedSMId || undefined,
         assignedTIId: assignedTIId || undefined
       };
 
@@ -133,6 +137,10 @@ const StationListPage = () => {
     setEditStationName(station.stationName || '');
     setEditStationCode(station.stationCode || '');
     setEditDivisionId(station.divisionId || '');
+    const initialSMIds = Array.isArray(station.assignedSMIds) && station.assignedSMIds.length > 0
+      ? station.assignedSMIds
+      : (station.assignedSMId ? [station.assignedSMId] : []);
+    setEditAssignedSMIds(initialSMIds);
     setEditAssignedSMId(station.assignedSMId || '');
     setEditAssignedTIId(station.assignedTiId || '');
 
@@ -184,7 +192,8 @@ const StationListPage = () => {
         stationName: editStationName.trim(),
         stationCode: editStationCode.trim().toUpperCase(),
         divisionId: editDivisionId || undefined,
-        assignedSMId: editAssignedSMId || undefined,
+        assignedSMIds: editAssignedSMIds,
+        assignedSMId: editAssignedSMIds[0] || undefined,
         assignedTIId: editAssignedTIId || undefined
       };
 
@@ -670,13 +679,140 @@ const StationListPage = () => {
                       </select>
                     </div>
                   )}
+
+                  {/* Assign Station Master(s) - Supports multiple */}
+                  <div style={{ marginBottom: '16px' }}>
+                    <label style={{ display: 'block', marginBottom: '6px', fontSize: '12.5px', fontWeight: 600, color: '#475569' }}>
+                      ASSIGN STATION MASTER(S)
+                    </label>
+                    <select
+                      className="filter-text-input"
+                      style={{ width: '100%', height: '40px', boxSizing: 'border-box' }}
+                      value=""
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val && !assignedSMIds.includes(val)) {
+                          setAssignedSMIds(prev => [...prev, val]);
+                        }
+                      }}
+                    >
+                      <option value="">Select Station Master to Add...</option>
+                      {stationMasters
+                        .filter(sm => !assignedSMIds.includes(sm.id))
+                        .map(sm => (
+                          <option key={sm.id} value={sm.id}>
+                            {sm.full_name || sm.fullName} ({sm.hrms_id || sm.hrmsId}) - {sm.role}
+                          </option>
+                        ))}
+                    </select>
+
+                    {assignedSMIds.length > 0 ? (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '10px' }}>
+                        {assignedSMIds.map(id => {
+                          const smObj = stationMasters.find(s => s.id === id);
+                          const name = smObj ? (smObj.full_name || smObj.fullName) : id;
+                          const hrms = smObj ? (smObj.hrms_id || smObj.hrmsId) : '';
+                          const role = smObj ? smObj.role : 'SM';
+                          return (
+                            <span
+                              key={id}
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                padding: '4px 10px',
+                                backgroundColor: '#EFF6FF',
+                                color: '#1D4ED8',
+                                border: '1px solid #BFDBFE',
+                                borderRadius: '6px',
+                                fontSize: '12.5px',
+                                fontWeight: 600
+                              }}
+                            >
+                              <span>{name} {hrms ? `(${hrms})` : ''} <span style={{ fontSize: '11px', color: '#64748B' }}>[{role}]</span></span>
+                              <button
+                                type="button"
+                                onClick={() => setAssignedSMIds(prev => prev.filter(x => x !== id))}
+                                style={{
+                                  border: 'none',
+                                  background: 'none',
+                                  cursor: 'pointer',
+                                  color: '#64748B',
+                                  padding: '0 2px',
+                                  display: 'flex',
+                                  alignItems: 'center'
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.color = '#DC2626'}
+                                onMouseLeave={(e) => e.currentTarget.style.color = '#64748B'}
+                                title="Remove"
+                              >
+                                <X size={14} />
+                              </button>
+                            </span>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <span style={{ fontSize: '12px', color: '#94A3B8', fontStyle: 'italic', display: 'block', marginTop: '6px' }}>
+                        No Station Master assigned yet. Select from the dropdown to add.
+                      </span>
+                    )}
+                  </div>
                 </div>
 
-                <div className="staff-modal-footer">
-                  <button type="button" className="staff-modal-close-btn" onClick={() => setIsModalOpen(false)} style={{ backgroundColor: '#F1F5F9', border: '1px solid #E2E8F0', color: '#475569' }}>
+                <div 
+                  className="staff-modal-footer" 
+                  style={{ 
+                    display: 'flex', 
+                    justifyContent: 'flex-end', 
+                    alignItems: 'center', 
+                    gap: '12px', 
+                    padding: '16px 24px',
+                    borderTop: '1px solid #E2E8F0',
+                    backgroundColor: '#FFFFFF',
+                    borderBottomLeftRadius: '16px',
+                    borderBottomRightRadius: '16px'
+                  }}
+                >
+                  <button 
+                    type="button" 
+                    onClick={() => setIsModalOpen(false)} 
+                    style={{ 
+                      padding: '9px 18px', 
+                      borderRadius: '8px', 
+                      backgroundColor: '#F8FAFC', 
+                      border: '1px solid #CBD5E1', 
+                      color: '#475569', 
+                      fontWeight: 600, 
+                      fontSize: '13.5px',
+                      cursor: 'pointer',
+                      margin: 0,
+                      transition: 'all 0.15s ease'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F1F5F9'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#F8FAFC'}
+                  >
                     Cancel
                   </button>
-                  <button type="submit" className="btn-open-intel" style={{ backgroundColor: '#2B5CE6', color: '#FFFFFF' }} disabled={modalSubmitting}>
+                  <button 
+                    type="submit" 
+                    disabled={modalSubmitting}
+                    style={{ 
+                      padding: '9px 22px', 
+                      borderRadius: '8px', 
+                      backgroundColor: '#2563EB', 
+                      border: 'none', 
+                      color: '#FFFFFF', 
+                      fontWeight: 600, 
+                      fontSize: '13.5px',
+                      cursor: modalSubmitting ? 'not-allowed' : 'pointer',
+                      margin: 0,
+                      boxShadow: '0 2px 4px rgba(37, 99, 235, 0.2)',
+                      transition: 'all 0.15s ease'
+                    }}
+                    onMouseEnter={(e) => !modalSubmitting && (e.currentTarget.style.backgroundColor = '#1D4ED8')}
+                    onMouseLeave={(e) => !modalSubmitting && (e.currentTarget.style.backgroundColor = '#2563EB')}
+                  >
                     {modalSubmitting ? "Creating..." : "Create Station"}
                   </button>
                 </div>
@@ -773,13 +909,140 @@ const StationListPage = () => {
                       </select>
                     </div>
                   )}
+
+                  {/* Assign Station Master(s) - Supports multiple */}
+                  <div style={{ marginBottom: '16px' }}>
+                    <label style={{ display: 'block', marginBottom: '6px', fontSize: '12.5px', fontWeight: 600, color: '#475569' }}>
+                      ASSIGN STATION MASTER(S)
+                    </label>
+                    <select
+                      className="filter-text-input"
+                      style={{ width: '100%', height: '40px', boxSizing: 'border-box' }}
+                      value=""
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val && !editAssignedSMIds.includes(val)) {
+                          setEditAssignedSMIds(prev => [...prev, val]);
+                        }
+                      }}
+                    >
+                      <option value="">Select Station Master to Add...</option>
+                      {stationMasters
+                        .filter(sm => !editAssignedSMIds.includes(sm.id))
+                        .map(sm => (
+                          <option key={sm.id} value={sm.id}>
+                            {sm.full_name || sm.fullName} ({sm.hrms_id || sm.hrmsId}) - {sm.role}
+                          </option>
+                        ))}
+                    </select>
+
+                    {editAssignedSMIds.length > 0 ? (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '10px' }}>
+                        {editAssignedSMIds.map(id => {
+                          const smObj = stationMasters.find(s => s.id === id);
+                          const name = smObj ? (smObj.full_name || smObj.fullName) : id;
+                          const hrms = smObj ? (smObj.hrms_id || smObj.hrmsId) : '';
+                          const role = smObj ? smObj.role : 'SM';
+                          return (
+                            <span
+                              key={id}
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                padding: '4px 10px',
+                                backgroundColor: '#EFF6FF',
+                                color: '#1D4ED8',
+                                border: '1px solid #BFDBFE',
+                                borderRadius: '6px',
+                                fontSize: '12.5px',
+                                fontWeight: 600
+                              }}
+                            >
+                              <span>{name} {hrms ? `(${hrms})` : ''} <span style={{ fontSize: '11px', color: '#64748B' }}>[{role}]</span></span>
+                              <button
+                                type="button"
+                                onClick={() => setEditAssignedSMIds(prev => prev.filter(x => x !== id))}
+                                style={{
+                                  border: 'none',
+                                  background: 'none',
+                                  cursor: 'pointer',
+                                  color: '#64748B',
+                                  padding: '0 2px',
+                                  display: 'flex',
+                                  alignItems: 'center'
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.color = '#DC2626'}
+                                onMouseLeave={(e) => e.currentTarget.style.color = '#64748B'}
+                                title="Remove"
+                              >
+                                <X size={14} />
+                              </button>
+                            </span>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <span style={{ fontSize: '12px', color: '#94A3B8', fontStyle: 'italic', display: 'block', marginTop: '6px' }}>
+                        No Station Master assigned yet. Select from the dropdown to add.
+                      </span>
+                    )}
+                  </div>
                 </div>
 
-                <div className="staff-modal-footer">
-                  <button type="button" className="staff-modal-close-btn" onClick={() => setIsEditModalOpen(false)} style={{ backgroundColor: '#F1F5F9', border: '1px solid #E2E8F0', color: '#475569' }}>
+                <div 
+                  className="staff-modal-footer" 
+                  style={{ 
+                    display: 'flex', 
+                    justifyContent: 'flex-end', 
+                    alignItems: 'center', 
+                    gap: '12px', 
+                    padding: '16px 24px',
+                    borderTop: '1px solid #E2E8F0',
+                    backgroundColor: '#FFFFFF',
+                    borderBottomLeftRadius: '16px',
+                    borderBottomRightRadius: '16px'
+                  }}
+                >
+                  <button 
+                    type="button" 
+                    onClick={() => setIsEditModalOpen(false)} 
+                    style={{ 
+                      padding: '9px 18px', 
+                      borderRadius: '8px', 
+                      backgroundColor: '#F8FAFC', 
+                      border: '1px solid #CBD5E1', 
+                      color: '#475569', 
+                      fontWeight: 600, 
+                      fontSize: '13.5px',
+                      cursor: 'pointer',
+                      margin: 0,
+                      transition: 'all 0.15s ease'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F1F5F9'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#F8FAFC'}
+                  >
                     Cancel
                   </button>
-                  <button type="submit" className="btn-open-intel" style={{ backgroundColor: '#2B5CE6', color: '#FFFFFF' }} disabled={modalSubmitting}>
+                  <button 
+                    type="submit" 
+                    disabled={modalSubmitting}
+                    style={{ 
+                      padding: '9px 22px', 
+                      borderRadius: '8px', 
+                      backgroundColor: '#2563EB', 
+                      border: 'none', 
+                      color: '#FFFFFF', 
+                      fontWeight: 600, 
+                      fontSize: '13.5px',
+                      cursor: modalSubmitting ? 'not-allowed' : 'pointer',
+                      margin: 0,
+                      boxShadow: '0 2px 4px rgba(37, 99, 235, 0.2)',
+                      transition: 'all 0.15s ease'
+                    }}
+                    onMouseEnter={(e) => !modalSubmitting && (e.currentTarget.style.backgroundColor = '#1D4ED8')}
+                    onMouseLeave={(e) => !modalSubmitting && (e.currentTarget.style.backgroundColor = '#2563EB')}
+                  >
                     {modalSubmitting ? "Saving..." : "Save Changes"}
                   </button>
                 </div>

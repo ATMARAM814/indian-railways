@@ -130,10 +130,14 @@ async function createStationService(creatorUserId, creatorRole, stationData) {
     stationCode.trim().toUpperCase()
   );
 
-  // Assign Station Master (any role can assign SM now)
-  if (assignedSMId) {
-    await db.closeCurrentSmPostingDb(assignedSMId);
-    await db.assignSmToStationDb(assignedSMId, station.id);
+  // Assign Station Master(s) (any role can assign SM now)
+  const smIdsToAssign = stationData.assignedSMIds !== undefined
+    ? (Array.isArray(stationData.assignedSMIds) ? stationData.assignedSMIds.filter(Boolean) : [])
+    : (assignedSMId ? [assignedSMId] : []);
+
+  for (const smId of smIdsToAssign) {
+    await db.closeCurrentSmPostingDb(smId);
+    await db.assignSmToStationDb(smId, station.id);
   }
 
   // Assign Traffic Inspector
@@ -265,17 +269,41 @@ async function updateStationService(stationId, updaterUserId, updaterRole, stati
     stationCode.trim().toUpperCase()
   );
 
-  // 4. Update SM Assignment if changed
-  if (assignedSMId && assignedSMId !== currentSmId) {
-    // Deassign previous SM(s) from this station
-    await db.deassignSmFromStationDb(stationId);
-    // Close the new SM's active posting elsewhere
-    await db.closeCurrentSmPostingDb(assignedSMId);
-    // Assign new SM to this station
-    await db.assignSmToStationDb(assignedSMId, stationId);
-  } else if (!assignedSMId && currentSmId) {
-    // If explicitly removed
-    await db.deassignSmFromStationDb(stationId);
+  // 4. Update SM Assignment(s)
+  const smIdsProvided = assignedSMIds !== undefined
+    ? (Array.isArray(assignedSMIds) ? assignedSMIds.filter(Boolean) : [])
+    : (assignedSMId !== undefined ? (assignedSMId ? [assignedSMId] : []) : null);
+
+  if (smIdsProvided !== null) {
+    // Fetch currently active SMs/SSs for this station
+    const currentSmRes = await poolQuery(
+      `SELECT p.id FROM staff_station_postings ssp
+       JOIN profiles p ON p.id = ssp.profile_id
+       JOIN roles r ON r.id = p.role_id
+       WHERE ssp.station_id = $1 AND ssp.is_current = true AND (r.name = 'SM' OR r.name = 'SS')`,
+      [stationId]
+    );
+    const currentSmIds = currentSmRes.rows.map(r => r.id);
+
+    // Deassign SMs removed from this station
+    for (const smId of currentSmIds) {
+      if (!smIdsProvided.includes(smId)) {
+        await poolQuery(
+          `UPDATE staff_station_postings
+           SET is_current = false, posted_to = CURRENT_DATE
+           WHERE station_id = $1 AND profile_id = $2 AND is_current = true`,
+          [stationId, smId]
+        );
+      }
+    }
+
+    // Assign new SMs added to this station
+    for (const smId of smIdsProvided) {
+      if (!currentSmIds.includes(smId)) {
+        await db.closeCurrentSmPostingDb(smId);
+        await db.assignSmToStationDb(smId, stationId);
+      }
+    }
   }
 
   // 5. Update TI Assignment if changed
