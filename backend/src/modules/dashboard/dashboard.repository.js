@@ -1386,7 +1386,7 @@ async function getSuperAdminHighRiskStaff(filters) {
   if (totalHighRiskStaff > 10) avgRisk = 'HIGH';
   else if (totalHighRiskStaff > 2) avgRisk = 'MEDIUM';
   
-  const kpis = {
+    const kpis = {
     totalHighRiskStaff,
     highRiskStations,
     highestRiskStation,
@@ -1394,6 +1394,52 @@ async function getSuperAdminHighRiskStaff(filters) {
   };
   
   return { records, total, stationCounts, kpis };
+}
+
+async function getSuperAdminTiAssessmentStats() {
+  const query = `
+    SELECT
+      p.id as "tiId",
+      p.full_name as "tiName",
+      p.hrms_id as "tiHrmsId",
+      (
+        SELECT COUNT(DISTINCT ssp.profile_id)::int
+        FROM station_assignments sa_inner
+        JOIN staff_station_postings ssp ON ssp.station_id = sa_inner.station_id AND ssp.is_current = true
+        WHERE sa_inner.profile_id = p.id AND sa_inner.assignment_type = 'TI_AREA' AND sa_inner.assigned_to IS NULL
+      ) as "totalEmployees",
+      (
+        SELECT COUNT(DISTINCT a.id)::int
+        FROM station_assignments sa_inner
+        JOIN staff_station_postings ssp ON ssp.station_id = sa_inner.station_id AND ssp.is_current = true
+        JOIN assessments a ON a.assessed_user_id = ssp.profile_id
+        WHERE sa_inner.profile_id = p.id AND sa_inner.assignment_type = 'TI_AREA' AND sa_inner.assigned_to IS NULL
+          AND ((a.status = 'completed' AND (a.approval_status = 'approved' OR a.approval_status = 'rejected')))
+      ) as "completedAssessments",
+      (
+        SELECT COUNT(DISTINCT a.id)::int
+        FROM station_assignments sa_inner
+        JOIN staff_station_postings ssp ON ssp.station_id = sa_inner.station_id AND ssp.is_current = true
+        JOIN assessments a ON a.assessed_user_id = ssp.profile_id
+        WHERE sa_inner.profile_id = p.id AND sa_inner.assignment_type = 'TI_AREA' AND sa_inner.assigned_to IS NULL
+          AND (a.status IN ('created', 'mcq_pending', 'mcq_submitted', 'evaluation_pending', 'evaluation_submitted', 'scheduled', 'mcq_access_sent'))
+      ) as "pendingAssessments",
+      (
+        SELECT COUNT(DISTINCT a.id)::int
+        FROM station_assignments sa_inner
+        JOIN staff_station_postings ssp ON ssp.station_id = sa_inner.station_id AND ssp.is_current = true
+        JOIN assessments a ON a.assessed_user_id = ssp.profile_id
+        WHERE sa_inner.profile_id = p.id AND sa_inner.assignment_type = 'TI_AREA' AND sa_inner.assigned_to IS NULL
+          AND ((a.status = 'completed' OR a.status = 'evaluated') AND (a.approval_status = 'pending_approval' OR a.approval_status IS NULL))
+      ) as "approvalPending"
+    FROM station_assignments sa
+    JOIN profiles p ON p.id = sa.profile_id
+    WHERE sa.assignment_type = 'TI_AREA' AND sa.assigned_to IS NULL
+    GROUP BY p.id, p.full_name, p.hrms_id
+    ORDER BY p.full_name;
+  `;
+  const result = await pool.query(query);
+  return result.rows;
 }
 
 async function getSmSupervisorSummary(stationId, profileId) {
@@ -1917,6 +1963,7 @@ module.exports = {
   getSuperAdminWorkforceActivity,
   getSuperAdminHighRiskStaff,
   getDashboardCategoryCandidatesDb,
+  getSuperAdminTiAssessmentStats,
 
   // Optimized combined stats & aggregates
   getSuperAdminStationStats,

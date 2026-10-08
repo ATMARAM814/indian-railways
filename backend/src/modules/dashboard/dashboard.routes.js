@@ -19,6 +19,7 @@ const {
   getSuperAdminHighRiskStaff,
   getSmSupervisorDashboard,
   getDashboardCategoryCandidates,
+  getTiAssessmentStats,
 } = require("./dashboard.controller");
 
 // PM Dashboard
@@ -115,6 +116,14 @@ router.get(
   enforcePasswordChange,
   authorize("SUPER_ADMIN", "AOM", "TI"),
   getDashboardCategoryCandidates
+);
+
+router.get(
+  "/super-admin/ti-assessment-stats",
+  authenticate,
+  enforcePasswordChange,
+  authorize("SUPER_ADMIN"),
+  getTiAssessmentStats
 );
 
 module.exports = router;

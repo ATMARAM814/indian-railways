@@ -384,13 +384,15 @@ const SuperAdminDashboard = () => {
             type="normal"
             trend="Total active safety crew"
           />
-          <StatCard
-            title="Pending Approvals"
-            value={summary.pendingApprovals}
-            icon={<Inbox size={20} />}
-            type="warning"
-            trend="Awaiting review"
-          />
+          <div style={{ cursor: 'pointer' }} onClick={() => navigate('/reports/ti-approvals')}>
+            <StatCard
+              title="Pending Approvals"
+              value={summary.pendingApprovals}
+              icon={<Inbox size={20} />}
+              type="warning"
+              trend="Awaiting review"
+            />
+          </div>
           <StatCard
             title="Total Evaluations"
             value={summary.totalAssessments}

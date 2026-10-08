@@ -86,7 +86,7 @@ const AssessmentRoleListPage = () => {
     setBulkType('Periodic Assessment');
     setBulkScheduledDate(() => new Date().toISOString().split('T')[0]);
     setBulkDueDate(() => getDefaultDueDate());
-    
+
     const res = await handleGetBulkEligibleStaff();
     if (res.success) {
       setBulkEligibleStaff(res.data);
@@ -285,7 +285,7 @@ const AssessmentRoleListPage = () => {
   return (
     <DashboardLayout>
       <div className="dashboard-page-container">
-        
+
         {/* Page Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -379,17 +379,16 @@ const AssessmentRoleListPage = () => {
 
         {/* Feedback Alerts */}
         {feedback && (
-          <div className={`p-4 rounded-lg flex items-start justify-between border ${
-            feedback.type === 'success' 
-              ? 'bg-emerald-50 border-emerald-200 text-emerald-800' 
+          <div className={`p-4 rounded-lg flex items-start justify-between border ${feedback.type === 'success'
+              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
               : 'bg-rose-50 border-rose-200 text-rose-800'
-          }`}>
+            }`}>
             <div className="flex items-center gap-3">
               {feedback.type === 'success' ? <CheckCircle2 size={20} className="text-emerald-600" /> : <AlertCircle size={20} className="text-rose-600" />}
               <span className="text-sm font-medium">{feedback.message}</span>
             </div>
-            <button 
-              onClick={() => setFeedback(null)} 
+            <button
+              onClick={() => setFeedback(null)}
               style={{
                 background: 'none',
                 border: 'none',
@@ -501,7 +500,7 @@ const AssessmentRoleListPage = () => {
             {/* Modal Body */}
             <form onSubmit={handleBulkSubmit}>
               <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px', maxHeight: '70vh', overflowY: 'auto' }}>
-                
+
                 {bulkLoading ? (
                   <div style={{ padding: '32px', textAlign: 'center', color: '#64748B', fontSize: '15px' }}>
                     Loading eligible employees list...
@@ -577,7 +576,7 @@ const AssessmentRoleListPage = () => {
                       >
                         <option value="Monthly Assessment">Monthly Assessment</option>
                         <option value="Quarterly Assessment">Quarterly Assessment</option>
-                        <option value="Annual Assessment">Annual Assessment</option>
+                        <option value="Half Yearly Assessment">Half Yearly Assessment</option>
                         <option value="Special Safety Review">Special Safety Review</option>
                         <option value="Post Transfer Assessment">Post Transfer Assessment</option>
                       </select>

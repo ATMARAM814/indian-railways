@@ -35,7 +35,7 @@ export const AssessmentStaffTable = ({
   const [scheduledDate, setScheduledDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [dueDate, setDueDate] = useState(() => getDefaultDueDate());
   const [instructionsRemarks, setInstructionsRemarks] = useState('');
-  
+
   const [cancellationReason, setCancellationReason] = useState('');
   const [cancelLoading, setCancelLoading] = useState(false);
   const [scheduleLoading, setScheduleLoading] = useState(false);
@@ -227,14 +227,14 @@ export const AssessmentStaffTable = ({
                     </div>
                   </td>
                   <td style={{ textAlign: 'center', verticalAlign: 'middle', padding: '12px 16px' }}>
-                    <AssessmentStatusBadge 
-                      status={row.assessment_status} 
-                      approvalStatus={row.approval_status} 
+                    <AssessmentStatusBadge
+                      status={row.assessment_status}
+                      approvalStatus={row.approval_status}
                     />
                   </td>
                   <td style={{ textAlign: 'right', verticalAlign: 'middle', padding: '12px 16px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
-                      
+
                       {/* Case 1 & 4: Show Schedule */}
                       {(assessmentCase === 1 || assessmentCase === 4) && (
                         <button
@@ -385,7 +385,7 @@ export const AssessmentStaffTable = ({
             {/* Modal Body */}
             <form onSubmit={handleScheduleSubmit}>
               <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px', maxHeight: '70vh', overflowY: 'auto' }}>
-                
+
                 {/* Readonly Section */}
                 <div className="modal-info-grid" style={{
                   backgroundColor: '#F8FAFC',
@@ -441,7 +441,7 @@ export const AssessmentStaffTable = ({
                       >
                         <option value="Monthly Assessment">Monthly Assessment</option>
                         <option value="Quarterly Assessment">Quarterly Assessment</option>
-                        <option value="Annual Assessment">Annual Assessment</option>
+                        <option value="Half Yearly Assessment">Half Yearly Assessment</option>
                         <option value="Special Safety Review">Special Safety Review</option>
                         <option value="Post Transfer Assessment">Post Transfer Assessment</option>
                       </select>
@@ -708,7 +708,7 @@ export const AssessmentStaffTable = ({
 
             {/* Modal Body */}
             <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              
+
               {/* Metadata Info */}
               <div className="modal-status-meta-grid" style={{
                 fontSize: '13px',
@@ -796,7 +796,7 @@ export const AssessmentStaffTable = ({
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', width: '100%', padding: '0 4px' }}>
                   {/* Background line */}
                   <div style={{ position: 'absolute', top: '16px', left: '8.3%', right: '8.3%', height: '4px', backgroundColor: '#E2E8F0', zIndex: 1 }}></div>
-                  
+
                   {/* Highlighted active line */}
                   <div style={{
                     position: 'absolute',

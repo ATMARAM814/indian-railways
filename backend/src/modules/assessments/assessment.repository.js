@@ -838,6 +838,7 @@ async function getRoleStatsForAssessor(assessorId, assessorRole, roleCode) {
           COALESCE(a.approved_at, a.created_at) >= NOW() - CASE 
             WHEN a.assessment_cycle ILIKE '%monthly%' THEN INTERVAL '30 days'
             WHEN a.assessment_cycle ILIKE '%quarterly%' THEN INTERVAL '90 days'
+            WHEN a.assessment_cycle ILIKE '%half yearly%' THEN INTERVAL '180 days'
             WHEN a.assessment_cycle ILIKE '%annual%' THEN INTERVAL '365 days'
             ELSE INTERVAL '30 days'
           END
@@ -869,6 +870,7 @@ async function getRoleStatsForAssessor(assessorId, assessorRole, roleCode) {
           COALESCE(a.approved_at, a.created_at) >= NOW() - CASE 
             WHEN a.assessment_cycle ILIKE '%monthly%' THEN INTERVAL '30 days'
             WHEN a.assessment_cycle ILIKE '%quarterly%' THEN INTERVAL '90 days'
+            WHEN a.assessment_cycle ILIKE '%half yearly%' THEN INTERVAL '180 days'
             WHEN a.assessment_cycle ILIKE '%annual%' THEN INTERVAL '365 days'
             ELSE INTERVAL '30 days'
           END
@@ -1122,6 +1124,7 @@ async function getEligibleStaff(assessorId, assessorRole, roleCode, filters = {}
           COALESCE(a.approved_at, a.created_at) >= NOW() - CASE 
             WHEN a.assessment_cycle ILIKE '%monthly%' THEN INTERVAL '30 days'
             WHEN a.assessment_cycle ILIKE '%quarterly%' THEN INTERVAL '90 days'
+            WHEN a.assessment_cycle ILIKE '%half yearly%' THEN INTERVAL '180 days'
             WHEN a.assessment_cycle ILIKE '%annual%' THEN INTERVAL '365 days'
             ELSE INTERVAL '30 days'
           END
@@ -1153,6 +1156,7 @@ async function getEligibleStaff(assessorId, assessorRole, roleCode, filters = {}
           COALESCE(a.approved_at, a.created_at) >= NOW() - CASE 
             WHEN a.assessment_cycle ILIKE '%monthly%' THEN INTERVAL '30 days'
             WHEN a.assessment_cycle ILIKE '%quarterly%' THEN INTERVAL '90 days'
+            WHEN a.assessment_cycle ILIKE '%half yearly%' THEN INTERVAL '180 days'
             WHEN a.assessment_cycle ILIKE '%annual%' THEN INTERVAL '365 days'
             ELSE INTERVAL '30 days'
           END

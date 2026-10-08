@@ -9,6 +9,7 @@ const {
   getSuperAdminHighRiskStaffService,
   getSmSupervisorDashboardService,
   getDashboardCategoryCandidatesService,
+  getSuperAdminTiAssessmentStatsService,
 } = require("./dashboard.service");
 
 async function getPmDashboard(req, res) {
@@ -201,6 +202,21 @@ async function getDashboardCategoryCandidates(req, res) {
   }
 }
 
+async function getTiAssessmentStats(req, res) {
+  try {
+    const data = await getSuperAdminTiAssessmentStatsService();
+    return res.status(200).json({
+      success: true,
+      data,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+}
+
 module.exports = {
   getPmDashboard,
   getTmDashboard,
@@ -212,4 +228,5 @@ module.exports = {
   getSuperAdminHighRiskStaff,
   getSmSupervisorDashboard,
   getDashboardCategoryCandidates,
+  getTiAssessmentStats,
 };

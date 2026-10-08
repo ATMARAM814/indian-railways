@@ -45,20 +45,20 @@ function yyyyMmToMonthName(yyyyMm) {
 }
 
 function fillRoleDistribution(dbRoles) {
-  const result = { 
-    PM: 0, 
-    SM: 0, 
-    TM: 0, 
-    "STATION MASTER SUPERVISOR": 0, 
-    "CABIN MASTER": 0, 
-    "SHUNTING MASTER": 0, 
-    SS: 0, 
-    TI: 0 
+  const result = {
+    PM: 0,
+    SM: 0,
+    TM: 0,
+    "STATION MASTER SUPERVISOR": 0,
+    "CABIN MASTER": 0,
+    "SHUNTING MASTER": 0,
+    SS: 0,
+    TI: 0
   };
   if (Array.isArray(dbRoles)) {
     dbRoles.forEach((r) => {
       let name = (r.role || "").toUpperCase().trim();
-      
+
       // Normalize aliases/casing/typos to canonical keys in result
       if (name === "POINTSMAN" || name === "POINTSMEN") {
         name = "PM";
@@ -77,7 +77,7 @@ function fillRoleDistribution(dbRoles) {
       } else if (name === "SS" || name === "STATION MASTER INCHARGE" || name === "STATION_MASTER_INCHARGE" || name === "SM INCHARGE") {
         name = "SS";
       }
-      
+
       if (name in result) {
         result[name] += r.count || 0;
       }
@@ -570,7 +570,7 @@ async function getSmDashboardService(profileId) {
     summary.completedAssessments,
     summary.pendingAssessments
   );
-  
+
   const stationCategoryDistribution = stationCategoryDist.map((row) => ({
     stationName: row.stationName,
     categoryA: row.categoryA || 0,
@@ -910,7 +910,7 @@ async function getAomDashboardService(profileId) {
     tiItem.count = summary.totalTI;
   }
   const categoryDistribution = fillCategoryDistribution(categoryData);
-  
+
   const assessmentPipeline = {
     summary: pipelineData.summary,
     monthly: pipelineData.monthly.map(row => ({
@@ -1124,6 +1124,10 @@ async function getSuperAdminDashboardService() {
   };
 }
 
+async function getSuperAdminTiAssessmentStatsService() {
+  return await db.getSuperAdminTiAssessmentStats();
+}
+
 async function getSuperAdminWorkforceActivityService(filters) {
   return await db.getSuperAdminWorkforceActivity(filters);
 }
@@ -1212,7 +1216,7 @@ async function getSmSupervisorDashboardService(profileId) {
     summary.completedAssessments,
     summary.pendingAssessments
   );
-  
+
   const stationCategoryDistribution = stationCategoryDist.map((row) => ({
     stationName: row.stationName,
     categoryA: row.categoryA || 0,
@@ -1302,4 +1306,5 @@ module.exports = {
   getSuperAdminHighRiskStaffService,
   getSmSupervisorDashboardService,
   getDashboardCategoryCandidatesService,
+  getSuperAdminTiAssessmentStatsService,
 };

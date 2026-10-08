@@ -55,3 +55,8 @@ export const getDashboardCategoryCandidates = async (params = {}) => {
   const res = await apiClient.get('/dashboard/category-candidates', { params });
   return res.data;
 };
+
+export const getSuperAdminTiAssessmentStats = async () => {
+  const res = await apiClient.get('/dashboard/super-admin/ti-assessment-stats');
+  return res.data;
+};
