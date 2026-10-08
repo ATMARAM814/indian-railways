@@ -27,7 +27,7 @@ const Topbar = ({ onToggleSidebar }) => {
     if (path.startsWith('/audit-logs')) return 'System Audit Logs';
     if (path.startsWith('/question-bank')) return 'Question Bank Management';
     if (path.startsWith('/staff-management')) return 'Staff Accounts Management';
-    return 'Railway Evaluation System';
+    return 'SCOPE NGP';
   };
 
   const getInitials = (name) => {

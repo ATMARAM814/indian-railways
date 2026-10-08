@@ -509,7 +509,7 @@ const CounselingPage = () => {
             </button>
             <div>
               <h1 style={{ fontSize: '24px', fontWeight: 800, color: '#0B2341', margin: 0 }}>
-                Railway Evaluation System
+                SCOPE NGP
               </h1>
             </div>
           </div>

@@ -78,7 +78,7 @@ const PlaceholderPage = () => {
           <h2 className="placeholder-title">{meta.title}</h2>
           <p className="placeholder-desc">{meta.desc}</p>
           <p style={{ fontSize: '12px', color: '#64748B', marginTop: '16px', fontWeight: '500' }}>
-            INDIAN RAILWAY EVALUATION SYSTEM • PORTAL MODULE
+            SCOPE NGP • PORTAL MODULE
           </p>
         </div>
       </div>

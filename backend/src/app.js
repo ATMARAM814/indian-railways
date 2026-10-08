@@ -124,7 +124,7 @@ app.get("/health", async (req, res) => {
 app.get("/", (req, res) => {
   res.json({
     success: true,
-    message: "Indian Railway Evaluation System API Running",
+    message: "SCOPE NGP API Running",
   });
 });
 
