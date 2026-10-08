@@ -155,12 +155,12 @@ async function getPmCategoryHistory(profileId) {
   return result.rows;
 }
 
-  // ==========================================
-  // TM DASHBOARD QUERIES
-  // ==========================================
+// ==========================================
+// TM DASHBOARD QUERIES
+// ==========================================
 
-  async function getTmSummary(profileId) {
-    const query = `
+async function getTmSummary(profileId) {
+  const query = `
       SELECT 
         (
           SELECT percentage 
@@ -207,12 +207,12 @@ async function getPmCategoryHistory(profileId) {
           LIMIT 1
         ) as last_assessment_date;
     `;
-    const result = await pool.query(query, [profileId]);
-    return result.rows[0];
-  }
+  const result = await pool.query(query, [profileId]);
+  return result.rows[0];
+}
 
-  async function getTmPerformanceTrend(profileId) {
-    const query = `
+async function getTmPerformanceTrend(profileId) {
+  const query = `
       SELECT 
         percentage,
         COALESCE(evaluated_at, created_at) as "assessmentDate"
@@ -220,12 +220,12 @@ async function getPmCategoryHistory(profileId) {
       WHERE assessed_user_id = $1 AND status = 'completed'
       ORDER BY COALESCE(evaluated_at, created_at) ASC;
     `;
-    const result = await pool.query(query, [profileId]);
-    return result.rows;
-  }
+  const result = await pool.query(query, [profileId]);
+  return result.rows;
+}
 
-  async function getTmSectionWisePerformance(profileId) {
-    const query = `
+async function getTmSectionWisePerformance(profileId) {
+  const query = `
       SELECT
         AVG(alertness_score)::numeric(10,2) as alertness,
         AVG(safety_record_score)::numeric(10,2) as safety_record,
@@ -235,12 +235,12 @@ async function getPmCategoryHistory(profileId) {
       FROM assessments
       WHERE assessed_user_id = $1 AND status = 'completed';
     `;
-    const result = await pool.query(query, [profileId]);
-    return result.rows[0];
-  }
+  const result = await pool.query(query, [profileId]);
+  return result.rows[0];
+}
 
-  async function getTmCategoryHistory(profileId) {
-    const query = `
+async function getTmCategoryHistory(profileId) {
+  const query = `
       SELECT date, category FROM (
         SELECT ec.created_at as date, sc.category_code as category
         FROM employee_categories ec
@@ -267,11 +267,11 @@ async function getPmCategoryHistory(profileId) {
       ) combined
       ORDER BY date DESC;
     `;
-    const result = await pool.query(query, [profileId]);
-    return result.rows;
-  }
+  const result = await pool.query(query, [profileId]);
+  return result.rows;
+}
 
-  // ==========================================
+// ==========================================
 // SM DASHBOARD QUERIES
 // ==========================================
 
@@ -610,7 +610,7 @@ async function getAomSummary(divisionId) {
       (
         SELECT COUNT(*)::int
         FROM assessments a
-        WHERE a.status = 'completed'
+        WHERE a.status = 'evaluated'
           AND a.approval_status = 'pending_approval'
           AND a.assessed_role_code IN ('SM', 'TM', 'TI', 'SS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Cabin Master', 'CABIN MASTER')
           AND a.assessed_user_id IN (
@@ -815,7 +815,7 @@ async function getSuperAdminSummary() {
       (
         SELECT COUNT(*)::int
         FROM assessments
-        WHERE status = 'completed' AND approval_status = 'pending_approval'
+        WHERE status = 'evaluated' AND approval_status = 'pending_approval'
       ) as pending_approvals,
       (
         SELECT COUNT(DISTINCT p.id)::int
@@ -1015,10 +1015,10 @@ async function getStationStaff(stationId) {
 }
 
 
-  
+
 async function getSuperAdminWorkforceActivity(filters) {
   const { fromDate, toDate, roleCode, actionType, stationId, stationName, category, search, page = 1, limit = 10 } = filters;
-  
+
   let query = `
     FROM audit_logs al
     JOIN profiles p ON p.id = al.entity_id
@@ -1035,10 +1035,10 @@ async function getSuperAdminWorkforceActivity(filters) {
     LEFT JOIN profiles perf ON perf.id = al.performed_by
     WHERE al.action_type IN ('USER_CREATED', 'EMPLOYEE_TRANSFERRED', 'USER_DEACTIVATED', 'USER_ACTIVATED')
   `;
-  
+
   const params = [];
   let paramCount = 0;
-  
+
   if (fromDate) {
     paramCount++;
     query += ` AND al.created_at >= $${paramCount}`;
@@ -1084,11 +1084,11 @@ async function getSuperAdminWorkforceActivity(filters) {
     query += ` AND (p.full_name ILIKE $${paramCount} OR p.hrms_id ILIKE $${paramCount} OR perf.full_name ILIKE $${paramCount} OR perf.hrms_id ILIKE $${paramCount})`;
     params.push(`%${search}%`);
   }
-  
+
   const countQuery = `SELECT COUNT(*)::int as total ` + query;
   const countRes = await pool.query(countQuery, params);
   const total = countRes.rows[0]?.total || 0;
-  
+
   let selectQuery = `
     SELECT 
       al.id,
@@ -1102,11 +1102,11 @@ async function getSuperAdminWorkforceActivity(filters) {
       (al.new_data->>'stationId') as "toStationId",
       s.station_name as "currentStationName"
   ` + query;
-  
+
   selectQuery += ` ORDER BY al.created_at DESC LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}`;
   const offset = (page - 1) * limit;
   const recordsRes = await pool.query(selectQuery, [...params, limit, offset]);
-  
+
   const records = [];
   for (const row of recordsRes.rows) {
     let fromStation = '--';
@@ -1121,13 +1121,13 @@ async function getSuperAdminWorkforceActivity(filters) {
         toStation = sRes.rows[0]?.station_name || '--';
       }
     }
-    
+
     let readableAction = row.actionType;
     if (row.actionType === 'USER_CREATED') readableAction = 'Created';
     else if (row.actionType === 'EMPLOYEE_TRANSFERRED') readableAction = 'Transferred';
     else if (row.actionType === 'USER_DEACTIVATED') readableAction = 'Deactivated';
     else if (row.actionType === 'USER_ACTIVATED') readableAction = 'Reactivated';
-    
+
     records.push({
       id: row.id,
       date: row.date,
@@ -1140,7 +1140,7 @@ async function getSuperAdminWorkforceActivity(filters) {
       performedBy: row.performedBy || 'System'
     });
   }
-  
+
   const monthlyQuery = `
     SELECT 
       TO_CHAR(al.created_at, 'YYYY-MM') as month_key,
@@ -1159,7 +1159,7 @@ async function getSuperAdminWorkforceActivity(filters) {
     const monthIndex = parseInt(parts[1], 10) - 1;
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const monthName = `${months[monthIndex]} ${year}`;
-    
+
     return {
       month: monthName,
       created: row.created_count,
@@ -1168,7 +1168,7 @@ async function getSuperAdminWorkforceActivity(filters) {
       reactivated: row.reactivated_count
     };
   });
-  
+
   const kpiQuery = `
     SELECT
       COUNT(*) FILTER (WHERE al.action_type = 'USER_CREATED')::int as created_total,
@@ -1210,7 +1210,7 @@ function formatDateDdMmmYyyy(dateVal) {
 
 async function getSuperAdminHighRiskStaff(filters) {
   const { fromDate, toDate, stationId, stationName, roleCode, category, riskLevel, search, page = 1, limit = 10 } = filters;
-  
+
   let query = `
     FROM staff_station_postings ssp
     JOIN profiles p ON p.id = ssp.profile_id
@@ -1225,10 +1225,10 @@ async function getSuperAdminHighRiskStaff(filters) {
     LEFT JOIN staff_categories sc ON sc.id = ec.category_id
     WHERE ssp.is_current = true AND sc.category_code = 'D'
   `;
-  
+
   const params = [];
   let paramCount = 0;
-  
+
   if (fromDate) {
     paramCount++;
     query += ` AND ec.created_at >= $${paramCount}`;
@@ -1254,11 +1254,11 @@ async function getSuperAdminHighRiskStaff(filters) {
     query += ` AND r.name = $${paramCount}`;
     params.push(roleCode);
   }
-  
+
   const countQuery = `SELECT COUNT(*)::int as total ` + query;
   const countRes = await pool.query(countQuery, params);
   const total = countRes.rows[0]?.total || 0;
-  
+
   let selectQuery = `
     SELECT 
       p.id,
@@ -1305,11 +1305,11 @@ async function getSuperAdminHighRiskStaff(filters) {
         ORDER BY a.evaluated_at DESC LIMIT 1
       ) as "lastAssessmentDate"
   ` + query;
-  
+
   selectQuery += ` ORDER BY s.station_name, p.full_name LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}`;
   const offset = (page - 1) * limit;
   const recordsRes = await pool.query(selectQuery, [...params, limit, offset]);
-  
+
   const records = recordsRes.rows.map(row => ({
     id: row.id,
     stationName: row.stationName,
@@ -1325,7 +1325,7 @@ async function getSuperAdminHighRiskStaff(filters) {
     riskLevel: 'HIGH',
     lastAssessmentDate: formatDateDdMmmYyyy(row.lastAssessmentDate)
   }));
-  
+
   let chartQuery = `
     SELECT 
       s.station_name as "stationName",
@@ -1333,10 +1333,10 @@ async function getSuperAdminHighRiskStaff(filters) {
       COUNT(DISTINCT p.id) FILTER (
         WHERE sc.category_code = 'D'
   `;
-  
+
   const chartParams = [];
   let chartParamCount = 0;
-  
+
   if (fromDate) {
     chartParamCount++;
     chartQuery += ` AND ec.created_at >= $${chartParamCount}`;
@@ -1352,7 +1352,7 @@ async function getSuperAdminHighRiskStaff(filters) {
     chartQuery += ` AND r.name = $${chartParamCount}`;
     chartParams.push(roleCode);
   }
-  
+
   chartQuery += `
       )::int as count
     FROM stations s
@@ -1368,7 +1368,7 @@ async function getSuperAdminHighRiskStaff(filters) {
     LEFT JOIN staff_categories sc ON sc.id = ec.category_id
     WHERE 1=1
   `;
-  
+
   if (stationId) {
     chartParamCount++;
     chartQuery += ` AND s.id = $${chartParamCount}`;
@@ -1379,7 +1379,7 @@ async function getSuperAdminHighRiskStaff(filters) {
     chartQuery += ` AND (s.station_name ILIKE $${chartParamCount} OR s.station_code ILIKE $${chartParamCount})`;
     chartParams.push(`%${stationName}%`);
   }
-  
+
   chartQuery += `
     GROUP BY s.id, s.station_name, s.station_code
     ORDER BY count DESC, s.station_name ASC
@@ -1390,29 +1390,29 @@ async function getSuperAdminHighRiskStaff(filters) {
     stationCode: row.stationCode,
     count: row.count
   }));
-  
+
   const kpisQuery = `
     SELECT 
       COUNT(DISTINCT p.id)::int as total_high_risk_staff,
       COUNT(DISTINCT s.id)::int as high_risk_stations
     ` + query;
   const kpisRes = await pool.query(kpisQuery, params);
-  
+
   const highestRiskStation = stationCounts.find(sc => sc.count > 0)?.stationCode || '--';
   const totalHighRiskStaff = kpisRes.rows[0]?.total_high_risk_staff || 0;
   const highRiskStations = kpisRes.rows[0]?.high_risk_stations || 0;
-  
+
   let avgRisk = 'LOW';
   if (totalHighRiskStaff > 10) avgRisk = 'HIGH';
   else if (totalHighRiskStaff > 2) avgRisk = 'MEDIUM';
-  
-    const kpis = {
+
+  const kpis = {
     totalHighRiskStaff,
     highRiskStations,
     highestRiskStation,
     averageDivisionRisk: avgRisk
   };
-  
+
   return { records, total, stationCounts, kpis };
 }
 
@@ -1540,7 +1540,7 @@ async function getDashboardCategoryCandidatesDb({
 }) {
   let conditions = [];
   let values = [];
-  
+
   if (role === 'TI') {
     const tiStations = await getTiStations(userId);
     if (!tiStations || tiStations.length === 0) return [];
@@ -1552,7 +1552,7 @@ async function getDashboardCategoryCandidatesDb({
     values.push(aomDiv);
     conditions.push(`s.division_id = $${values.length}`);
   }
-  
+
   if (category) {
     values.push(category.toUpperCase());
     conditions.push(`COALESCE(sc.category_code, CASE 
@@ -1569,17 +1569,17 @@ async function getDashboardCategoryCandidatesDb({
     values.push(targetRole.trim());
     conditions.push(`r.name = $${values.length}`);
   }
-  
+
   if (search && search.trim()) {
     values.push(`%${search.trim().toLowerCase()}%`);
     conditions.push(`(LOWER(p.full_name) LIKE $${values.length} OR LOWER(p.hrms_id) LIKE $${values.length})`);
   }
-  
+
   if (stationSearch && stationSearch.trim()) {
     values.push(`%${stationSearch.trim().toLowerCase()}%`);
     conditions.push(`(LOWER(s.station_name) LIKE $${values.length} OR LOWER(s.station_code) LIKE $${values.length})`);
   }
-  
+
   let query = `
     SELECT 
       p.id as "userId",
@@ -1630,18 +1630,18 @@ async function getDashboardCategoryCandidatesDb({
     ) lca ON true
     WHERE ssp.is_current = true
   `;
-  
+
   if (conditions.length > 0) {
     query += ` AND ` + conditions.join(' AND ');
   }
-  
+
   query += ` ORDER BY lca.percentage ASC NULLS LAST, p.full_name ASC`;
-  
+
   if (limit) {
     values.push(limit);
     query += ` LIMIT $${values.length}`;
   }
-  
+
   const result = await pool.query(query, values);
   return result.rows;
 }
@@ -1775,7 +1775,7 @@ async function getTiStationStats(stationIds) {
 function buildScopeQuery(baseQuery, scope) {
   let whereClause = "";
   const params = [];
-  
+
   if (scope && scope.type === 'division') {
     whereClause = `
       AND a.assessed_user_id IN (
@@ -1805,7 +1805,7 @@ function buildScopeQuery(baseQuery, scope) {
     `;
     params.push(scope.value);
   }
-  
+
   const sql = baseQuery.split("__SCOPE_FILTER__").join(whereClause);
   return { sql, params };
 }
@@ -1883,15 +1883,15 @@ async function getAssessmentPipelineDb(scope) {
     FULL OUTER JOIN rejected_stats r ON r.month = COALESCE(a.month, p.month)
     ORDER BY month;
   `;
-  
+
   const qSummary = buildScopeQuery(baseQuerySummary, scope);
   const qMonthly = buildScopeQuery(baseQueryMonthly, scope);
-  
+
   const [resSummary, resMonthly] = await Promise.all([
     pool.query(qSummary.sql, qSummary.params),
     pool.query(qMonthly.sql, qMonthly.params)
   ]);
-  
+
   return {
     summary: {
       approved: resSummary.rows[0]?.approved || 0,
@@ -2002,7 +2002,7 @@ module.exports = {
   getTiStations,
   getAomDivision,
   getStationStaff,
-  
+
   getPmSummary,
   getPmPerformanceTrend,
   getPmSectionWisePerformance,
@@ -2019,7 +2019,7 @@ module.exports = {
   getSmStationCategoryDistribution,
   getSmAssessments,
   getSmSupervisorSummary,
-  
+
   getTiSummary,
   getTiStationProgress,
   getTiStationAvgScore,
@@ -2027,7 +2027,7 @@ module.exports = {
   getTiCategoryDistribution,
   getTiAssessments,
   getTiStationCategoryDistribution,
-  
+
   getAomSummary,
   getAomStationProgress,
   getAomStationAvgScore,
@@ -2036,7 +2036,7 @@ module.exports = {
   getAomTiPerformance,
   getAomStationCategoryDistribution,
   getAomAssessments,
-  
+
   getSuperAdminSummary,
   getSuperAdminStationProgress,
   getSuperAdminStationAvgScore,

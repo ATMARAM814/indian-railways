@@ -278,6 +278,7 @@ const AOMDashboard = () => {
             icon={<Inbox size={20} />}
             type="warning"
             link="/reports/ti-approvals"
+            trend="Awaiting final clearance"
           />
           <StatCard
             title="Division Average Score"

@@ -348,6 +348,7 @@ const SuperAdminDashboard = () => {
             icon={<Inbox size={20} />}
             type="warning"
             link="/reports/ti-approvals"
+            trend="Awaiting final clearance"
           />
           <StatCard
             title="Division Average Score"
@@ -523,10 +524,6 @@ const SuperAdminDashboard = () => {
               </button>
             }
           />
-        </div>
-
-        {/* Row 2: Grade/Category Distribution */}
-        <div className="charts-grid">
           <DonutChartCard
             title="Grade/Category Distribution"
             subtitle="Staff grades in your section"
@@ -554,6 +551,8 @@ const SuperAdminDashboard = () => {
             }
           />
         </div>
+
+
 
         {/* Row 4: Traffic Inspector Performance (vertical, full-width) */}
         <div className="charts-grid charts-grid-full">
@@ -662,73 +661,6 @@ const SuperAdminDashboard = () => {
           />
         </div>
 
-        {/* Row 6: Assessment Pipeline (division-wide premium component) */}
-        <div className="charts-grid charts-grid-full">
-          <ChartCard
-            title="Assessment Pipeline"
-            subtitle="Division-wide pipeline status and trend"
-          >
-            <div style={{ display: 'flex', flexDirection: 'column', width: '100%', gap: '24px' }}>
-              {/* Pipeline KPI Cards Grid */}
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-                  gap: '16px',
-                  width: '100%'
-                }}
-              >
-                <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '8px', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#1B365D' }}></span>
-                    <span style={{ fontSize: '10.5px', color: '#64748B', fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase' }}>Approved</span>
-                  </div>
-                  <span style={{ fontSize: '20px', fontWeight: 700, color: '#0B2341', marginLeft: '14px' }}>{pipeline.summary?.approved ?? 0}</span>
-                </div>
-
-                <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '8px', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#2563EB' }}></span>
-                    <span style={{ fontSize: '10.5px', color: '#64748B', fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase' }}>Pending</span>
-                  </div>
-                  <span style={{ fontSize: '20px', fontWeight: 700, color: '#0B2341', marginLeft: '14px' }}>{pipeline.summary?.pending ?? 0}</span>
-                </div>
-
-                <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '8px', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#C53030' }}></span>
-                    <span style={{ fontSize: '10.5px', color: '#64748B', fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase' }}>Rejected</span>
-                  </div>
-                  <span style={{ fontSize: '20px', fontWeight: 700, color: '#0B2341', marginLeft: '14px' }}>{pipeline.summary?.rejected ?? 0}</span>
-                </div>
-
-                <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '8px', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#64748B' }}></span>
-                    <span style={{ fontSize: '10.5px', color: '#64748B', fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase' }}>Overdue</span>
-                  </div>
-                  <span style={{ fontSize: '20px', fontWeight: 700, color: '#0B2341', marginLeft: '14px' }}>{pipeline.summary?.overdue ?? 0}</span>
-                </div>
-              </div>
-
-              {/* Grouped Bar Chart */}
-              <ResponsiveContainer width="100%" height={320}>
-                <BarChart data={pipeline.monthly} margin={{ top: 10, right: 10, left: -20, bottom: 0 }} key={JSON.stringify(pipeline.monthly)}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
-                  <XAxis dataKey="month" stroke="#64748B" fontSize={11} tickLine={false} axisLine={false} dy={10} interval={0} />
-                  <YAxis domain={[0, 100]} stroke="#64748B" fontSize={11} tickLine={false} axisLine={false} dx={-5} allowDecimals={false} />
-                  <Tooltip />
-                  <Legend verticalAlign="bottom" height={55} iconType="circle" iconSize={8} />
-                  <Bar dataKey="Approved" fill="#1B365D" barSize={10} radius={[2, 2, 0, 0]} isAnimationActive={true} animationBegin={0} animationDuration={1200} animationEasing="ease-out" />
-                  <Bar dataKey="Pending" fill="#2563EB" barSize={10} radius={[2, 2, 0, 0]} isAnimationActive={true} animationBegin={0} animationDuration={1200} animationEasing="ease-out" />
-                  <Bar dataKey="Rejected" fill="#C53030" barSize={10} radius={[2, 2, 0, 0]} isAnimationActive={true} animationBegin={0} animationDuration={1200} animationEasing="ease-out" />
-                  <Bar dataKey="Overdue" fill="#64748B" barSize={10} radius={[2, 2, 0, 0]} isAnimationActive={true} animationBegin={0} animationDuration={1200} animationEasing="ease-out" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </ChartCard>
-        </div>
-
         {/* Top Performing Stations & Stations Needing Attention */}
         <div className="charts-grid" style={{ marginTop: '24px' }}>
           <ChartCard
@@ -755,7 +687,7 @@ const SuperAdminDashboard = () => {
         onClose={() => setIsDrillDownOpen(false)}
         graphType={drillDownType}
       />
-    </DashboardLayout>
+    </DashboardLayout >
   );
 };
 
