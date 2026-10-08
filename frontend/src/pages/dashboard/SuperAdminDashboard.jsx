@@ -348,7 +348,7 @@ const SuperAdminDashboard = () => {
             icon={<Inbox size={20} />}
             type="warning"
             link="/reports/ti-approvals"
-            trend="Awaiting final clearance"
+            trend="Evaluation & approval status by TI"
           />
           <StatCard
             title="Division Average Score"
