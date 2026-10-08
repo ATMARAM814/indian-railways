@@ -504,11 +504,23 @@ async function getStationSummaryReport(filters, scope) {
   let assessmentDateJoinCond = "";
   if (filters.fromDate) {
     values.push(filters.fromDate);
-    assessmentDateJoinCond += ` AND a.created_at >= $${values.length}::timestamp`;
+    assessmentDateJoinCond += ` AND COALESCE(a.evaluated_at, a.created_at) >= $${values.length}::timestamp`;
+  } else {
+    assessmentDateJoinCond += ` AND COALESCE(a.evaluated_at, a.created_at) >= CASE 
+      WHEN EXTRACT(MONTH FROM CURRENT_DATE) <= 6 
+      THEN make_date(EXTRACT(YEAR FROM CURRENT_DATE)::int, 1, 1)::timestamp
+      ELSE make_date(EXTRACT(YEAR FROM CURRENT_DATE)::int, 7, 1)::timestamp
+    END`;
   }
   if (filters.toDate) {
     values.push(filters.toDate);
-    assessmentDateJoinCond += ` AND a.created_at <= $${values.length}::timestamp`;
+    assessmentDateJoinCond += ` AND COALESCE(a.evaluated_at, a.created_at) <= $${values.length}::timestamp`;
+  } else {
+    assessmentDateJoinCond += ` AND COALESCE(a.evaluated_at, a.created_at) <= CASE 
+      WHEN EXTRACT(MONTH FROM CURRENT_DATE) <= 6 
+      THEN (make_date(EXTRACT(YEAR FROM CURRENT_DATE)::int, 6, 30) + time '23:59:59')::timestamp
+      ELSE (make_date(EXTRACT(YEAR FROM CURRENT_DATE)::int, 12, 31) + time '23:59:59')::timestamp
+    END`;
   }
 
   const query = `

@@ -624,6 +624,16 @@ async function getAomSummary(divisionId) {
         SELECT COALESCE(AVG(a.percentage)::numeric(10,2), 0)
         FROM assessments a
         WHERE a.status = 'completed'
+          AND COALESCE(a.evaluated_at, a.created_at) >= CASE 
+            WHEN EXTRACT(MONTH FROM CURRENT_DATE) <= 6 
+            THEN make_date(EXTRACT(YEAR FROM CURRENT_DATE)::int, 1, 1)::timestamp
+            ELSE make_date(EXTRACT(YEAR FROM CURRENT_DATE)::int, 7, 1)::timestamp
+          END
+          AND COALESCE(a.evaluated_at, a.created_at) <= CASE 
+            WHEN EXTRACT(MONTH FROM CURRENT_DATE) <= 6 
+            THEN (make_date(EXTRACT(YEAR FROM CURRENT_DATE)::int, 6, 30) + time '23:59:59')::timestamp
+            ELSE (make_date(EXTRACT(YEAR FROM CURRENT_DATE)::int, 12, 31) + time '23:59:59')::timestamp
+          END
           AND a.assessed_user_id IN (
             SELECT ssp.profile_id
             FROM staff_station_postings ssp
@@ -847,10 +857,20 @@ async function getSuperAdminStationAvgScore() {
     SELECT
       s.station_name as "stationName",
       s.station_code as "stationCode",
-      AVG(a.percentage)::numeric(10,2) as "averageScore"
+      COALESCE(AVG(a.percentage)::numeric(10,2), 0) as "averageScore"
     FROM stations s
     LEFT JOIN staff_station_postings ssp ON ssp.station_id = s.id AND ssp.is_current = true
     LEFT JOIN assessments a ON a.assessed_user_id = ssp.profile_id AND a.status = 'completed'
+      AND COALESCE(a.evaluated_at, a.created_at) >= CASE 
+        WHEN EXTRACT(MONTH FROM CURRENT_DATE) <= 6 
+        THEN make_date(EXTRACT(YEAR FROM CURRENT_DATE)::int, 1, 1)::timestamp
+        ELSE make_date(EXTRACT(YEAR FROM CURRENT_DATE)::int, 7, 1)::timestamp
+      END
+      AND COALESCE(a.evaluated_at, a.created_at) <= CASE 
+        WHEN EXTRACT(MONTH FROM CURRENT_DATE) <= 6 
+        THEN (make_date(EXTRACT(YEAR FROM CURRENT_DATE)::int, 6, 30) + time '23:59:59')::timestamp
+        ELSE (make_date(EXTRACT(YEAR FROM CURRENT_DATE)::int, 12, 31) + time '23:59:59')::timestamp
+      END
     GROUP BY s.id, s.station_name, s.station_code
     ORDER BY s.station_code;
   `;
@@ -1637,7 +1657,7 @@ async function getSuperAdminStationStats() {
       s.station_code as "stationCode",
       COUNT(DISTINCT a.id) FILTER (WHERE a.status = 'completed')::int as completed,
       COUNT(DISTINCT a.id) FILTER (WHERE a.status IN ('created', 'mcq_submitted'))::int as pending,
-      COALESCE(AVG(a.percentage)::numeric(10,2), 0) as "averageScore",
+      COALESCE(AVG(a.percentage) FILTER (WHERE a.status = 'completed')::numeric(10,2), 0) as "averageScore",
       COUNT(DISTINCT p.id) FILTER (WHERE sc.category_code = 'A')::int as "categoryA",
       COUNT(DISTINCT p.id) FILTER (WHERE sc.category_code = 'B')::int as "categoryB",
       COUNT(DISTINCT p.id) FILTER (WHERE sc.category_code = 'C')::int as "categoryC",
@@ -1653,6 +1673,16 @@ async function getSuperAdminStationStats() {
     ) ec ON true
     LEFT JOIN staff_categories sc ON sc.id = ec.category_id
     LEFT JOIN assessments a ON a.assessed_user_id = ssp.profile_id
+      AND COALESCE(a.evaluated_at, a.created_at) >= CASE 
+        WHEN EXTRACT(MONTH FROM CURRENT_DATE) <= 6 
+        THEN make_date(EXTRACT(YEAR FROM CURRENT_DATE)::int, 1, 1)::timestamp
+        ELSE make_date(EXTRACT(YEAR FROM CURRENT_DATE)::int, 7, 1)::timestamp
+      END
+      AND COALESCE(a.evaluated_at, a.created_at) <= CASE 
+        WHEN EXTRACT(MONTH FROM CURRENT_DATE) <= 6 
+        THEN (make_date(EXTRACT(YEAR FROM CURRENT_DATE)::int, 6, 30) + time '23:59:59')::timestamp
+        ELSE (make_date(EXTRACT(YEAR FROM CURRENT_DATE)::int, 12, 31) + time '23:59:59')::timestamp
+      END
     GROUP BY s.id, s.station_name, s.station_code
     ORDER BY s.station_code;
   `;
@@ -1667,7 +1697,7 @@ async function getAomStationStats(divisionId) {
       s.station_code as "stationCode",
       COUNT(DISTINCT a.id) FILTER (WHERE a.status = 'completed')::int as completed,
       COUNT(DISTINCT a.id) FILTER (WHERE a.status IN ('created', 'mcq_submitted'))::int as pending,
-      COALESCE(AVG(a.percentage)::numeric(10,2), 0) as "averageScore",
+      COALESCE(AVG(a.percentage) FILTER (WHERE a.status = 'completed')::numeric(10,2), 0) as "averageScore",
       COUNT(DISTINCT p.id) FILTER (WHERE sc.category_code = 'A')::int as "categoryA",
       COUNT(DISTINCT p.id) FILTER (WHERE sc.category_code = 'B')::int as "categoryB",
       COUNT(DISTINCT p.id) FILTER (WHERE sc.category_code = 'C')::int as "categoryC",
@@ -1683,6 +1713,16 @@ async function getAomStationStats(divisionId) {
     ) ec ON true
     LEFT JOIN staff_categories sc ON sc.id = ec.category_id
     LEFT JOIN assessments a ON a.assessed_user_id = ssp.profile_id
+      AND COALESCE(a.evaluated_at, a.created_at) >= CASE 
+        WHEN EXTRACT(MONTH FROM CURRENT_DATE) <= 6 
+        THEN make_date(EXTRACT(YEAR FROM CURRENT_DATE)::int, 1, 1)::timestamp
+        ELSE make_date(EXTRACT(YEAR FROM CURRENT_DATE)::int, 7, 1)::timestamp
+      END
+      AND COALESCE(a.evaluated_at, a.created_at) <= CASE 
+        WHEN EXTRACT(MONTH FROM CURRENT_DATE) <= 6 
+        THEN (make_date(EXTRACT(YEAR FROM CURRENT_DATE)::int, 6, 30) + time '23:59:59')::timestamp
+        ELSE (make_date(EXTRACT(YEAR FROM CURRENT_DATE)::int, 12, 31) + time '23:59:59')::timestamp
+      END
     WHERE s.division_id = $1
     GROUP BY s.id, s.station_name, s.station_code
     ORDER BY s.station_code;
@@ -1698,7 +1738,7 @@ async function getTiStationStats(stationIds) {
       s.station_code as "stationCode",
       COUNT(DISTINCT a.id) FILTER (WHERE a.status = 'completed')::int as completed,
       COUNT(DISTINCT a.id) FILTER (WHERE a.status IN ('created', 'mcq_submitted'))::int as pending,
-      COALESCE(AVG(a.percentage)::numeric(10,2), 0) as "averageScore",
+      COALESCE(AVG(a.percentage) FILTER (WHERE a.status = 'completed')::numeric(10,2), 0) as "averageScore",
       COUNT(DISTINCT p.id) FILTER (WHERE sc.category_code = 'A')::int as "categoryA",
       COUNT(DISTINCT p.id) FILTER (WHERE sc.category_code = 'B')::int as "categoryB",
       COUNT(DISTINCT p.id) FILTER (WHERE sc.category_code = 'C')::int as "categoryC",
@@ -1714,6 +1754,16 @@ async function getTiStationStats(stationIds) {
     ) ec ON true
     LEFT JOIN staff_categories sc ON sc.id = ec.category_id
     LEFT JOIN assessments a ON a.assessed_user_id = ssp.profile_id
+      AND COALESCE(a.evaluated_at, a.created_at) >= CASE 
+        WHEN EXTRACT(MONTH FROM CURRENT_DATE) <= 6 
+        THEN make_date(EXTRACT(YEAR FROM CURRENT_DATE)::int, 1, 1)::timestamp
+        ELSE make_date(EXTRACT(YEAR FROM CURRENT_DATE)::int, 7, 1)::timestamp
+      END
+      AND COALESCE(a.evaluated_at, a.created_at) <= CASE 
+        WHEN EXTRACT(MONTH FROM CURRENT_DATE) <= 6 
+        THEN (make_date(EXTRACT(YEAR FROM CURRENT_DATE)::int, 6, 30) + time '23:59:59')::timestamp
+        ELSE (make_date(EXTRACT(YEAR FROM CURRENT_DATE)::int, 12, 31) + time '23:59:59')::timestamp
+      END
     WHERE s.id = ANY($1)
     GROUP BY s.id, s.station_name, s.station_code
     ORDER BY s.station_code;
@@ -1891,10 +1941,21 @@ async function getApprovalTrendDb(scope) {
 async function getPerformanceTrendDb(scope) {
   const baseQuery = `
     SELECT 
-      TO_CHAR(evaluated_at, 'YYYY-MM') as month,
+      TO_CHAR(COALESCE(evaluated_at, created_at), 'YYYY-MM') as month,
       ROUND(AVG(percentage), 2)::numeric as "averageScore"
     FROM assessments a
-    WHERE status = 'completed' AND evaluated_at IS NOT NULL AND percentage IS NOT NULL __SCOPE_FILTER__
+    WHERE status = 'completed' AND percentage IS NOT NULL
+      AND COALESCE(evaluated_at, created_at) >= CASE 
+        WHEN EXTRACT(MONTH FROM CURRENT_DATE) <= 6 
+        THEN make_date(EXTRACT(YEAR FROM CURRENT_DATE)::int, 1, 1)::timestamp
+        ELSE make_date(EXTRACT(YEAR FROM CURRENT_DATE)::int, 7, 1)::timestamp
+      END
+      AND COALESCE(evaluated_at, created_at) <= CASE 
+        WHEN EXTRACT(MONTH FROM CURRENT_DATE) <= 6 
+        THEN (make_date(EXTRACT(YEAR FROM CURRENT_DATE)::int, 6, 30) + time '23:59:59')::timestamp
+        ELSE (make_date(EXTRACT(YEAR FROM CURRENT_DATE)::int, 12, 31) + time '23:59:59')::timestamp
+      END
+      __SCOPE_FILTER__
     GROUP BY month
     ORDER BY month;
   `;

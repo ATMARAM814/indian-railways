@@ -193,12 +193,43 @@ export const mapTiPerformanceComparison = (data) => {
   }));
 };
 
+export const getCurrentQuarterCycleMonths = () => {
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const now = new Date();
+  const currentMonthIdx = now.getMonth(); // 0 to 11
+  const year = now.getFullYear();
+  const startMonthIdx = currentMonthIdx <= 5 ? 0 : 6;
+  const result = [];
+  for (let m = startMonthIdx; m <= currentMonthIdx; m++) {
+    result.push(`${months[m]} ${year}`);
+  }
+  return result;
+};
+
 export const mapDivisionPerformanceTrend = (data) => {
-  const mapped = safeArray(data).map((item) => ({
-    month: item.month || 'N/A',
-    Score: Number(item.averageScore || 0),
-  }));
-  return padTrendData(mapped, () => ({ Score: 0 }));
+  const cycleMonths = getCurrentQuarterCycleMonths();
+  const cycleMonthSet = new Set(cycleMonths);
+
+  const mapped = safeArray(data)
+    .filter(item => cycleMonthSet.has(item.month))
+    .map((item) => ({
+      month: item.month || 'N/A',
+      Score: Number(item.averageScore || 0),
+    }));
+
+  const presentMonths = new Set(mapped.map(item => item.month));
+  const result = [...mapped];
+  cycleMonths.forEach(m => {
+    if (!presentMonths.has(m)) {
+      result.push({
+        month: m,
+        Score: 0
+      });
+    }
+  });
+
+  result.sort((a, b) => parseMonthYear(a.month) - parseMonthYear(b.month));
+  return result;
 };
 
 export const mapScoreSafetyTrend = (data) => {

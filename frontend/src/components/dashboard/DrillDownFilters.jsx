@@ -264,42 +264,46 @@ const DrillDownFilters = ({ filters, onFilterChange, onReset, graphType }) => {
         )}
 
         {/* Start Date */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          <label style={{ fontSize: '11px', fontWeight: 600, color: '#64748B' }}>Start Date</label>
-          <input 
-            type="date"
-            value={filters.fromDate || ''}
-            onChange={(e) => onFilterChange('fromDate', e.target.value)}
-            style={{
-              padding: '7px 12px',
-              border: '1px solid #CBD5E1',
-              borderRadius: '6px',
-              fontSize: '13px',
-              color: '#0F172A',
-              outline: 'none',
-              width: '100%'
-            }}
-          />
-        </div>
+        {!isCategoryDist && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <label style={{ fontSize: '11px', fontWeight: 600, color: '#64748B' }}>Start Date</label>
+            <input 
+              type="date"
+              value={filters.fromDate || ''}
+              onChange={(e) => onFilterChange('fromDate', e.target.value)}
+              style={{
+                padding: '7px 12px',
+                border: '1px solid #CBD5E1',
+                borderRadius: '6px',
+                fontSize: '13px',
+                color: '#0F172A',
+                outline: 'none',
+                width: '100%'
+              }}
+            />
+          </div>
+        )}
 
         {/* End Date */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          <label style={{ fontSize: '11px', fontWeight: 600, color: '#64748B' }}>End Date</label>
-          <input 
-            type="date"
-            value={filters.toDate || ''}
-            onChange={(e) => onFilterChange('toDate', e.target.value)}
-            style={{
-              padding: '7px 12px',
-              border: '1px solid #CBD5E1',
-              borderRadius: '6px',
-              fontSize: '13px',
-              color: '#0F172A',
-              outline: 'none',
-              width: '100%'
-            }}
-          />
-        </div>
+        {!isCategoryDist && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <label style={{ fontSize: '11px', fontWeight: 600, color: '#64748B' }}>End Date</label>
+            <input 
+              type="date"
+              value={filters.toDate || ''}
+              onChange={(e) => onFilterChange('toDate', e.target.value)}
+              style={{
+                padding: '7px 12px',
+                border: '1px solid #CBD5E1',
+                borderRadius: '6px',
+                fontSize: '13px',
+                color: '#0F172A',
+                outline: 'none',
+                width: '100%'
+              }}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
