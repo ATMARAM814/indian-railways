@@ -10,15 +10,11 @@ const mapUserToRow = (user) => ({
     'Station Code': user.station_code || '—',
     'Station Name': user.station_name || '—',
     'Category': user.category_code ? `Cat ${user.category_code}` : '—',
-    'Risk Level': user.risk_level || '—',
     'Latest Score (%)': user.percentage !== null && user.percentage !== undefined
         ? parseFloat(user.percentage).toFixed(1)
         : '—',
     'Status': user.status === 'active' ? 'Active' : 'Inactive',
     'Mobile': user.mobile || '—',
-    'Email': user.email || '—',
-    'Date of Birth': user.date_of_birth || '—',
-    'Date of Joining': user.date_of_joining || '—',
 });
 
 /**
@@ -281,9 +277,6 @@ export const downloadAllStationsEmployeesExcel = async (
             'Cat B': stUsers.filter((u) => u.category_code === 'B').length,
             'Cat C': stUsers.filter((u) => u.category_code === 'C').length,
             'Cat D': stUsers.filter((u) => u.category_code === 'D').length,
-            'High Risk': stUsers.filter((u) => u.risk_level === 'HIGH').length,
-            'Medium Risk': stUsers.filter((u) => u.risk_level === 'MEDIUM').length,
-            'Low Risk': stUsers.filter((u) => u.risk_level === 'LOW').length,
         }));
 
         const summaryWs = XLSX.utils.json_to_sheet(summaryRows);
@@ -363,9 +356,6 @@ export const downloadTIWiseExcel = async (
                 'Cat B': employees.filter((u) => u.category_code === 'B').length,
                 'Cat C': employees.filter((u) => u.category_code === 'C').length,
                 'Cat D': employees.filter((u) => u.category_code === 'D').length,
-                'High Risk': employees.filter((u) => u.risk_level === 'HIGH').length,
-                'Medium Risk': employees.filter((u) => u.risk_level === 'MEDIUM').length,
-                'Low Risk': employees.filter((u) => u.risk_level === 'LOW').length,
             };
         });
 
