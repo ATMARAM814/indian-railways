@@ -4,10 +4,10 @@ import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { getAomDashboardData, getDashboardCategoryCandidates } from '../../api/dashboardApi';
 import HighRiskWatchlist from '../../components/stations/HighRiskWatchlist';
-import { 
-  mapRoleDistribution, 
-  mapCategoryDistribution, 
-  mapStationCategoryDistribution, 
+import {
+  mapRoleDistribution,
+  mapCategoryDistribution,
+  mapStationCategoryDistribution,
   mapMonthlyCompletionTrend,
   mapSafetyCompliance,
   mapStationProgress,
@@ -26,19 +26,19 @@ import LineChartCard from '../../components/charts/LineChartCard';
 import BarChartCard from '../../components/charts/BarChartCard';
 import DonutChartCard from '../../components/charts/DonutChartCard';
 import DrillDownChartModal from '../../components/dashboard/DrillDownChartModal';
-import { 
-  ResponsiveContainer, 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend 
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend
 } from 'recharts';
-import { 
+import {
   Building2,
-  Users, 
+  Users,
   ShieldAlert,
   AlertTriangle,
   Percent,
@@ -168,7 +168,7 @@ const AOMDashboard = () => {
     const totalCategorized = catA + catB + catC + catD;
     const catAAndB = catA + catB;
     const safetyPercent = totalCategorized > 0 ? Math.round((catAAndB / totalCategorized) * 100) : 100;
-    
+
     return {
       stationName: s.stationName,
       stationCode: s.stationCode || s.stationName,
@@ -223,10 +223,10 @@ const AOMDashboard = () => {
                 <td style={{ padding: '10px 16px', fontSize: '13.5px', fontWeight: 500 }}>
                   {station.safetyPercent}%
                 </td>
-                <td style={{ 
-                  padding: '10px 16px', 
-                  fontSize: '13.5px', 
-                  fontWeight: 600, 
+                <td style={{
+                  padding: '10px 16px',
+                  fontSize: '13.5px',
+                  fontWeight: 600,
                   color: station.highRiskCount > 0 ? '#DC2626' : '#64748B'
                 }}>
                   {station.highRiskCount}
@@ -258,40 +258,34 @@ const AOMDashboard = () => {
 
         {/* KPI Cards Grid */}
         <div className="kpi-grid">
-          <StatCard 
+          <StatCard
             title="Total Stations"
             value={summary.totalStations}
             icon={<Building2 size={20} />}
             type="normal"
             trend="Active division stations"
           />
-          <StatCard 
+          <StatCard
             title="Total Employees"
             value={summary.totalEmployees}
             icon={<Users size={20} />}
             type="normal"
             trend="Active division personnel"
           />
-          <StatCard 
-            title="Pending Approvals"
+          <StatCard
+            title="TI Wise Status"
             value={summary.pendingApprovals}
             icon={<Inbox size={20} />}
             type="warning"
-            trend="Awaiting final clearance"
+            link="/approvals"
           />
-          <StatCard 
-            title="Completed Approvals"
-            value={summary.completedApprovals}
-            icon={<ThumbsUp size={20} />}
-            type="success"
-            trend="Approved safety audits"
-          />
-          <StatCard 
+          <StatCard
             title="Division Average Score"
-            value={summary.averageDivisionScore !== null ? `${summary.averageDivisionScore}%` : '0%'}
+            value={summary.averageDivisionScore !== null && summary.averageDivisionScore !== undefined ? `${summary.averageDivisionScore}%` : '0%'}
             icon={<Percent size={20} />}
             type="normal"
             trend="Overall division performance"
+            clickable={false}
           />
         </div>
 
@@ -414,7 +408,7 @@ const AOMDashboard = () => {
 
         {/* Row 1: Progress & Average Score Charts */}
         <div className="charts-grid">
-          <BarChartCard 
+          <BarChartCard
             title="Station-wise Evaluation Progress"
             subtitle="Completed vs pending evaluation counts per station"
             data={stationProgress}
@@ -425,7 +419,7 @@ const AOMDashboard = () => {
             ]}
             barSize={12}
             headerAction={
-              <button 
+              <button
                 onClick={() => {
                   setDrillDownType('stationEvaluationProgress');
                   setIsDrillDownOpen(true);
@@ -446,7 +440,7 @@ const AOMDashboard = () => {
             }
           />
 
-          <BarChartCard 
+          <BarChartCard
             title="Station-wise Average Score"
             subtitle="Average safety score percentage across stations"
             data={stationAvgScore}
@@ -456,7 +450,7 @@ const AOMDashboard = () => {
             barColor="#2E7D32"
             barSize={16}
             headerAction={
-              <button 
+              <button
                 onClick={() => {
                   setDrillDownType('stationAverageScore');
                   setIsDrillDownOpen(true);
@@ -480,13 +474,13 @@ const AOMDashboard = () => {
 
         {/* Row 2: Grade/Category Distribution */}
         <div className="charts-grid">
-          <DonutChartCard 
+          <DonutChartCard
             title="Grade/Category Distribution"
             subtitle="Staff grades in your section"
             data={categoryDist}
             colors={['#1B365D', '#2B6CB0', '#D69E2E', '#C53030']}
             headerAction={
-              <button 
+              <button
                 onClick={() => {
                   setDrillDownType('categoryDistribution');
                   setIsDrillDownOpen(true);
@@ -506,11 +500,51 @@ const AOMDashboard = () => {
               </button>
             }
           />
+
+          <ChartCard
+            title="Safety Compliance Analytics"
+            subtitle="Completion rates for safety operations"
+          >
+            <div className="compliance-list">
+              {safetyCompliance.map((item, index) => (
+                <div key={index} className="compliance-item">
+                  <div className="compliance-info">
+                    <span className="compliance-label">{item.label}</span>
+                    <span className="compliance-value">{item.percentage}%</span>
+                  </div>
+                  <div className="compliance-bar-bg">
+                    <div
+                      className={`compliance-bar-fill ${getComplianceColorClass(item.percentage)}`}
+                      style={{ width: `${item.percentage}%` }}
+                    ></div>
+                  </div>
+                  {item.note && <span className="compliance-note">{item.note}</span>}
+                </div>
+              ))}
+            </div>
+          </ChartCard>
+        </div>
+
+        {/* Row 3: Role-wise Staff Distribution (full-width) */}
+        <div className="charts-grid charts-grid-full">
+          <BarChartCard
+            title="Role-wise Staff Distribution"
+            subtitle="Designation breakdown of safety personnel"
+            data={roleStaffDist}
+            xKey="role"
+            yKey="Count"
+            yKeyName="Staff Count"
+            barColor="#0B2341"
+            barSize={40}
+            hideLegend={true}
+            yInterval={150}
+            height={350}
+          />
         </div>
 
         {/* Row 4: Traffic Inspector Performance (vertical) */}
         <div className="charts-grid charts-grid-full">
-          <BarChartCard 
+          <BarChartCard
             title="Traffic Inspector Performance"
             subtitle="Average assessment scores achieved across TIs"
             data={tiPerformance}
@@ -525,7 +559,7 @@ const AOMDashboard = () => {
 
         {/* Row 5: Division Performance Trend & Assessment Workflow Trend */}
         <div className="charts-grid">
-          <LineChartCard 
+          <LineChartCard
             title="Division Performance Trend"
             subtitle="Mean division average score change over months"
             data={divisionTrend}
@@ -534,7 +568,7 @@ const AOMDashboard = () => {
             lineColor="#10B981"
           />
 
-          <LineChartCard 
+          <LineChartCard
             title="Assessment Workflow Trend (Last 3 Months)"
             subtitle="Visualize how assessments move through the workflow pipeline over time"
             data={completionTrend.slice(-3)}
@@ -549,16 +583,16 @@ const AOMDashboard = () => {
 
         {/* Row 6: Assessment Pipeline (division-wide premium component) */}
         <div className="charts-grid charts-grid-full">
-          <ChartCard 
+          <ChartCard
             title="Assessment Pipeline"
             subtitle="Division-wide pipeline status and trend"
           >
             <div style={{ display: 'flex', flexDirection: 'column', width: '100%', gap: '24px' }}>
               {/* Pipeline KPI Cards Grid */}
-              <div 
-                style={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', 
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
                   gap: '16px',
                   width: '100%'
                 }}
@@ -570,7 +604,7 @@ const AOMDashboard = () => {
                   </div>
                   <span style={{ fontSize: '20px', fontWeight: 700, color: '#0B2341', marginLeft: '14px' }}>{pipeline.summary?.approved ?? 0}</span>
                 </div>
-                
+
                 <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '8px', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#2563EB' }}></span>
@@ -616,7 +650,7 @@ const AOMDashboard = () => {
 
         {/* Top Performing Stations & Stations Needing Attention */}
         <div className="charts-grid" style={{ marginTop: '24px' }}>
-          <ChartCard 
+          <ChartCard
             title="Top Performing Stations"
             subtitle="Highest average assessment score in your division"
             style={{ minHeight: 'auto' }}
@@ -625,7 +659,7 @@ const AOMDashboard = () => {
             {renderStationTable(topStations, 'performance')}
           </ChartCard>
 
-          <ChartCard 
+          <ChartCard
             title="Stations Needing Attention"
             subtitle="Stations requiring immediate safety audit in your division"
             style={{ minHeight: 'auto' }}
@@ -635,10 +669,10 @@ const AOMDashboard = () => {
           </ChartCard>
         </div>
       </div>
-      <DrillDownChartModal 
-        isOpen={isDrillDownOpen} 
-        onClose={() => setIsDrillDownOpen(false)} 
-        graphType={drillDownType} 
+      <DrillDownChartModal
+        isOpen={isDrillDownOpen}
+        onClose={() => setIsDrillDownOpen(false)}
+        graphType={drillDownType}
       />
     </DashboardLayout>
   );

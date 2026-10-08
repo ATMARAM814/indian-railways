@@ -330,13 +330,6 @@ const SuperAdminDashboard = () => {
         {/* KPI Cards Grid */}
         <div className="kpi-grid">
           <StatCard
-            title="Total Divisions"
-            value={summary.totalDivisions}
-            icon={<Globe size={20} />}
-            type="normal"
-            trend="Active operating divisions"
-          />
-          <StatCard
             title="Total Stations"
             value={summary.totalStations}
             icon={<Building2 size={20} />}
@@ -350,20 +343,19 @@ const SuperAdminDashboard = () => {
             type="normal"
             trend="Total active safety crew"
           />
-          <div style={{ cursor: 'pointer' }} onClick={() => navigate('/reports/ti-approvals')}>
-            <StatCard
-              title="TI Approvals"
-              value={summary.pendingApprovals}
-              icon={<Inbox size={20} />}
-              type="warning"
-            />
-          </div>
           <StatCard
-            title="Total Evaluations"
-            value={summary.totalAssessments}
-            icon={<ClipboardCheck size={20} />}
-            type="success"
-            trend="System-wide assessment count"
+            title="TI Wise Status"
+            value={summary.pendingApprovals}
+            icon={<Inbox size={20} />}
+            type="warning"
+            link="/reports/ti-approvals"
+          />
+          <StatCard
+            title="Division Average Score"
+            value={stationAvgScore && stationAvgScore.length > 0 ? `${Math.round(stationAvgScore.reduce((acc, curr) => acc + curr.Score, 0) / stationAvgScore.length)}%` : '0%'}
+            icon={<Percent size={20} />}
+            type="normal"
+            trend="System-wide performance"
             clickable={false}
           />
         </div>
