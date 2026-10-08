@@ -122,7 +122,7 @@ router.get(
   "/super-admin/ti-assessment-stats",
   authenticate,
   enforcePasswordChange,
-  authorize("SUPER_ADMIN"),
+  authorize("SUPER_ADMIN", "AOM"),
   getTiAssessmentStats
 );
 

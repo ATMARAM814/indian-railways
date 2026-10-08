@@ -257,7 +257,7 @@ const AOMDashboard = () => {
         </div>
 
         {/* KPI Cards Grid */}
-        <div className="kpi-grid">
+        <div className="kpi-grid-4">
           <StatCard
             title="Total Stations"
             value={summary.totalStations}
@@ -277,7 +277,7 @@ const AOMDashboard = () => {
             value={summary.pendingApprovals}
             icon={<Inbox size={20} />}
             type="warning"
-            link="/approvals"
+            link="/reports/ti-approvals"
           />
           <StatCard
             title="Division Average Score"

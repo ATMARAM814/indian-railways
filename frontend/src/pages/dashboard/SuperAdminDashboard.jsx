@@ -327,8 +327,7 @@ const SuperAdminDashboard = () => {
           </p>
         </div>
 
-        {/* KPI Cards Grid */}
-        <div className="kpi-grid">
+        <div className="kpi-grid-4">
           <StatCard
             title="Total Stations"
             value={summary.totalStations}

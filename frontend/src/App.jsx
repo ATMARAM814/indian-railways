@@ -496,7 +496,7 @@ function App() {
               path="/reports/ti-approvals"
               element={
                 <ProtectedRoute>
-                  <RoleRoute allowedRoles={['SUPER_ADMIN']}>
+                  <RoleRoute allowedRoles={['SUPER_ADMIN', 'AOM']}>
                     <TiApprovalsPage />
                   </RoleRoute>
                 </ProtectedRoute>
