@@ -612,9 +612,16 @@ function buildApprovalWhere(filters, scope, values) {
     values.push(filters.stationId);
     conditions.push(`ssp.station_id = $${values.length}`);
   }
+  const reportStationSearch = filters.stationSearch || filters.station || filters.stationName || filters.stationCode;
+  if (reportStationSearch) {
+    values.push(`%${reportStationSearch.trim()}%`);
+    conditions.push(`(s.station_name ILIKE $${values.length} OR s.station_code ILIKE $${values.length})`);
+  }
   if (filters.approvalStatus) {
     values.push(filters.approvalStatus);
     conditions.push(`a.approval_status = $${values.length}`);
+  } else {
+    conditions.push(`a.approval_status IN ('approved', 'rejected')`);
   }
   if (filters.fromDate) {
     values.push(filters.fromDate);
@@ -650,15 +657,18 @@ async function getApprovalStatusReport(filters, scope) {
       assessed.hrms_id as "hrmsId",
       a.assessed_role_code as "role",
       s.station_name as "stationName",
+      s.station_code as "stationCode",
       a.approval_status as "approvalStatus",
       approver.full_name as "approvedBy",
       a.approved_at as "approvedAt",
       rejecter.full_name as "rejectedBy",
       a.rejected_at as "rejectedAt",
       a.rejection_reason as "rejectionReason",
+      a.approval_remark as "approvalRemark",
       a.modification_remark as "modificationRemark",
       a.total_score as "totalScore",
-      a.percentage as "percentage"
+      a.percentage as "percentage",
+      a.evaluated_at as "evaluatedAt"
     FROM assessments a
     JOIN profiles assessed ON assessed.id = a.assessed_user_id
     LEFT JOIN staff_station_postings ssp ON ssp.profile_id = assessed.id AND ssp.is_current = true
@@ -666,7 +676,7 @@ async function getApprovalStatusReport(filters, scope) {
     LEFT JOIN profiles approver ON approver.id = a.approved_by
     LEFT JOIN profiles rejecter ON rejecter.id = a.rejected_by
     ${whereClause}
-    ORDER BY a.created_at DESC
+    ORDER BY COALESCE(a.approved_at, a.rejected_at, a.evaluated_at, a.created_at) DESC
     LIMIT $${values.length + 1} OFFSET $${values.length + 2};
   `;
 

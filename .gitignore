@@ -8,9 +8,11 @@ Thumbs.db
 # Dependencies
 node_modules/
 
-# Local configuration
+# Local configuration (NEVER commit .env files - contains secrets)
 .env
 .env.local
+.env.production
+.env.development
 
 # Build folders
 dist/
@@ -22,3 +24,22 @@ dist-ssr/
 # Backend temporary scratch files and tests
 backend/scratch/
 backend/tests/
+
+# IDE and Tool Configs (machine-specific)
+.cursor/
+.jetro/
+.windsurfrules
+
+# MCP config (contains tool credentials)
+.mcp.json
+
+# Agent-specific instruction files
+AGENT.md
+CLAUDE.md
+
+# Generated JSON files from DB introspection scripts
+backend/db_fks.json
+backend/db_schema.json
+
+# Scratch/utility scripts (not part of the main project)
+scratch/

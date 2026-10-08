@@ -189,7 +189,7 @@ const Login = () => {
     setIsSubmitting(false);
 
     if (!result.success) {
-      setApiError(result.message || 'Invalid HRMS ID or password');
+      setApiError('Invalid HRMS ID or password');
     }
   };
 

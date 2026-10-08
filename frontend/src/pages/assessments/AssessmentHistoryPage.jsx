@@ -178,8 +178,9 @@ export const AssessmentHistoryPage = () => {
       <div style={{ padding: '24px 32px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
         
         {/* Header Title Section */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
           <button
+            className="header-back-btn circular"
             onClick={() => navigate(`/assessments/${roleCode}`)}
             style={{
               display: 'inline-flex',

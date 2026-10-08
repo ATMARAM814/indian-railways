@@ -271,12 +271,37 @@ if (creatorRole === "AOM") {
   values.push(creatorUserId);
 
   conditions.push(`
-    s.division_id = (
-      SELECT division_id
-      FROM division_assignments
-      WHERE profile_id = $${values.length}
-        AND is_current = true
-      LIMIT 1
+    (
+      s.division_id = (
+        SELECT division_id
+        FROM division_assignments
+        WHERE profile_id = $${values.length}
+          AND is_current = true
+        LIMIT 1
+      )
+      OR
+      EXISTS (
+        SELECT 1
+        FROM division_assignments da
+        WHERE da.profile_id = p.id
+          AND da.division_id = (
+            SELECT division_id
+            FROM division_assignments
+            WHERE profile_id = $${values.length}
+              AND is_current = true
+            LIMIT 1
+          )
+      )
+      OR
+      (
+        s.id IS NULL
+        AND EXISTS (
+          SELECT 1
+          FROM division_assignments da_aom
+          WHERE da_aom.profile_id = $${values.length}
+            AND da_aom.is_current = true
+        )
+      )
     )
   `);
 }
@@ -672,12 +697,37 @@ if (creatorRole === "AOM") {
   values.push(creatorUserId);
 
   conditions.push(`
-    s.division_id = (
-      SELECT division_id
-      FROM division_assignments
-      WHERE profile_id = $${values.length}
-        AND is_current = true
-      LIMIT 1
+    (
+      s.division_id = (
+        SELECT division_id
+        FROM division_assignments
+        WHERE profile_id = $${values.length}
+          AND is_current = true
+        LIMIT 1
+      )
+      OR
+      EXISTS (
+        SELECT 1
+        FROM division_assignments da
+        WHERE da.profile_id = p.id
+          AND da.division_id = (
+            SELECT division_id
+            FROM division_assignments
+            WHERE profile_id = $${values.length}
+              AND is_current = true
+            LIMIT 1
+          )
+      )
+      OR
+      (
+        s.id IS NULL
+        AND EXISTS (
+          SELECT 1
+          FROM division_assignments da_aom
+          WHERE da_aom.profile_id = $${values.length}
+            AND da_aom.is_current = true
+        )
+      )
     )
   `);
 }

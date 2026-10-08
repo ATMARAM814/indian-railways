@@ -78,7 +78,7 @@ export const AuthProvider = ({ children }) => {
         throw new Error(res.data.message || 'Login failed');
       }
     } catch (error) {
-      const msg = error.response?.data?.message || error.message || 'Network error occurred';
+      const msg = error.response?.data?.message || 'Invalid HRMS ID or password';
       return { success: false, message: msg };
     } finally {
       setLoading(false);

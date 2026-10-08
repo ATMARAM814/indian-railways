@@ -49,11 +49,8 @@ import {
   ThumbsUp,
   Inbox,
   ClipboardCheck,
-  FileText,
-  Download
+  FileText
 } from 'lucide-react';
-import { downloadTIWiseExcel } from '../../utils/excelExport';
-import { getWorkforceList } from '../../services/workforce.service';
 
 const SuperAdminDashboard = () => {
   const { user, logout } = useAuth();
@@ -67,7 +64,6 @@ const SuperAdminDashboard = () => {
   const [highRiskStaffData, setHighRiskStaffData] = useState([]);
   const [categoryCWatchlist, setCategoryCWatchlist] = useState([]);
   const [categoryDWatchlist, setCategoryDWatchlist] = useState([]);
-  const [tiExcelDownloading, setTiExcelDownloading] = useState(false);
 
   const fetchDashboardData = async () => {
     setLoading(true);
@@ -324,41 +320,11 @@ const SuperAdminDashboard = () => {
   return (
     <DashboardLayout>
       <div className="dashboard-content">
-        <div className="page-header-container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
-          <div>
-            <h1 className="page-title">Super Admin System-wide Dashboard</h1>
-            <p className="page-subtitle">
-              System administration console for <strong>{user?.fullName || user?.full_name || 'Admin User'}</strong>. Global safety metrics, staff audits, and active configurations.
-            </p>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', paddingTop: '4px' }}>
-            <button
-              onClick={() => downloadTIWiseExcel(getWorkforceList, setTiExcelDownloading)}
-              disabled={tiExcelDownloading}
-              title="Download TI-wise employee list as Excel (one sheet per TI)"
-              style={{
-                padding: '10px 18px',
-                fontSize: '13.5px',
-                fontWeight: 600,
-                color: '#15803D',
-                backgroundColor: '#F0FDF4',
-                border: '1.5px solid #86EFAC',
-                borderRadius: '8px',
-                cursor: tiExcelDownloading ? 'not-allowed' : 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                transition: 'all 0.2s',
-                opacity: tiExcelDownloading ? 0.65 : 1,
-                whiteSpace: 'nowrap'
-              }}
-              onMouseOver={(e) => { if (!tiExcelDownloading) { e.currentTarget.style.backgroundColor = '#DCFCE7'; e.currentTarget.style.borderColor = '#4ADE80'; } }}
-              onMouseOut={(e) => { e.currentTarget.style.backgroundColor = '#F0FDF4'; e.currentTarget.style.borderColor = '#86EFAC'; }}
-            >
-              <Download size={15} />
-              {tiExcelDownloading ? 'Preparing Excel...' : 'TI-wise Employee List (Excel)'}
-            </button>
-          </div>
+        <div className="page-header-container">
+          <h1 className="page-title">Super Admin System-wide Dashboard</h1>
+          <p className="page-subtitle">
+            System administration console for <strong>{user?.fullName || user?.full_name || 'Admin User'}</strong>. Global safety metrics, staff audits, and active configurations.
+          </p>
         </div>
 
         {/* KPI Cards Grid */}

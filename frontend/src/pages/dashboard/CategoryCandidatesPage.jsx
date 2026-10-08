@@ -70,8 +70,10 @@ const CategoryCandidatesPage = () => {
         gap: '24px'
       }}>
         {/* Back Button and Title */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
           <button
+            className="header-back-btn"
+            title="Back to Dashboard"
             onClick={() => navigate('/dashboard')}
             style={{
               display: 'flex',

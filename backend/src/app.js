@@ -57,16 +57,24 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 // 4. Rate Limiting protection
+const isDev = process.env.NODE_ENV !== "production";
+const isLocalIp = (req) => {
+  const ip = req.ip || req.connection?.remoteAddress || "";
+  return isDev || ip === "127.0.0.1" || ip === "::1" || ip === "::ffff:127.0.0.1";
+};
+
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  limit: 300,
+  limit: isDev ? 50000 : 5000,
+  skip: isLocalIp,
   message: { success: false, message: "Too many requests from this IP, please try again later." },
   legacyHeaders: false,
 });
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  limit: 50,
+  limit: isDev ? 10000 : 300,
+  skip: isLocalIp,
   message: { success: false, message: "Too many authentication attempts, please try again after 15 minutes." },
   legacyHeaders: false,
 });

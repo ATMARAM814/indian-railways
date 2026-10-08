@@ -7,7 +7,7 @@ export const RoleDistributionChart = ({ data }) => {
   if (!data) return null;
 
   return (
-    <div className="trend-card-full" style={{ minHeight: '320px' }}>
+    <div className="trend-card-full" style={{ minHeight: '320px', minWidth: 0, maxWidth: '100%', boxSizing: 'border-box', overflow: 'hidden' }}>
       <div>
         <h3 style={{ margin: '0 0 4px 0', fontSize: '15px', fontWeight: 700, color: '#0F172A' }}>
           Role-wise Staff Distribution
@@ -16,7 +16,7 @@ export const RoleDistributionChart = ({ data }) => {
           Designation breakdown of safety personnel
         </p>
       </div>
-      <div style={{ width: '100%', height: '240px' }}>
+      <div style={{ width: '100%', height: '240px', minWidth: 0, maxWidth: '100%', overflow: 'hidden' }}>
         {data.length > 0 ? (
           <div className="chart-scroll-container">
             <div style={{ minWidth: isMobile ? `${Math.max(800, data.length * 130)}px` : 'auto', width: '100%' }}>

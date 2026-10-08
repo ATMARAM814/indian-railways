@@ -903,6 +903,77 @@
   border: 1px solid #E2E8F0;
 }
 
+/* Marks entry cell and single input */
+.marks-entry-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.marks-box-input {
+  width: 58px;
+  height: 38px;
+  padding: 4px 6px;
+  font-size: 1rem;
+  font-weight: 700;
+  text-align: center;
+  border: 1.5px solid #CBD5E1;
+  border-radius: 8px;
+  color: #0F172A;
+  background: #FFFFFF;
+  outline: none;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.marks-box-input:focus {
+  border-color: #2B5CE6;
+  box-shadow: 0 0 0 3px rgba(43, 92, 230, 0.18);
+  background: #FFFFFF;
+}
+
+.marks-box-input::placeholder {
+  color: #94A3B8;
+  font-weight: 500;
+}
+
+.marks-box-input.marks-box-error {
+  border-color: #EF4444 !important;
+  background-color: #FEF2F2 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
+}
+
+.marks-out-of-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #475569;
+  white-space: nowrap;
+}
+
+.marks-display-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  border-radius: 6px;
+}
+
+.marks-display-pill .marks-val {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #1D4ED8;
+}
+
+.marks-display-pill .marks-denom {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #64748B;
+}
+
 /* Operational details styles */
 .operational-details-section {
   background: #FFFFFF;
@@ -2313,6 +2384,19 @@
     grid-template-columns: 1fr;
     gap: 12px;
   }
+  .assessment-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+  .scoped-title-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+  .scoped-info-badge {
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
 }
 
 @media (max-width: 480px) {
@@ -2321,6 +2405,290 @@
   }
   .modal-status-meta-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Assessment Cycle Status Modal & Responsive Components */
+.status-modal-footer {
+  background-color: #F8FAFC;
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid #E2E8F0;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.status-footer-left {
+  display: flex;
+  align-items: center;
+}
+
+.status-footer-right {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.status-helper-msg {
+  font-size: 11px;
+  color: #B45309;
+  font-weight: 600;
+  max-width: 280px;
+  text-align: right;
+  line-height: 1.3;
+}
+
+.status-btn-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-btn-view {
+  padding: 0 16px;
+  height: 40px;
+  border-radius: 8px;
+  border: 1px solid #2B5CE6;
+  background-color: #FFFFFF;
+  color: #2B5CE6;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.status-btn-view:hover {
+  background-color: #EFF6FF;
+}
+
+.status-btn-eval {
+  padding: 0 20px;
+  height: 40px;
+  border-radius: 8px;
+  border: none;
+  font-size: 13px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.status-btn-eval.active {
+  background-color: #F97316;
+  color: #FFFFFF;
+  cursor: pointer;
+}
+
+.status-btn-eval.active:hover {
+  background-color: #EA580C;
+}
+
+.status-btn-eval.disabled {
+  background-color: #E2E8F0;
+  color: #94A3B8;
+  cursor: not-allowed;
+}
+
+.status-btn-close {
+  padding: 0 16px;
+  height: 40px;
+  border-radius: 8px;
+  border: 1px solid #CBD5E1;
+  background-color: #FFFFFF;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.status-btn-close:hover {
+  background-color: #F1F5F9;
+}
+
+@media (max-width: 640px) {
+  .status-modal-footer {
+    padding: 12px 16px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .status-footer-left,
+  .status-footer-right {
+    width: 100%;
+  }
+
+  .status-footer-right {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .status-helper-msg {
+    max-width: 100%;
+    text-align: center;
+    background: #FEF3C7;
+    border: 1px solid #FDE68A;
+    padding: 8px 10px;
+    border-radius: 6px;
+  }
+
+  .status-btn-group {
+    width: 100%;
+    display: flex;
+    gap: 8px;
+  }
+
+  .status-btn-view {
+    width: 100%;
+  }
+
+  .status-btn-eval,
+  .status-btn-close {
+    flex: 1 1 50%;
+  }
+}
+
+/* =========================================================
+   RESPONSIVE ROLE LIST HEADER & ACTION BUTTONS
+   ========================================================= */
+.role-list-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.role-list-title-group {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  flex: 1;
+  min-width: 260px;
+}
+
+.role-list-title-text h1 {
+  font-size: 24px;
+  font-weight: 800;
+  color: #0B2341;
+  margin-bottom: 4px;
+  line-height: 1.25;
+}
+
+.role-list-title-text p {
+  font-size: 14px;
+  color: #64748B;
+  line-height: 1.4;
+}
+
+.role-list-actions-group {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.role-action-btn {
+  height: 42px;
+  padding: 0 20px;
+  font-size: 14px;
+  font-weight: 700;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.role-action-btn.export-btn {
+  border: 1px solid #CBD5E1;
+  background-color: #FFFFFF;
+  color: #0B2341;
+  box-shadow: 0 1px 2px rgba(11, 35, 65, 0.05);
+}
+
+.role-action-btn.export-btn:hover {
+  background-color: #EEF6FC;
+}
+
+.role-action-btn.schedule-btn {
+  border: none;
+  background-color: #2B5CE6;
+  color: #FFFFFF;
+  box-shadow: 0 4px 6px -1px rgba(43, 92, 230, 0.2);
+}
+
+.role-action-btn.schedule-btn:hover {
+  background-color: #1E40AF;
+}
+
+@media (max-width: 768px) {
+  .role-list-header-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+
+  .role-list-title-group {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .role-list-title-text h1 {
+    font-size: 20px;
+  }
+
+  .role-list-title-text p {
+    font-size: 13px;
+  }
+
+  .role-list-actions-group {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1.35fr;
+    gap: 10px;
+  }
+
+  .role-action-btn {
+    width: 100%;
+    height: 38px;
+    padding: 0 10px;
+    font-size: 12.5px;
+    white-space: normal;
+    text-align: center;
+    line-height: 1.2;
+  }
+}
+
+@media (max-width: 480px) {
+  .role-list-title-text h1 {
+    font-size: 18px;
+  }
+
+  .role-list-actions-group {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .role-action-btn {
+    height: 36px;
+    padding: 0 6px;
+    font-size: 11.5px;
   }
 }
 

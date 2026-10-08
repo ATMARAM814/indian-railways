@@ -56,12 +56,15 @@ apiClient.interceptors.response.use(
     
     // Check for 401 unauthorized errors (token expired/invalid)
     if (error.response && error.response.status === 401 && !originalRequest._retry) {
-      sessionStorage.removeItem('token');
-      sessionStorage.removeItem('user');
-      
-      // If we are not already on the login page, redirect to login
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login?expired=true';
+      const isLoginRequest = originalRequest.url && (originalRequest.url.includes('/auth/login') || originalRequest.url.endsWith('/login'));
+      if (!isLoginRequest) {
+        sessionStorage.removeItem('token');
+        sessionStorage.removeItem('user');
+        
+        // If we are not already on the login page, redirect to login
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login?expired=true';
+        }
       }
     }
     

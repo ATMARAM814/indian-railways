@@ -3,7 +3,11 @@
 .dashboard-container {
   display: flex;
   height: 100vh;
+  height: 100dvh;
   overflow: hidden;
+  max-width: 100vw;
+  width: 100%;
+  box-sizing: border-box;
   background-color: var(--bg-light, #EEF6FC);
   font-family: 'Poppins', 'Inter', sans-serif;
 }
@@ -142,8 +146,14 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
+  max-width: 100%;
   height: 100vh;
+  height: 100dvh;
   overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  box-sizing: border-box;
 }
 
 /* Topbar Styling */
@@ -771,6 +781,10 @@
 
 .staff-table-wrapper {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .staff-table {

@@ -102,6 +102,7 @@ const ApprovalsPage = () => {
           page,
           limit,
           search: filters.search || undefined,
+          stationSearch: filters.stationSearch || undefined,
           stationId: filters.stationId || undefined,
           role: filters.role || undefined,
           approvalStatus: filters.approvalStatus || undefined,
@@ -283,7 +284,7 @@ const ApprovalsPage = () => {
           'Role': roleNameMap[row.assessed_role_code] || row.assessed_role_code,
           'Station': row.station_name ? `${row.station_name} (${row.station_code})` : row.station_code || '-',
           'Assessor': row.assessor_name,
-          'Assessor Role': roleNameMap[row.assessor_role_code] || row.assessor_role_code,
+          'Assessor Role': row.assessor_designation || (row.assessor_station_code ? `TI ${row.assessor_station_code}` : (roleNameMap[row.assessor_role_code] || cleanDesignationText(row.assessor_role_code))),
           'Assessment Type': row.assessment_type || 'Periodic Assessment',
           'Total Score': `${row.total_score} (${parseFloat(row.percentage || 0).toFixed(1)}%)`,
           'Pass/Fail': parseFloat(row.percentage) >= 60 ? 'PASS' : 'FAIL',
@@ -296,12 +297,12 @@ const ApprovalsPage = () => {
           'Employee Name': row.assessedUserName,
           'HRMS ID': row.hrmsId,
           'Role': roleNameMap[row.role] || row.role,
-          'Station': row.stationName || '-',
+          'Station': row.stationName ? `${row.stationName}${row.stationCode ? ` (${row.stationCode})` : ''}` : (row.stationCode || '-'),
           'Total Score': `${row.totalScore} (${parseFloat(row.percentage || 0).toFixed(1)}%)`,
-          'Sign-off Status': row.approvalStatus === 'approved' ? 'Approved' : 'Rejected',
-          'Processed By': row.approvalStatus === 'approved' ? row.approvedBy : row.rejectedBy || '-',
-          'Action Date': formatDate(row.approvalStatus === 'approved' ? row.approvedAt : row.rejectedAt),
-          'Remarks / Reasons': row.approvalStatus === 'approved' ? row.approvalRemark : row.rejectionReason || '-'
+          'Sign-off Status': row.approvalStatus === 'approved' ? 'Approved' : (row.approvalStatus === 'rejected' ? 'Rejected' : 'Pending'),
+          'Processed By': row.approvalStatus === 'approved' ? row.approvedBy : (row.rejectedBy || '-'),
+          'Action Date': formatDate(row.approvalStatus === 'approved' ? row.approvedAt : (row.rejectedAt || row.evaluatedAt)),
+          'Remarks / Reasons': row.approvalStatus === 'approved' ? (row.approvalRemark || '-') : (row.rejectionReason || '-')
         }));
       }
 
@@ -698,7 +699,7 @@ const ApprovalsPage = () => {
                           {row.assessor_name}
                         </td>
                         <td style={{ verticalAlign: 'middle', textAlign: 'center', color: '#64748B' }}>
-                          {cleanDesignationText(row.assessor_role_code)}
+                          {row.assessor_designation || (row.assessor_station_code ? `TI ${row.assessor_station_code}` : cleanDesignationText(row.assessor_role_code))}
                         </td>
                         <td style={{ verticalAlign: 'middle', textAlign: 'center' }}>
                           {row.assessment_type || 'Periodic Assessment'}
@@ -779,7 +780,7 @@ const ApprovalsPage = () => {
                           <span className="sidebar-role-badge" style={{ marginTop: 0 }}>{cleanDesignationText(row.role)}</span>
                         </td>
                         <td style={{ verticalAlign: 'middle', textAlign: 'center' }}>
-                          {row.stationName || '-'}
+                          {row.stationName ? `${row.stationName}${row.stationCode ? ` (${row.stationCode})` : ''}` : (row.stationCode || '-')}
                         </td>
                         <td style={{ verticalAlign: 'middle', textAlign: 'center', fontWeight: '700' }}>
                           {row.totalScore} ({parseFloat(row.percentage || 0).toFixed(1)}%)
@@ -787,19 +788,21 @@ const ApprovalsPage = () => {
                         <td style={{ verticalAlign: 'middle', textAlign: 'center' }}>
                           {row.approvalStatus === 'approved' ? (
                             <span className="status-badge status-approved">Approved</span>
-                          ) : (
+                          ) : row.approvalStatus === 'rejected' ? (
                             <span className="status-badge status-rejected">Rejected</span>
+                          ) : (
+                            <span className="status-badge status-pending">Pending</span>
                           )}
                         </td>
                         <td style={{ verticalAlign: 'middle', textAlign: 'center', fontWeight: '500' }}>
-                          {row.approvalStatus === 'approved' ? row.approvedBy : row.rejectedBy || '-'}
+                          {row.approvalStatus === 'approved' ? row.approvedBy : (row.rejectedBy || '-')}
                         </td>
                         <td style={{ verticalAlign: 'middle', textAlign: 'center' }}>
-                          {formatDate(row.approvalStatus === 'approved' ? row.approvedAt : row.rejectedAt)}
+                          {formatDate(row.approvalStatus === 'approved' ? row.approvedAt : (row.rejectedAt || row.evaluatedAt))}
                         </td>
                         <td style={{ verticalAlign: 'middle', textAlign: 'left', maxWidth: '240px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          <span title={row.approvalStatus === 'approved' ? row.approvalRemark : row.rejectionReason}>
-                            {row.approvalStatus === 'approved' ? row.approvalRemark : row.rejectionReason || '-'}
+                          <span title={row.approvalStatus === 'approved' ? (row.approvalRemark || 'Approved') : (row.rejectionReason || '-')}>
+                            {row.approvalStatus === 'approved' ? (row.approvalRemark || 'Approved') : (row.rejectionReason || '-')}
                           </span>
                         </td>
                         <td style={{ verticalAlign: 'middle', textAlign: 'center' }}>

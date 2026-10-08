@@ -337,7 +337,7 @@ const StationListPage = () => {
           <ErrorState title="Error Loading Stations" message={error} />
         ) : (
           <div className="staff-table-card">
-            <div className="staff-table-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="staff-table-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <h3 className="staff-table-title">Operational Stations Roll</h3>
                 <span className="staff-table-badge">Active Stations: {stations.length}</span>
@@ -491,19 +491,14 @@ const StationListPage = () => {
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                padding: '16px 24px',
-                backgroundColor: '#FFFFFF',
+              <div className="pagination-responsive-bar" style={{
                 borderRadius: '0 0 12px 12px',
                 borderTop: '1px solid #E2E8F0'
               }}>
-                <span style={{ fontSize: '13px', color: '#64748B' }}>
+                <span className="pagination-info-text">
                   Showing <strong style={{ color: '#0F172A' }}>{((currentPage - 1) * itemsPerPage) + 1}</strong> to <strong style={{ color: '#0F172A' }}>{Math.min(currentPage * itemsPerPage, totalRecords)}</strong> of <strong style={{ color: '#0F172A' }}>{totalRecords}</strong> stations
                 </span>
-                <div style={{ display: 'flex', gap: '8px' }}>
+                <div className="pagination-controls-group">
                   <button
                     type="button"
                     onClick={() => setCurrentPage(currentPage - 1)}

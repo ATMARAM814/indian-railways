@@ -381,8 +381,10 @@ const ApprovalDetailModal = ({ assessmentId, roleCode, userRole, onClose, onActi
                     <span style={{ color: '#0F172A', fontWeight: 600 }}>{assessment.assessed_hrms_id}</span>
                     <span style={{ color: '#64748B', fontWeight: 500 }}>Role / Post:</span>
                     <span style={{ color: '#0F172A', fontWeight: 600 }}>{assessment.assessed_role_code}</span>
-                    <span style={{ color: '#64748B', fontWeight: 500 }}>Station Code:</span>
-                    <span style={{ color: '#0F172A', fontWeight: 600 }}>{assessment.station_code || '-'}</span>
+                    <span style={{ color: '#64748B', fontWeight: 500 }}>Station:</span>
+                    <span style={{ color: '#0F172A', fontWeight: 600 }}>
+                      {assessment.station_code ? `${assessment.station_code}${assessment.station_name ? ` (${assessment.station_name})` : ''}` : '-'}
+                    </span>
                   </div>
 
                   <div style={{ borderBottom: '1px solid #F1F5F9', paddingTop: '8px', paddingBottom: '12px' }}>
@@ -394,7 +396,9 @@ const ApprovalDetailModal = ({ assessmentId, roleCode, userRole, onClose, onActi
                     <span style={{ color: '#64748B', fontWeight: 500 }}>Assessor Name:</span>
                     <span style={{ color: '#0F172A', fontWeight: 600 }}>{assessment.assessor_name}</span>
                     <span style={{ color: '#64748B', fontWeight: 500 }}>Assessor Role:</span>
-                    <span style={{ color: '#0F172A', fontWeight: 600 }}>{assessment.assessor_role_code}</span>
+                    <span style={{ color: '#0F172A', fontWeight: 600 }}>
+                      {assessment.assessor_designation || (assessment.assessor_station_code ? `TI ${assessment.assessor_station_code}` : assessment.assessor_role_code)}
+                    </span>
                     <span style={{ color: '#64748B', fontWeight: 500 }}>Evaluation Date:</span>
                     <span style={{ color: '#0F172A', fontWeight: 600 }}>{assessment.evaluated_at ? new Date(assessment.evaluated_at).toLocaleDateString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '-'}</span>
                   </div>

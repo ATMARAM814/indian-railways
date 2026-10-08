@@ -183,21 +183,21 @@ function validateAssessmentHierarchy(
   }
 }
 
-async function submitMcqAnswers(assessmentId, userId, submittedAnswers){
+async function submitMcqAnswers(assessmentId, userId, submittedAnswers) {
   const correctAnswers =
     await getQuestionsWithCorrectAnswers(assessmentId);
 
-    const assessment = await getAssessmentById(assessmentId);
-    if (assessment.assessed_user_id !== userId) {
-      throw new Error("Only assessed employee can submit MCQ exam");
-    }
-    if (!assessment) {
-      throw new Error("Assessment not found");
-    }
+  const assessment = await getAssessmentById(assessmentId);
+  if (assessment.assessed_user_id !== userId) {
+    throw new Error("Only assessed employee can submit MCQ exam");
+  }
+  if (!assessment) {
+    throw new Error("Assessment not found");
+  }
 
-if (assessment.status !== "created") {
-  throw new Error("MCQ exam already submitted or assessment is not open");
-}
+  if (assessment.status !== "created") {
+    throw new Error("MCQ exam already submitted or assessment is not open");
+  }
 
   if (submittedAnswers.length !== correctAnswers.length) {
     throw new Error(
@@ -247,11 +247,11 @@ if (assessment.status !== "created") {
 
 async function submitEvaluation(assessmentId, userId, submittedAnswers, operationalDetails) {
 
-const assessment = await getAssessmentById(assessmentId);
+  const assessment = await getAssessmentById(assessmentId);
 
-if (!assessment) {
-  throw new Error("Assessment not found");
-}
+  if (!assessment) {
+    throw new Error("Assessment not found");
+  }
 
   const pool = require("../../config/database");
   const checkAuthRes = await pool.query(
@@ -273,7 +273,7 @@ if (!assessment) {
      WHERE p_user.id = $2`,
     [assessment.assessed_user_id, userId]
   );
-  
+
   const isAssessor = assessment.assessor_user_id === userId;
   const isStationAuthority = checkAuthRes.rows[0]?.isStationAuthority || false;
 
@@ -281,16 +281,27 @@ if (!assessment) {
     throw new Error("Only assessor or station master can submit evaluation");
   }
 
-const isMcqSubmitted = assessment.status === "mcq_submitted";
-const isUnapprovedCompleted = assessment.status === "completed" && ["pending_approval", "rejected"].includes(assessment.approval_status);
+  const isMcqSubmitted = assessment.status === "mcq_submitted";
+  const isUnapprovedCompleted = assessment.status === "completed" && ["pending_approval", "rejected"].includes(assessment.approval_status);
 
-if (!isMcqSubmitted && !isUnapprovedCompleted) {
-  throw new Error(
-    "Evaluation already approved and locked, or MCQ exam is not completed"
-  );
-}
+  if (!isMcqSubmitted && !isUnapprovedCompleted) {
+    throw new Error(
+      "Evaluation already approved and locked, or MCQ exam is not completed"
+    );
+  }
 
-const roleCode = assessment.assessed_role_code;
+  if (!operationalDetails || (operationalDetails.pmeStatus || '').toLowerCase() !== 'fit') {
+    throw new Error(
+      "Cannot submit evaluation: PME status must be 'Fit'. If candidate is Unfit, evaluation remains in Pending draft status."
+    );
+  }
+
+  if (!operationalDetails.alcoholicStatus) {
+    throw new Error(
+      "Cannot submit evaluation: Alcoholic status is mandatory."
+    );
+  }
+  const roleCode = assessment.assessed_role_code;
 
   const questions =
     await getYesNoQuestionsWithSections(roleCode);
@@ -322,16 +333,20 @@ const roleCode = assessment.assessed_role_code;
       throw new Error("Invalid Yes/No question submitted");
     }
 
-    const marksAwarded = answer.answer
-      ? question.marks_per_question
-      : 0;
+    const maxMarks = question.marks_per_question || 0;
+    let marksAwarded = 0;
+    if (answer.marksAwarded !== undefined && answer.marksAwarded !== null) {
+      marksAwarded = Math.min(maxMarks, Math.max(0, parseInt(answer.marksAwarded, 10) || 0));
+    } else {
+      marksAwarded = answer.answer ? maxMarks : 0;
+    }
 
     sectionScores[question.section_code] += marksAwarded;
 
     return {
       questionId: answer.questionId,
       sectionCode: question.section_code,
-      answer: answer.answer,
+      answer: marksAwarded > 0,
       marksAwarded,
     };
   });
@@ -489,7 +504,7 @@ async function saveEvaluationDraftService(
      WHERE p_user.id = $2`,
     [assessment.assessed_user_id, assessorId]
   );
-  
+
   const isAssessor = assessment.assessor_user_id === assessorId;
   const isStationAuthority = checkAuthRes.rows[0]?.isStationAuthority || false;
 
@@ -538,7 +553,7 @@ async function getEvaluationDraftService(
      WHERE p_user.id = $2`,
     [assessment.assessed_user_id, userId]
   );
-  
+
   const isAssessor = assessment.assessor_user_id === userId;
   const isStationAuthority = checkAuthRes.rows[0]?.isStationAuthority || false;
 
@@ -743,7 +758,7 @@ async function getPmeRefStatusService(userId) {
         medicalFitnessStatus: row.pme_status,
         remarks: row.remarks || '—',
       });
-      
+
       if (row.status === 'completed' && row.approval_status === 'approved') {
         pmeTotalCompleted++;
         if (!pmeCurrentStatus) {
@@ -766,7 +781,7 @@ async function getPmeRefStatusService(userId) {
         nextDueDate: row.due_date || '—',
         remarks: row.remarks || '—',
       });
-      
+
       if (row.status === 'completed' && row.approval_status === 'approved') {
         refTotalCompleted++;
         if (!refCurrentStatus) {
@@ -782,12 +797,12 @@ async function getPmeRefStatusService(userId) {
     // Pending / Scheduled and Expired checks
     if (row.status !== 'completed' && row.status !== 'cancelled') {
       const isOverdue = row.due_date && new Date(row.due_date) < now;
-      
+
       if (isPmeRow) {
         if (isOverdue) pmeExpiredOverdue++;
         else pmePendingScheduled++;
       }
-      
+
       if (isRefRow) {
         if (isOverdue) refExpiredCancelled++;
         else refPendingScheduled++;

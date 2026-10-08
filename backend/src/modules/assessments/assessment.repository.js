@@ -503,10 +503,15 @@ async function getAssessmentResult(assessmentId) {
       assessed.full_name as assessed_name,
       assessed.hrms_id as assessed_hrms_id,
       a.assessed_role_code,
+      s.station_code,
+      s.station_name,
 
       assessor.full_name as assessor_name,
       assessor.hrms_id as assessor_hrms_id,
       a.assessor_role_code,
+      COALESCE(NULLIF(assessor.designation, ''), (CASE WHEN a.assessor_role_code = 'TI' AND s_assessor.station_code IS NOT NULL THEN 'TI ' || s_assessor.station_code ELSE a.assessor_role_code END)) as assessor_designation,
+      s_assessor.station_code as assessor_station_code,
+      s_assessor.station_name as assessor_station_name,
 
       a.mcq_score,
       a.alertness_score,
@@ -548,6 +553,14 @@ async function getAssessmentResult(assessmentId) {
       ON assessed.id = a.assessed_user_id
     JOIN profiles assessor
       ON assessor.id = a.assessor_user_id
+    LEFT JOIN staff_station_postings ssp
+      ON ssp.profile_id = assessed.id AND ssp.is_current = true
+    LEFT JOIN stations s
+      ON s.id = ssp.station_id
+    LEFT JOIN staff_station_postings ssp_assessor
+      ON ssp_assessor.profile_id = assessor.id AND ssp_assessor.is_current = true
+    LEFT JOIN stations s_assessor
+      ON s_assessor.id = ssp_assessor.station_id
     WHERE a.id = $1;
   `;
 
