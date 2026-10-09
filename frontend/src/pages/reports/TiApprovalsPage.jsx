@@ -11,7 +11,6 @@ import {
   AlertCircle, 
   Search, 
   Compass, 
-  FileCheck2, 
   X,
   Layers
 } from 'lucide-react';
@@ -66,7 +65,9 @@ const TiApprovalsPage = () => {
         const q = searchQuery.toLowerCase();
         return data.filter(row => 
             (row.tiName && row.tiName.toLowerCase().includes(q)) ||
-            (row.tiHrmsId && row.tiHrmsId.toLowerCase().includes(q))
+            (row.tiHrmsId && row.tiHrmsId.toLowerCase().includes(q)) ||
+            (row.stationName && row.stationName.toLowerCase().includes(q)) ||
+            (row.stationCode && row.stationCode.toLowerCase().includes(q))
         );
     }, [data, searchQuery]);
 
@@ -84,7 +85,7 @@ const TiApprovalsPage = () => {
     if (loading) {
         return (
             <DashboardLayout>
-                <LoadingState cardsCount={1} />
+                <LoadingState cardsCount={4} />
             </DashboardLayout>
         );
     }
@@ -92,7 +93,7 @@ const TiApprovalsPage = () => {
     if (error) {
         return (
             <DashboardLayout>
-                <div className="dashboard-content">
+                <div className="dashboard-content" style={{ padding: '24px' }}>
                     <ErrorState message={error} onRetry={fetchData} />
                 </div>
             </DashboardLayout>
@@ -472,7 +473,7 @@ const TiApprovalsPage = () => {
                                                             {row.tiName}
                                                         </div>
                                                         <div style={{ fontSize: '11.5px', color: '#64748B', fontWeight: 500, marginTop: '1px' }}>
-                                                            Traffic Inspector Jurisdiction
+                                                            {row.stationName || 'N/A'}
                                                         </div>
                                                     </div>
                                                 </div>

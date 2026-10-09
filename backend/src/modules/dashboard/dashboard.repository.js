@@ -1422,6 +1422,32 @@ async function getSuperAdminTiAssessmentStats() {
       p.id as "tiId",
       p.full_name as "tiName",
       p.hrms_id as "tiHrmsId",
+      COALESCE(
+        (
+          SELECT s.station_name || ' (' || s.station_code || ')'
+          FROM staff_station_postings ssp
+          JOIN stations s ON s.id = ssp.station_id
+          WHERE ssp.profile_id = p.id AND ssp.is_current = true
+          LIMIT 1
+        ),
+        (
+          SELECT STRING_AGG(DISTINCT s.station_name, ', ')
+          FROM station_assignments sa_sub
+          JOIN stations s ON s.id = sa_sub.station_id
+          WHERE sa_sub.profile_id = p.id
+        ),
+        'N/A'
+      ) as "stationName",
+      COALESCE(
+        (
+          SELECT s.station_code
+          FROM staff_station_postings ssp
+          JOIN stations s ON s.id = ssp.station_id
+          WHERE ssp.profile_id = p.id AND ssp.is_current = true
+          LIMIT 1
+        ),
+        'N/A'
+      ) as "stationCode",
       (
         SELECT COUNT(DISTINCT ssp.profile_id)::int
         FROM station_assignments sa_inner
