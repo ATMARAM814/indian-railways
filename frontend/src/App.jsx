@@ -101,10 +101,11 @@ const DashboardRoot = () => {
     case 'Shunting Master':
       return <Navigate to="/dashboard/shunting-master" replace />;
     case 'SS':
-    case 'SM':
     case 'Cabin Master':
     case 'CABIN MASTER':
       return <Navigate to="/dashboard/sm" replace />;
+    case 'SM':
+      return <Navigate to="/dashboard/pm" replace />;
     case 'SMS':
     case 'STATION MASTER SUPERVISOR':
     case 'Station Master Supervisor':
@@ -252,7 +253,7 @@ function App() {
               path="/dashboard/pm"
               element={
                 <ProtectedRoute>
-                  <RoleRoute allowedRoles={['PM', 'SS', 'SMS', 'STATION MASTER SUPERVISOR', 'Cabin Master', 'CABIN MASTER']}>
+                  <RoleRoute allowedRoles={['PM', 'SS', 'SMS', 'STATION MASTER SUPERVISOR', 'Cabin Master', 'CABIN MASTER', 'SM']}>
                     <PMDashboard />
                   </RoleRoute>
                 </ProtectedRoute>
@@ -282,7 +283,7 @@ function App() {
               path="/dashboard/sm"
               element={
                 <ProtectedRoute>
-                  <RoleRoute allowedRoles={['SM', 'SS', 'Cabin Master', 'CABIN MASTER']}>
+                  <RoleRoute allowedRoles={['SS', 'Cabin Master', 'CABIN MASTER']}>
                     <SMDashboard />
                   </RoleRoute>
                 </ProtectedRoute>
@@ -344,7 +345,7 @@ function App() {
               path="/assessments"
               element={
                 <ProtectedRoute>
-                  <RoleRoute allowedRoles={['PM', 'SM', 'TI', 'AOM', 'SUPER_ADMIN', 'SS', 'SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'Cabin Master', 'CABIN MASTER']}>
+                  <RoleRoute allowedRoles={['TI', 'AOM', 'SUPER_ADMIN', 'SS', 'SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'Cabin Master', 'CABIN MASTER']}>
                     <AssessmentsLandingPage />
                   </RoleRoute>
                 </ProtectedRoute>
@@ -354,7 +355,7 @@ function App() {
               path="/assessments/:roleCode"
               element={
                 <ProtectedRoute>
-                  <RoleRoute allowedRoles={['SM', 'TI', 'AOM', 'SUPER_ADMIN', 'SS', 'SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'Cabin Master', 'CABIN MASTER']}>
+                  <RoleRoute allowedRoles={['TI', 'AOM', 'SUPER_ADMIN', 'SS', 'SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'Cabin Master', 'CABIN MASTER']}>
                     <AssessmentRoleListPage />
                   </RoleRoute>
                 </ProtectedRoute>
@@ -364,7 +365,7 @@ function App() {
               path="/assessments/:roleCode/:employeeId/history"
               element={
                 <ProtectedRoute>
-                  <RoleRoute allowedRoles={['SM', 'TI', 'AOM', 'SUPER_ADMIN', 'SS', 'SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'Cabin Master', 'CABIN MASTER']}>
+                  <RoleRoute allowedRoles={['TI', 'AOM', 'SUPER_ADMIN', 'SS', 'SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'Cabin Master', 'CABIN MASTER']}>
                     <AssessmentHistoryPage />
                   </RoleRoute>
                 </ProtectedRoute>
@@ -374,7 +375,7 @@ function App() {
               path="/assessments/:roleCode/:assessmentId/form"
               element={
                 <ProtectedRoute>
-                  <RoleRoute allowedRoles={['SM', 'TI', 'AOM', 'SS', 'SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'Cabin Master', 'CABIN MASTER']}>
+                  <RoleRoute allowedRoles={['TI', 'AOM', 'SS', 'SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'Cabin Master', 'CABIN MASTER']}>
                     <AssessmentFormPage />
                   </RoleRoute>
                 </ProtectedRoute>
@@ -394,7 +395,7 @@ function App() {
               path="/assessments/:roleCode/:assessmentId/edit"
               element={
                 <ProtectedRoute>
-                  <RoleRoute allowedRoles={['SM', 'TI', 'AOM', 'SS', 'SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'Cabin Master', 'CABIN MASTER']}>
+                  <RoleRoute allowedRoles={['TI', 'AOM', 'SS', 'SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'Cabin Master', 'CABIN MASTER']}>
                     <AssessmentFormPage />
                   </RoleRoute>
                 </ProtectedRoute>
@@ -644,7 +645,7 @@ function App() {
               path="/workforce/pointsmen"
               element={
                 <ProtectedRoute>
-                  <RoleRoute allowedRoles={['SM', 'TI', 'AOM', 'SUPER_ADMIN', 'SS', 'SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'Cabin Master', 'CABIN MASTER']}>
+                  <RoleRoute allowedRoles={['TI', 'AOM', 'SUPER_ADMIN', 'SS', 'SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'Cabin Master', 'CABIN MASTER']}>
                     <PointsmenPage />
                   </RoleRoute>
                 </ProtectedRoute>
@@ -654,7 +655,7 @@ function App() {
               path="/workforce/station-masters"
               element={
                 <ProtectedRoute>
-                  <RoleRoute allowedRoles={['TI', 'AOM', 'SUPER_ADMIN', 'SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR']}>
+                  <RoleRoute allowedRoles={['SS', 'TI', 'AOM', 'SUPER_ADMIN', 'SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR']}>
                     <StationMastersPage />
                   </RoleRoute>
                 </ProtectedRoute>
@@ -664,7 +665,7 @@ function App() {
               path="/workforce/train-managers"
               element={
                 <ProtectedRoute>
-                  <RoleRoute allowedRoles={['SM', 'SS', 'TI', 'AOM', 'SUPER_ADMIN', 'SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'Cabin Master', 'CABIN MASTER']}>
+                  <RoleRoute allowedRoles={['SS', 'TI', 'AOM', 'SUPER_ADMIN', 'SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'Cabin Master', 'CABIN MASTER']}>
                     <TrainManagersPage />
                   </RoleRoute>
                 </ProtectedRoute>
@@ -694,7 +695,7 @@ function App() {
               path="/workforce/shunting-masters"
               element={
                 <ProtectedRoute>
-                  <RoleRoute allowedRoles={['SM', 'TI', 'AOM', 'SUPER_ADMIN', 'SS', 'SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'Cabin Master', 'CABIN MASTER']}>
+                  <RoleRoute allowedRoles={['SS', 'TI', 'AOM', 'SUPER_ADMIN', 'SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'Cabin Master', 'CABIN MASTER']}>
                     <ShuntingMastersPage />
                   </RoleRoute>
                 </ProtectedRoute>

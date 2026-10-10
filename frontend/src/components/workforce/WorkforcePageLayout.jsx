@@ -286,7 +286,7 @@ const WorkforcePageLayout = ({
             {pagination.totalPages > 1 && (
               <div className="pagination-responsive-bar" style={{ marginTop: '20px', borderRadius: '8px', border: '1px solid #D7E3EF' }}>
                 <span className="pagination-info-text">
-                  Showing <strong style={{ color: '#0F172A' }}>{((activePage - 1) * 10) + 1}</strong> to <strong style={{ color: '#0F172A' }}>{Math.min(activePage * 10, pagination.total)}</strong> of <strong style={{ color: '#0F172A' }}>{pagination.total}</strong> records
+                  Showing <strong style={{ color: '#0F172A' }}>{users.length > 0 ? ((activePage - 1) * 10) + 1 : 0}</strong> to <strong style={{ color: '#0F172A' }}>{Math.min(((activePage - 1) * 10) + users.length, pagination.total)}</strong> of <strong style={{ color: '#0F172A' }}>{pagination.total}</strong> records
                 </span>
                 <div className="pagination-controls-group">
                   <button

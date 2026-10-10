@@ -20,11 +20,13 @@ const AssessmentsLandingPage = () => {
   const [myResultsLoading, setMyResultsLoading] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState('');
 
+  const isExaminee = ['PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'SM'].includes(user?.role);
+
   useEffect(() => {
-    if (user && user.role !== 'PM' && user.role !== 'Shunting Master') {
+    if (user && !isExaminee) {
       fetchStats();
     }
-  }, [user, fetchStats]);
+  }, [user, isExaminee, fetchStats]);
 
   useEffect(() => {
     if (!statsLoading && stats && stats.length > 0) {
@@ -35,7 +37,7 @@ const AssessmentsLandingPage = () => {
 
   useEffect(() => {
     const fetchMyResults = async () => {
-      if (user && user.role === 'PM') {
+      if (user && isExaminee) {
         setMyResultsLoading(true);
         try {
           const res = await apiClient.get('/assessments/my-results');
@@ -50,7 +52,7 @@ const AssessmentsLandingPage = () => {
       }
     };
     fetchMyResults();
-  }, [user]);
+  }, [user, isExaminee]);
 
   if (!user) return <Navigate to="/login" replace />;
 
@@ -68,8 +70,8 @@ const AssessmentsLandingPage = () => {
     <DashboardLayout>
       <div className="dashboard-page-container">
         
-        {/* Page Header for PM */}
-        {user.role === 'PM' && (
+        {/* Page Header for Examinees */}
+        {isExaminee && (
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
               <h1 style={{ fontSize: '24px', fontWeight: 800, color: '#0B2341', marginBottom: '4px' }}>
@@ -82,8 +84,8 @@ const AssessmentsLandingPage = () => {
           </div>
         )}
 
-        {/* PM Personal View */}
-        {user.role === 'PM' && (
+        {/* Examinee Personal View */}
+        {isExaminee && (
           <div className="table-responsive" style={{ padding: '16px' }}>
             {myResultsLoading ? (
               <TableSkeleton />

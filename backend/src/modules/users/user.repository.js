@@ -213,7 +213,7 @@ async function getUsers(filters = {}) {
     `);
   }
 
-  if (creatorRole === "SM" || creatorRole === "SS" || ["Station Master Supervisor", "STATION MASTER SUPERVISOR", "SMS"].includes(creatorRole) || ["Cabin Master", "CABIN MASTER"].includes(creatorRole)) {
+  if (creatorRole === "SS" || ["Station Master Supervisor", "STATION MASTER SUPERVISOR", "SMS"].includes(creatorRole) || ["Cabin Master", "CABIN MASTER"].includes(creatorRole)) {
     values.push(creatorUserId);
 
     conditions.push(`
@@ -230,6 +230,12 @@ async function getUsers(filters = {}) {
       conditions.push(`
         (
           r.name IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'Cabin Master', 'CABIN MASTER', 'TM', 'SM', 'SS')
+        )
+      `);
+    } else if (creatorRole === "SS") {
+      conditions.push(`
+        (
+          r.name IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'Cabin Master', 'CABIN MASTER', 'SM')
         )
       `);
     } else {
@@ -251,6 +257,9 @@ async function getUsers(filters = {}) {
         `);
       }
     }
+  } else if (creatorRole === "SM") {
+    values.push(creatorUserId);
+    conditions.push(`p.id = $${values.length}`);
   }
 
 if (creatorRole === "TI") {
@@ -311,7 +320,7 @@ if (creatorRole === "AOM") {
   }
 
   query += `
-    ORDER BY p.full_name
+    ORDER BY (CASE WHEN p.status = 'active' THEN 0 ELSE 1 END), p.full_name
     LIMIT $${values.length + 1}
     OFFSET $${values.length + 2};
   `;
@@ -581,9 +590,11 @@ async function countUsers(filters = {}) {
     conditions.push(`r.name = $${values.length}`);
   }
 
-  if (status) {
+  if (status && status !== 'all') {
     values.push(status);
     conditions.push(`p.status = $${values.length}`);
+  } else if (!status) {
+    conditions.push(`p.status = 'active'`);
   }
 
   if (stationId) {
@@ -639,7 +650,7 @@ async function countUsers(filters = {}) {
     `);
   }
 
-  if (creatorRole === "SM" || creatorRole === "SS" || ["Station Master Supervisor", "STATION MASTER SUPERVISOR", "SMS"].includes(creatorRole) || ["Cabin Master", "CABIN MASTER"].includes(creatorRole)) {
+  if (creatorRole === "SS" || ["Station Master Supervisor", "STATION MASTER SUPERVISOR", "SMS"].includes(creatorRole) || ["Cabin Master", "CABIN MASTER"].includes(creatorRole)) {
     values.push(creatorUserId);
 
     conditions.push(`
@@ -656,6 +667,12 @@ async function countUsers(filters = {}) {
       conditions.push(`
         (
           r.name IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'Cabin Master', 'CABIN MASTER', 'TM', 'SM', 'SS')
+        )
+      `);
+    } else if (creatorRole === "SS") {
+      conditions.push(`
+        (
+          r.name IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'Cabin Master', 'CABIN MASTER', 'SM')
         )
       `);
     } else {
@@ -677,6 +694,9 @@ async function countUsers(filters = {}) {
         `);
       }
     }
+  } else if (creatorRole === "SM") {
+    values.push(creatorUserId);
+    conditions.push(`p.id = $${values.length}`);
   }
 
 if (creatorRole === "TI") {

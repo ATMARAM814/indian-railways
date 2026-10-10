@@ -751,7 +751,7 @@ async function getRoleStatsForAssessor(assessorId, assessorRole, roleCode) {
         LIMIT 1
       )
     `;
-  } else if (assessorRole === 'SM' || assessorRole === 'SS' || ['Cabin Master', 'CABIN MASTER'].includes(assessorRole)) {
+  } else if (assessorRole === 'SS' || ['Cabin Master', 'CABIN MASTER'].includes(assessorRole)) {
     scopeJoin = `LEFT JOIN staff_station_postings ssp ON ssp.profile_id = p.id AND ssp.is_current = true`;
     scopeCondition = `
       AND ssp.station_id = (
@@ -762,6 +762,9 @@ async function getRoleStatsForAssessor(assessorId, assessorRole, roleCode) {
         LIMIT 1
       )
     `;
+  } else if (assessorRole === 'SM') {
+    scopeJoin = `LEFT JOIN staff_station_postings ssp ON ssp.profile_id = p.id AND ssp.is_current = true`;
+    scopeCondition = `AND 1 = 0`;
   } else if (assessorRole === 'TI') {
     scopeJoin = `LEFT JOIN staff_station_postings ssp ON ssp.profile_id = p.id AND ssp.is_current = true`;
     scopeCondition = `
@@ -914,11 +917,13 @@ async function getRoleStatsForAssessor(assessorId, assessorRole, roleCode) {
 
 async function getAssessorRoleStats(assessorId, assessorRole) {
   let targetRoles = [];
-  if (assessorRole === 'SM' || assessorRole === 'SS' || ['Cabin Master', 'CABIN MASTER'].includes(assessorRole)) {
-    targetRoles = ['PM', 'Shunting Master'];
+  if (assessorRole === 'SS' || ['Cabin Master', 'CABIN MASTER'].includes(assessorRole)) {
+    targetRoles = ['PM', 'Shunting Master', 'SM'];
     if (assessorId === '439a8db6-2546-4858-abbc-3752f4acb536') {
       targetRoles.push('TM');
     }
+  } else if (assessorRole === 'SM') {
+    targetRoles = [];
   } else if (['Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS'].includes(assessorRole)) {
     targetRoles = ['PM', 'Shunting Master', 'SM', 'SS', 'Cabin Master'];
   } else if (assessorRole === 'TI') {
@@ -960,7 +965,7 @@ async function getEligibleStaff(assessorId, assessorRole, roleCode, filters = {}
         r.name IN ('SM', 'SS', 'Cabin Master', 'CABIN MASTER', 'PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM')
       )
     `);
-  } else if (assessorRole === 'SM' || assessorRole === 'SS' || ['Cabin Master', 'CABIN MASTER'].includes(assessorRole)) {
+  } else if (assessorRole === 'SS' || ['Cabin Master', 'CABIN MASTER'].includes(assessorRole)) {
     values.push(assessorId);
     conditions.push(`
       ssp.station_id = (
@@ -975,7 +980,7 @@ async function getEligibleStaff(assessorId, assessorRole, roleCode, filters = {}
     if (assessorId === '439a8db6-2546-4858-abbc-3752f4acb536') {
       conditions.push(`
         (
-          (r.name IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'TM', 'Train Manager') AND p.reporting_officer_id IS NULL)
+          (r.name IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'TM', 'Train Manager', 'SM') AND p.reporting_officer_id IS NULL)
           OR
           (p.reporting_officer_id = $${values.length})
         )
@@ -983,12 +988,14 @@ async function getEligibleStaff(assessorId, assessorRole, roleCode, filters = {}
     } else {
       conditions.push(`
         (
-          (r.name IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM') AND p.reporting_officer_id IS NULL)
+          (r.name IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'SM') AND p.reporting_officer_id IS NULL)
           OR
           (p.reporting_officer_id = $${values.length})
         )
       `);
     }
+  } else if (assessorRole === 'SM') {
+    conditions.push('1 = 0');
   } else if (assessorRole === 'TI') {
     values.push(assessorId);
     conditions.push(`
@@ -1287,7 +1294,7 @@ async function getBulkEligibleStaff(assessorId, assessorRole, roleCode) {
         r.name IN ('SM', 'SS', 'Cabin Master', 'CABIN MASTER', 'PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM')
       )
     `);
-  } else if (assessorRole === 'SM' || assessorRole === 'SS' || ['Cabin Master', 'CABIN MASTER'].includes(assessorRole)) {
+  } else if (assessorRole === 'SS' || ['Cabin Master', 'CABIN MASTER'].includes(assessorRole)) {
     values.push(assessorId);
     conditions.push(`
       ssp.station_id = (
@@ -1302,7 +1309,7 @@ async function getBulkEligibleStaff(assessorId, assessorRole, roleCode) {
     if (assessorId === '439a8db6-2546-4858-abbc-3752f4acb536') {
       conditions.push(`
         (
-          (r.name IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'TM', 'Train Manager') AND p.reporting_officer_id IS NULL)
+          (r.name IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'TM', 'Train Manager', 'SM') AND p.reporting_officer_id IS NULL)
           OR
           (p.reporting_officer_id = $${values.length})
         )
@@ -1310,12 +1317,14 @@ async function getBulkEligibleStaff(assessorId, assessorRole, roleCode) {
     } else {
       conditions.push(`
         (
-          (r.name IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM') AND p.reporting_officer_id IS NULL)
+          (r.name IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'SM') AND p.reporting_officer_id IS NULL)
           OR
           (p.reporting_officer_id = $${values.length})
         )
       `);
     }
+  } else if (assessorRole === 'SM') {
+    conditions.push('1 = 0');
   } else if (assessorRole === 'TI') {
     values.push(assessorId);
     conditions.push(`

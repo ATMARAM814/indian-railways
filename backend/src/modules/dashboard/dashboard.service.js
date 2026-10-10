@@ -561,7 +561,7 @@ async function getSmDashboardService(profileId) {
     completedAssessments: summaryData.completed_assessments || 0,
     pendingAssessments: summaryData.pending_assessments || 0,
     highRiskStaff: summaryData.high_risk_staff || 0,
-    totalEmployees: staff.length,
+    totalEmployees: staff.filter((s) => s.status === "active").length,
   };
 
   const roleWiseStaffDistribution = fillRoleDistribution(roleWiseData);
@@ -581,20 +581,21 @@ async function getSmDashboardService(profileId) {
 
   const monthlyAssessmentCompletionTrend = makeMonthlyCompletionTrend(assessments);
 
-  // Filter staff members
-  const stationMasters = staff.filter(
+  // Filter active staff members
+  const activeStaff = staff.filter((s) => s.status === "active");
+  const stationMasters = activeStaff.filter(
     (s) => s.role === "SM" && s.id !== profileId
   );
-  const stationMasterIncharges = staff.filter(
+  const stationMasterIncharges = activeStaff.filter(
     (s) => s.role === "SS" && s.id !== profileId
   );
-  const cabinMasters = staff.filter(
+  const cabinMasters = activeStaff.filter(
     (s) => (s.role === "Cabin Master" || s.role === "CABIN MASTER" || s.role === "CM") && s.id !== profileId
   );
-  const shuntingMasters = staff.filter(
+  const shuntingMasters = activeStaff.filter(
     (s) => (s.role === "Shunting Master" || s.role === "SHUNTING MASTER" || s.role === "SHM") && s.id !== profileId
   );
-  const pointsmen = staff.filter((s) => s.role === "PM");
+  const pointsmen = activeStaff.filter((s) => s.role === "PM");
 
   // Calculate current safety percent (Cat A + B vs total categorized pointsmen)
   const categorizedPointsmen = pointsmen.filter((s) =>
@@ -1205,7 +1206,7 @@ async function getSmSupervisorDashboardService(profileId) {
     pendingApprovals: summaryData.pending_approvals || 0,
     completedApprovals: summaryData.completed_approvals || 0,
     highRiskStaff: summaryData.high_risk_staff || 0,
-    totalEmployees: staff.length,
+    totalEmployees: staff.filter((s) => s.status === "active").length,
   };
 
   const roleWiseStaffDistribution = fillRoleDistribution(roleWiseData).filter(
@@ -1227,18 +1228,19 @@ async function getSmSupervisorDashboardService(profileId) {
 
   const monthlyAssessmentCompletionTrend = makeMonthlyCompletionTrend(assessments);
 
-  // Filter staff members
-  const stationMasters = staff.filter(
+  // Filter active staff members
+  const activeStaff = staff.filter((s) => s.status === "active");
+  const stationMasters = activeStaff.filter(
     (s) => s.role === "SM" && s.id !== profileId
   );
-  const stationMasterIncharges = staff.filter(
+  const stationMasterIncharges = activeStaff.filter(
     (s) => s.role === "SS" && s.id !== profileId
   );
-  const cabinMasters = staff.filter(
+  const cabinMasters = activeStaff.filter(
     (s) => (s.role === "Cabin Master" || s.role === "CABIN MASTER" || s.role === "CM") && s.id !== profileId
   );
-  const trainManagers = staff.filter((s) => s.role === "TM");
-  const pointsmen = staff.filter((s) => s.role === "PM" || s.role === "Shunting Master" || s.role === "SHUNTING MASTER" || s.role === "SHM");
+  const trainManagers = activeStaff.filter((s) => s.role === "TM");
+  const pointsmen = activeStaff.filter((s) => s.role === "PM" || s.role === "Shunting Master" || s.role === "SHUNTING MASTER" || s.role === "SHM");
 
   // Calculate current safety percent (Cat A + B vs total categorized pointsmen)
   const categorizedPointsmen = pointsmen.filter((s) =>

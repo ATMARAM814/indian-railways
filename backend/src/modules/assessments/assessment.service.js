@@ -61,7 +61,11 @@ async function createAssessment({
 
   if (reportingOfficerId && (assessmentType === 'Retest' || ['TI', 'AOM', 'SUPER_ADMIN'].includes(assessorRoleCode))) {
     finalAssessorUserId = reportingOfficerId;
-    finalAssessorRoleCode = reportingOfficerRole || 'SM';
+    finalAssessorRoleCode = reportingOfficerRole || 'SS';
+  }
+
+  if (['SM', 'Station Master', 'STATION MASTER'].includes(finalAssessorRoleCode)) {
+    throw new Error("Station Masters do not have authority to create or conduct assessments.");
   }
 
   if (reportingOfficerId !== finalAssessorUserId && assessmentType !== 'Retest' && assessmentCycle !== 'Retest after Counseling') {
@@ -81,11 +85,11 @@ async function createAssessment({
     }
   }
 
-  if (assessmentType !== 'Retest' && assessmentCycle !== 'Retest after Counseling' && ['SM', 'SS', 'Cabin Master', 'CABIN MASTER'].includes(finalAssessorRoleCode)) {
+  if (assessmentType !== 'Retest' && assessmentCycle !== 'Retest after Counseling' && ['SS', 'Cabin Master', 'CABIN MASTER'].includes(finalAssessorRoleCode)) {
     const hasSms = await hasStationSupervisor(assessedUserId);
     if (hasSms) {
       throw new Error(
-        "This station has an assigned Station Master Supervisor. Station Master cannot assess staff of this station."
+        "This station has an assigned Station Master Supervisor. Station Master Supervisor conducts assessments for this station."
       );
     }
   }
@@ -157,8 +161,8 @@ function validateAssessmentHierarchy(
   }
 
   const allowedMap = {
-    SM: ["PM", "Shunting Master", "SHUNTING MASTER", "SHM"],
-    SS: ["PM", "Shunting Master", "SHUNTING MASTER", "SHM"],
+    SM: [],
+    SS: ["PM", "Shunting Master", "SHUNTING MASTER", "SHM", "Cabin Master", "CABIN MASTER", "SM"],
     "Cabin Master": ["PM", "Shunting Master", "SHUNTING MASTER", "SHM"],
     "CABIN MASTER": ["PM", "Shunting Master", "SHUNTING MASTER", "SHM"],
     TI: ["SM", "SS", "TM", "Cabin Master", "CABIN MASTER"],
@@ -254,10 +258,19 @@ async function submitEvaluation(assessmentId, userId, submittedAnswers, operatio
   }
 
   const pool = require("../../config/database");
+  const userRoleRes = await pool.query(
+    `SELECT r.name FROM profiles p JOIN roles r ON r.id = p.role_id WHERE p.id = $1`,
+    [userId]
+  );
+  const userRoleName = userRoleRes.rows[0]?.name;
+  if (['SM', 'Station Master', 'STATION MASTER'].includes(userRoleName)) {
+    throw new Error("Station Masters do not have authority to evaluate assessments.");
+  }
+
   const checkAuthRes = await pool.query(
     `SELECT 
        (
-         r_user.name IN ('SM', 'Station Master', 'STATION MASTER', 'Cabin Master', 'CABIN MASTER', 'SS', 'Station Master Incharge', 'STATION MASTER INCHARGE', 'SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR')
+         r_user.name IN ('Cabin Master', 'CABIN MASTER', 'SS', 'Station Master Incharge', 'STATION MASTER INCHARGE', 'SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR')
          AND EXISTS (
            SELECT 1 
            FROM staff_station_postings ssp1
@@ -278,7 +291,7 @@ async function submitEvaluation(assessmentId, userId, submittedAnswers, operatio
   const isStationAuthority = checkAuthRes.rows[0]?.isStationAuthority || false;
 
   if (!isAssessor && !isStationAuthority) {
-    throw new Error("Only assessor or station master can submit evaluation");
+    throw new Error("Only designated assessor or station incharge/supervisor can submit evaluation");
   }
 
   const isMcqSubmitted = assessment.status === "mcq_submitted";

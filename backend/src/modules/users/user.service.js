@@ -28,8 +28,8 @@ const {
 } = require("./user.repository");
 
 const CREATE_PERMISSIONS = {
-  SM: ["PM", "Shunting Master", "SHUNTING MASTER", "SHM", "TM"],
-  SS: ["PM", "Shunting Master", "SHUNTING MASTER", "SHM", "TM"],
+  SM: [],
+  SS: ["PM", "Shunting Master", "SHUNTING MASTER", "SHM", "TM", "SM", "Cabin Master", "CABIN MASTER"],
   "Cabin Master": ["PM", "Shunting Master", "SHUNTING MASTER", "SHM", "TM"],
   "CABIN MASTER": ["PM", "Shunting Master", "SHUNTING MASTER", "SHM", "TM"],
 
@@ -335,14 +335,16 @@ async function listUsersService(
 
   const users = await getUsers(queryFilters);
   const total = await countUsers(queryFilters);
+  const totalAll = await countUsers({ ...queryFilters, status: 'all' });
 
   return {
     users,
     pagination: {
       total,
+      totalAll,
       page: Number(page),
       limit: Number(limit),
-      totalPages: Math.ceil(total / Number(limit)),
+      totalPages: Math.max(1, Math.ceil(totalAll / Number(limit))),
     },
   };
 }

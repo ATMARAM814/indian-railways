@@ -109,10 +109,10 @@ const Sidebar = ({ isOpen, onClose }) => {
     // Main links
     main.push({ name: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={18} /> });
     
-    const isCandidateRole = ['PM', 'TM', 'SHM', 'SHUNTING MASTER', 'Shunting Master'].includes(role);
+    const isCandidateRole = ['PM', 'TM', 'SHM', 'SHUNTING MASTER', 'Shunting Master', 'SM'].includes(role);
     if (isCandidateRole) {
       main.push({ name: 'My Assessments', path: '/my-assessment', icon: <ClipboardCheck size={18} /> });
-    } else if (role === 'SM' || role === 'SS' || ['Cabin Master', 'CABIN MASTER'].includes(role)) {
+    } else if (role === 'SS' || ['Cabin Master', 'CABIN MASTER'].includes(role)) {
       main.push({ name: 'My Assessments', path: '/my-assessment', icon: <ClipboardCheck size={18} /> });
       main.push({ name: 'Assessments', path: '/assessments', icon: <ClipboardCheck size={18} /> });
       if (hasRole('TM')) {
@@ -122,6 +122,9 @@ const Sidebar = ({ isOpen, onClose }) => {
       
       if (hasRole('PM')) {
         workforce.push({ name: 'Pointsmen', path: '/workforce/pointsmen', icon: <Users size={18} /> });
+      }
+      if (hasRole('SM')) {
+        workforce.push({ name: 'Station Masters', path: '/workforce/station-masters', icon: <Users size={18} /> });
       }
       if (hasRole('TM')) {
         workforce.push({ name: 'Train Managers', path: '/workforce/train-managers', icon: <Users size={18} /> });
