@@ -116,8 +116,6 @@ const WorkforceTransferModal = ({
     }
   }, [isOpen, user]);
 
-  if (!isOpen || !user) return null;
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -210,6 +208,8 @@ const WorkforceTransferModal = ({
   const selectableRoles = Object.keys(ROLE_DISPLAY_NAMES);
 
   const isNewRoleTi = formData.newRole === 'TI';
+
+  if (!isOpen || !user) return null;
 
   return (
     <div style={{
