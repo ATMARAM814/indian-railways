@@ -42,6 +42,17 @@ async function getStationStaffController(req, res) {
   try {
     const { stationId } = req.params;
 
+    if (req.user.role === 'TI') {
+      const db = require("./station.repository");
+      const tiStations = await db.getTiStations(req.user.userId);
+      if (!tiStations.includes(stationId)) {
+        return res.status(403).json({
+          success: false,
+          message: "Access Denied: You do not monitor this station.",
+        });
+      }
+    }
+
     const staff = await listStationStaff(stationId);
 
     return res.status(200).json({
@@ -60,6 +71,17 @@ async function getStationSummaryController(req, res) {
   try {
     const { stationId } = req.params;
 
+    if (req.user.role === 'TI') {
+      const db = require("./station.repository");
+      const tiStations = await db.getTiStations(req.user.userId);
+      if (!tiStations.includes(stationId)) {
+        return res.status(403).json({
+          success: false,
+          message: "Access Denied: You do not monitor this station.",
+        });
+      }
+    }
+
     const summary = await getStaffSummary(stationId);
 
     return res.status(200).json({
@@ -77,6 +99,17 @@ async function getStationSummaryController(req, res) {
 async function getStationStaffGroupedController(req, res) {
   try {
     const { stationId } = req.params;
+
+    if (req.user.role === 'TI') {
+      const db = require("./station.repository");
+      const tiStations = await db.getTiStations(req.user.userId);
+      if (!tiStations.includes(stationId)) {
+        return res.status(403).json({
+          success: false,
+          message: "Access Denied: You do not monitor this station.",
+        });
+      }
+    }
 
     const groupedStaff =
       await listStationStaffGrouped(stationId);

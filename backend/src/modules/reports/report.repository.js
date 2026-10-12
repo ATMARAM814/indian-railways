@@ -619,7 +619,22 @@ function buildApprovalWhere(filters, scope, values) {
   } else if (scope.type === "TI") {
     values.push(scope.stationIds);
     conditions.push(`ssp.station_id = ANY($${values.length}::uuid[])`);
-    conditions.push(`a.assessed_role_code IN ('PM', 'SM', 'TM', 'SS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Cabin Master', 'CABIN MASTER', 'Shunting Master', 'SHUNTING MASTER', 'SHM')`);
+    conditions.push(`a.assessed_role_code IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM')`);
+    values.push(scope.userId);
+    conditions.push(`
+      (
+        a.approved_by = $${values.length}
+        OR NOT EXISTS (
+          SELECT 1 
+          FROM staff_station_postings ssp_sms
+          JOIN profiles p_sms ON p_sms.id = ssp_sms.profile_id
+          JOIN roles r_sms ON r_sms.id = p_sms.role_id
+          WHERE ssp_sms.station_id = ssp.station_id 
+            AND ssp_sms.is_current = true 
+            AND r_sms.name IN ('Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Station Master Supervisior', 'Station Master Supervisio')
+        )
+      )
+    `);
   } else if (scope.type === "AOM") {
     values.push(scope.divisionId);
     conditions.push(`s.division_id = $${values.length}`);

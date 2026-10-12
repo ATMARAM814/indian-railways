@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import DrillDownPagination from '../../components/dashboard/DrillDownPagination';
@@ -27,9 +27,12 @@ const roleNameMap = {
 
 const ApprovalsPage = () => {
   const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const initialTab = (tabParam === 'completed' || tabParam === 'history') ? 'history' : 'pending';
   const isApprover = user && ['SM', 'SS', 'TI', 'AOM', 'SUPER_ADMIN', 'SMS', 'STATION MASTER SUPERVISOR', 'Station Master Supervisor', 'Station Master Supervisior', 'Station Master Supervisio', 'Cabin Master', 'CABIN MASTER'].includes(user.role);
 
-  const [activeTab, setActiveTab] = useState('pending'); // 'pending' or 'history'
+  const [activeTab, setActiveTab] = useState(initialTab); // 'pending' or 'history'
   
   // Data lists
   const [pendingList, setPendingList] = useState([]);
@@ -48,10 +51,20 @@ const ApprovalsPage = () => {
     stationSearch: '',
     stationId: '',
     role: '',
-    approvalStatus: '', // History only
+    approvalStatus: (tabParam === 'completed' || tabParam === 'history') ? 'approved' : '',
     fromDate: '',
     toDate: ''
   });
+
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab === 'completed' || tab === 'history') {
+      setActiveTab('history');
+      setFilters(prev => ({ ...prev, approvalStatus: 'approved' }));
+    } else if (tab === 'pending') {
+      setActiveTab('pending');
+    }
+  }, [searchParams]);
   
   // Pagination
   const [page, setPage] = useState(1);
@@ -152,6 +165,20 @@ const ApprovalsPage = () => {
 
   const getFilteredPendingList = () => {
     return pendingList.filter(item => {
+      // Strictly show only assessments awaiting approval
+      if (item.approval_status !== 'pending_approval') return false;
+
+      // Restrict TI to only employees in their assigned stations
+      if (user?.role === 'TI' && stations.length > 0) {
+        const belongsToTi = stations.some(
+          s => (s.station_code && item.station_code && s.station_code.toUpperCase() === item.station_code.toUpperCase()) ||
+               (s.stationCode && item.station_code && s.stationCode.toUpperCase() === item.station_code.toUpperCase()) ||
+               (s.id && item.station_id && s.id === item.station_id) ||
+               (s.stationId && item.station_id && s.stationId === item.station_id)
+        );
+        if (!belongsToTi) return false;
+      }
+
       // Search matches name or HRMS ID
       if (filters.search) {
         const term = filters.search.toLowerCase();
@@ -191,7 +218,24 @@ const ApprovalsPage = () => {
     });
   };
 
+  const getFilteredHistoryList = () => {
+    return historyList.filter(item => {
+      // Restrict TI to only employees in their assigned stations
+      if (user?.role === 'TI' && stations.length > 0) {
+        const belongsToTi = stations.some(
+          s => (s.station_code && item.stationCode && s.station_code.toUpperCase() === item.stationCode.toUpperCase()) ||
+               (s.stationCode && item.stationCode && s.stationCode.toUpperCase() === item.stationCode.toUpperCase()) ||
+               (s.station_name && item.stationName && s.station_name.toUpperCase() === item.stationName.toUpperCase()) ||
+               (s.stationName && item.stationName && s.stationName.toUpperCase() === item.stationName.toUpperCase())
+        );
+        if (!belongsToTi) return false;
+      }
+      return true;
+    });
+  };
+
   const visiblePending = getFilteredPendingList();
+  const visibleHistory = getFilteredHistoryList();
 
   // Role selections based on current authority
   const getRoleOptions = () => {
@@ -393,7 +437,11 @@ const ApprovalsPage = () => {
           scrollbarWidth: 'none', // Firefox
         }}>
           <button
-            onClick={() => { setActiveTab('pending'); setPage(1); }}
+            onClick={() => { 
+              setActiveTab('pending'); 
+              setPage(1); 
+              setSearchParams({ tab: 'pending' });
+            }}
             style={{
               padding: '12px 8px',
               fontSize: '15px',
@@ -423,12 +471,17 @@ const ApprovalsPage = () => {
               borderRadius: '9999px',
               marginLeft: '4px'
             }}>
-              {pendingList.length}
+              {visiblePending.length}
             </span>
           </button>
 
           <button
-            onClick={() => { setActiveTab('history'); setPage(1); }}
+            onClick={() => { 
+              setActiveTab('history'); 
+              setPage(1); 
+              setFilters(prev => ({ ...prev, approvalStatus: 'approved' }));
+              setSearchParams({ tab: 'completed' });
+            }}
             style={{
               padding: '12px 8px',
               fontSize: '15px',
@@ -448,7 +501,20 @@ const ApprovalsPage = () => {
             }}
           >
             <History size={16} />
-            <span>Approval History Log</span>
+            <span>Completed Approvals</span>
+            {activeTab === 'history' && totalItems > 0 && (
+              <span style={{
+                backgroundColor: 'var(--primary-navy)',
+                color: '#FFFFFF',
+                fontSize: '11px',
+                fontWeight: 800,
+                padding: '2px 8px',
+                borderRadius: '9999px',
+                marginLeft: '4px'
+              }}>
+                {totalItems}
+              </span>
+            )}
           </button>
         </div>
 
@@ -742,9 +808,9 @@ const ApprovalsPage = () => {
             )
           ) : (
             /* APPROVAL HISTORY TABLE */
-            historyList.length === 0 ? (
+            visibleHistory.length === 0 ? (
               <div style={{ padding: '48px 24px', textAlign: 'center', color: '#64748B' }}>
-                <p style={{ fontSize: '15px', fontWeight: 600, margin: 0 }}>No approval history records found.</p>
+                <p style={{ fontSize: '15px', fontWeight: 600, margin: 0 }}>No completed approval records found.</p>
               </div>
             ) : (
               <div className="table-responsive">
@@ -765,7 +831,7 @@ const ApprovalsPage = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {historyList.map((row) => (
+                    {visibleHistory.map((row) => (
                       <tr key={row.assessmentId} className="hover-row">
                         <td style={{ verticalAlign: 'middle', textAlign: 'center', fontWeight: '600', color: '#0B2341' }}>
                           {row.assessmentId.substring(0, 8)}...

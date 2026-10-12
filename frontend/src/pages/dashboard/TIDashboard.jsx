@@ -304,6 +304,7 @@ const TIDashboard = () => {
             icon={<Inbox size={20} />}
             type="warning"
             trend="Awaiting inspector review"
+            onClick={() => navigate('/approvals?tab=pending')}
           />
           <StatCard 
             title="Completed Approvals"
@@ -311,6 +312,7 @@ const TIDashboard = () => {
             icon={<ThumbsUp size={20} />}
             type="success"
             trend="Approved safety audits"
+            onClick={() => navigate('/approvals?tab=completed')}
           />
           <StatCard 
             title="Section Average Score"

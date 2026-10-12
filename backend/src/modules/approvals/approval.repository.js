@@ -49,6 +49,13 @@ async function getPendingApprovalsForUser(userId, role) {
         (assessed.reporting_officer_id IS NULL AND (
           ($1 = 'TI' 
            AND a.assessed_role_code IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM')
+           AND ssp.station_id IN (
+             SELECT sa.station_id 
+             FROM station_assignments sa 
+             WHERE sa.profile_id = $2 
+               AND sa.assignment_type = 'TI_AREA' 
+               AND sa.assigned_to IS NULL
+           )
            AND NOT EXISTS (
              SELECT 1 
              FROM staff_station_postings ssp_sms

@@ -68,6 +68,22 @@ async function validateApprovalHierarchy(
         "This station has an assigned Station Master Supervisor. TI cannot approve assessments for this station."
       );
     }
+    const checkJurisdictionRes = await pool.query(
+      `SELECT 1 
+       FROM staff_station_postings ssp
+       JOIN station_assignments sa ON sa.station_id = ssp.station_id 
+         AND sa.assignment_type = 'TI_AREA' 
+         AND sa.assigned_to IS NULL
+       WHERE ssp.profile_id = $1 
+         AND ssp.is_current = true 
+         AND sa.profile_id = $2`,
+      [assessment.assessed_user_id, approverId]
+    );
+    if (checkJurisdictionRes.rowCount === 0) {
+      throw new Error(
+        "You are not authorized to approve assessments for staff outside your assigned jurisdiction/stations."
+      );
+    }
   }
 
   if (
