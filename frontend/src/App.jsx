@@ -101,11 +101,10 @@ const DashboardRoot = () => {
     case 'Shunting Master':
       return <Navigate to="/dashboard/shunting-master" replace />;
     case 'SS':
+    case 'SM':
     case 'Cabin Master':
     case 'CABIN MASTER':
       return <Navigate to="/dashboard/sm" replace />;
-    case 'SM':
-      return <Navigate to="/dashboard/pm" replace />;
     case 'SMS':
     case 'STATION MASTER SUPERVISOR':
     case 'Station Master Supervisor':
@@ -283,7 +282,7 @@ function App() {
               path="/dashboard/sm"
               element={
                 <ProtectedRoute>
-                  <RoleRoute allowedRoles={['SS', 'Cabin Master', 'CABIN MASTER']}>
+                  <RoleRoute allowedRoles={['SM', 'SS', 'Cabin Master', 'CABIN MASTER']}>
                     <SMDashboard />
                   </RoleRoute>
                 </ProtectedRoute>

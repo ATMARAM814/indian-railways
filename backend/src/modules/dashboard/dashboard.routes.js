@@ -27,7 +27,7 @@ router.get(
   "/pm",
   authenticate,
   enforcePasswordChange,
-  authorize("PM"),
+  authorize("PM", "SM"),
   getPmDashboard
 );
 
