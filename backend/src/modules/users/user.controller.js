@@ -10,6 +10,7 @@ const {
   getWorkforcePresenceService,
   getEmployeePmeRefStatusService,
   searchEmployeeService,
+  getTrafficInspectorsService,
 } = require("./user.service");
 
 async function createUserController(
@@ -279,6 +280,24 @@ async function searchEmployeeController(req, res) {
   }
 }
 
+async function getTrafficInspectorsController(req, res) {
+  try {
+    const data = await getTrafficInspectorsService(
+      req.user.userId,
+      req.user.role
+    );
+    return res.status(200).json({
+      success: true,
+      data,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+}
+
 module.exports = {
   createUserController,
   listUsersController,
@@ -291,4 +310,5 @@ module.exports = {
   getWorkforcePresenceController,
   getEmployeePmeRefStatusController,
   searchEmployeeController,
+  getTrafficInspectorsController,
 };

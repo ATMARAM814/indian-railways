@@ -18,6 +18,7 @@ const {
   getWorkforcePresenceController,
   getEmployeePmeRefStatusController,
   searchEmployeeController,
+  getTrafficInspectorsController,
 } = require("./user.controller");
 
 router.post(
@@ -32,6 +33,13 @@ router.get(
   authenticate,
   enforcePasswordChange,
   listUsersController
+);
+
+router.get(
+  "/traffic-inspectors",
+  authenticate,
+  enforcePasswordChange,
+  getTrafficInspectorsController
 );
 
 router.get(

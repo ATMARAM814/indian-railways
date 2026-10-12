@@ -866,14 +866,29 @@ async function getUserProfileDetails(userId) {
     hierarchy.assignedSm = smRes.rows[0] || null;
 
     // TI
-    const tiQuery = `
-      SELECT p.id, p.full_name, p.phone, p.email, p.hrms_id
-      FROM station_assignments sa
-      JOIN profiles p ON p.id = sa.profile_id
-      WHERE sa.station_id = $1 AND sa.assignment_type = 'TI_AREA' AND sa.assigned_to IS NULL
-      LIMIT 1;
-    `;
-    const tiRes = await pool.query(tiQuery, [stationId]);
+    let tiRes = null;
+    if (userBase.reporting_officer_id) {
+      const roRes = await pool.query(
+        `SELECT p.id, p.full_name, p.phone, p.email, p.hrms_id
+         FROM profiles p
+         JOIN roles r ON r.id = p.role_id
+         WHERE p.id = $1 AND r.name = 'TI'`,
+        [userBase.reporting_officer_id]
+      );
+      if (roRes.rows.length > 0) {
+        tiRes = roRes;
+      }
+    }
+    if (!tiRes) {
+      const tiQuery = `
+        SELECT p.id, p.full_name, p.phone, p.email, p.hrms_id
+        FROM station_assignments sa
+        JOIN profiles p ON p.id = sa.profile_id
+        WHERE sa.station_id = $1 AND sa.assignment_type = 'TI_AREA' AND sa.assigned_to IS NULL
+        LIMIT 1;
+      `;
+      tiRes = await pool.query(tiQuery, [stationId]);
+    }
     hierarchy.assignedTi = tiRes.rows[0] || null;
 
     // Station Master Supervisor (SMS)

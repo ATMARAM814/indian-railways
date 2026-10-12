@@ -60,3 +60,8 @@ export const searchEmployees = async (query) => {
   return res.data;
 };
 
+export const getTrafficInspectorsList = async () => {
+  const res = await apiClient.get('/users/traffic-inspectors');
+  return res.data;
+};
+

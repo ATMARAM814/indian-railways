@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { X, Loader, Search } from 'lucide-react';
-import { getWorkforceDetails } from '../../services/workforce.service';
+import { getWorkforceDetails, getTrafficInspectorsList } from '../../services/workforce.service';
 
 const ROLE_HIERARCHY = {
   'PM': 1,
@@ -33,6 +33,7 @@ const WorkforceTransferModal = ({
 }) => {
   const [formData, setFormData] = useState({
     newStationId: '',
+    reportingTiId: '',
     newRole: '',
     tiAreaStationIds: [],
     reason: '',
@@ -43,6 +44,8 @@ const WorkforceTransferModal = ({
   const [submitting, setSubmitting] = useState(false);
   const [fullUser, setFullUser] = useState(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
+  const [trafficInspectors, setTrafficInspectors] = useState([]);
+  const [loadingTis, setLoadingTis] = useState(false);
   const [tiSearchTerm, setTiSearchTerm] = useState('');
 
   useEffect(() => {
@@ -50,6 +53,7 @@ const WorkforceTransferModal = ({
       const initialStationId = user.station_id || user.stationId || '';
       setFormData({
         newStationId: initialStationId,
+        reportingTiId: '',
         newRole: user.role || '',
         tiAreaStationIds: [],
         reason: '',
@@ -57,30 +61,58 @@ const WorkforceTransferModal = ({
       });
       setError(null);
       setFullUser(null);
+      setTrafficInspectors([]);
 
-      const fetchDetails = async () => {
+      const loadModalData = async () => {
         setLoadingDetails(true);
+        setLoadingTis(true);
         try {
-          const res = await getWorkforceDetails(user.id);
-          if (res.success && res.data) {
-            setFullUser(res.data);
-            const detailStationId = res.data.station_id || res.data.stationId || initialStationId;
+          const [detailsRes, tisRes] = await Promise.all([
+            getWorkforceDetails(user.id),
+            getTrafficInspectorsList()
+          ]);
+
+          let tisList = [];
+          if (tisRes && tisRes.success) {
+            tisList = tisRes.data || [];
+            setTrafficInspectors(tisList);
+          }
+
+          if (detailsRes && detailsRes.success && detailsRes.data) {
+            const userData = detailsRes.data;
+            setFullUser(userData);
+            const detailStationId = userData.station_id || userData.stationId || initialStationId;
+            
+            // Determine current Reporting TI
+            let matchedTiId = userData.hierarchy?.assignedTi?.id || userData.reporting_officer_id || '';
+            if (!matchedTiId && detailStationId && tisList.length > 0) {
+              const tiWithStation = tisList.find(ti => 
+                Array.isArray(ti.stations) && ti.stations.some(s => s.id === detailStationId)
+              );
+              if (tiWithStation) {
+                matchedTiId = tiWithStation.id;
+              }
+            }
+
             setFormData(prev => ({
               ...prev,
-              newRole: res.data.role || user.role,
+              newRole: userData.role || user.role,
+              reportingTiId: matchedTiId,
               newStationId: prev.newStationId || detailStationId
             }));
           }
         } catch (err) {
-          console.error("Failed to load user details for transfer", err);
+          console.error("Failed to load modal data for transfer", err);
         } finally {
           setLoadingDetails(false);
+          setLoadingTis(false);
         }
       };
 
-      fetchDetails();
+      loadModalData();
     } else {
       setFullUser(null);
+      setTrafficInspectors([]);
     }
   }, [isOpen, user]);
 
@@ -89,6 +121,16 @@ const WorkforceTransferModal = ({
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleTiChange = (e) => {
+    const newTiId = e.target.value;
+    // When the selected TI changes, reset the Destination Station selection
+    setFormData(prev => ({
+      ...prev,
+      reportingTiId: newTiId,
+      newStationId: ''
+    }));
   };
 
   const handleStationCheckboxChange = (stationId) => {
@@ -101,6 +143,13 @@ const WorkforceTransferModal = ({
     });
   };
 
+  // Stations assigned to the currently selected TI
+  const availableStations = useMemo(() => {
+    if (!formData.reportingTiId) return [];
+    const matchedTi = trafficInspectors.find(ti => ti.id === formData.reportingTiId);
+    return matchedTi?.stations || [];
+  }, [formData.reportingTiId, trafficInspectors]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
@@ -108,8 +157,15 @@ const WorkforceTransferModal = ({
     const isTi = formData.newRole === 'TI';
     const targetUser = fullUser || user || {};
     const currentStationId = targetUser.station_id || targetUser.stationId;
+    const currentTiId = targetUser.hierarchy?.assignedTi?.id || targetUser.reporting_officer_id;
     const currentRole = targetUser.role || 'PM';
     const isRoleChange = formData.newRole !== currentRole;
+    const isStationChange = formData.newStationId !== currentStationId;
+    const isTiChange = formData.reportingTiId !== currentTiId;
+
+    if (!isTi && !formData.reportingTiId) {
+      return setError('Please select a Reporting TI');
+    }
 
     if (!isTi && !formData.newStationId) {
       return setError('Please select a destination station');
@@ -119,13 +175,14 @@ const WorkforceTransferModal = ({
       return setError('Please select at least one station for the TI Area');
     }
 
-    if (!isTi && !isRoleChange && formData.newStationId === currentStationId) {
-      return setError('Please select a new station or change the role to proceed.');
+    if (!isTi && !isRoleChange && !isStationChange && !isTiChange) {
+      return setError('Please select a new station, change reporting TI, or change role to proceed.');
     }
 
     setSubmitting(true);
     const result = await onSubmit(user.id, {
       newStationId: isTi ? null : formData.newStationId,
+      reportingTiId: isTi ? null : formData.reportingTiId,
       newRole: formData.newRole,
       tiAreaStationIds: isTi ? formData.tiAreaStationIds : [],
       reason: formData.reason,
@@ -267,23 +324,77 @@ const WorkforceTransferModal = ({
               </select>
             </div>
 
-            {/* Destination Station Selection (if not TI) */}
+            {/* Destination Station and Reporting TI Selection (if not TI) */}
             {!isNewRoleTi && (
-              <div>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>Destination Station *</label>
-                <select
-                  name="newStationId"
-                  value={formData.newStationId}
-                  onChange={handleInputChange}
-                  required
-                  style={{ width: '100%', padding: '10px 12px', fontSize: '13.5px', borderRadius: '8px', border: '1px solid #D7E3EF', outline: 'none', cursor: 'pointer' }}
-                >
-                  <option value="">Select Destination Station</option>
-                  {stations.map(st => (
-                    <option key={st.id} value={st.id}>{st.station_name} ({st.station_code})</option>
-                  ))}
-                </select>
-              </div>
+              <>
+                {/* Reporting TI Dropdown */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>
+                    Reporting TI *
+                  </label>
+                  <select
+                    name="reportingTiId"
+                    value={formData.reportingTiId}
+                    onChange={handleTiChange}
+                    required
+                    disabled={loadingTis}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      fontSize: '13.5px',
+                      borderRadius: '8px',
+                      border: '1px solid #D7E3EF',
+                      outline: 'none',
+                      cursor: 'pointer',
+                      backgroundColor: '#FFFFFF'
+                    }}
+                  >
+                    <option value="">
+                      {loadingTis ? 'Loading Traffic Inspectors...' : 'Select Reporting TI'}
+                    </option>
+                    {trafficInspectors.map(ti => (
+                      <option key={ti.id} value={ti.id}>
+                        {ti.fullName} {ti.hrmsId ? `(${ti.hrmsId})` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Destination Station Selection */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>
+                    Destination Station *
+                  </label>
+                  <select
+                    name="newStationId"
+                    value={formData.newStationId}
+                    onChange={handleInputChange}
+                    required
+                    disabled={!formData.reportingTiId}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      fontSize: '13.5px',
+                      borderRadius: '8px',
+                      border: '1px solid #D7E3EF',
+                      outline: 'none',
+                      cursor: formData.reportingTiId ? 'pointer' : 'not-allowed',
+                      backgroundColor: formData.reportingTiId ? '#FFFFFF' : '#F8FAFC'
+                    }}
+                  >
+                    <option value="">
+                      {formData.reportingTiId
+                        ? (availableStations.length > 0 ? 'Select Destination Station' : 'No stations assigned to this TI')
+                        : 'Select Reporting TI first'}
+                    </option>
+                    {availableStations.map(st => (
+                      <option key={st.id} value={st.id}>
+                        {st.station_name} ({st.station_code})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </>
             )}
 
             {/* TI Area Selection (if assigned to TI) */}

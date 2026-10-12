@@ -646,6 +646,7 @@ async function transferUserService(
   targetUserId,
   transferData
 ) {
+  const pool = require("../../config/database");
   const existingUser = await getUserById(targetUserId);
 
   if (!existingUser) {
@@ -665,9 +666,37 @@ async function transferUserService(
   const isTargetTi = transferData.newRole === 'TI';
   
   if (!isTargetTi) {
+    if (!transferData.newStationId) {
+      throw new Error("Destination Station is required.");
+    }
+    if (!transferData.reportingTiId) {
+      throw new Error("Reporting TI is required.");
+    }
+
     const station = await getStationById(transferData.newStationId);
     if (!station) {
       throw new Error("Target station not found");
+    }
+
+    // Verify reporting TI is valid TI
+    const tiCheck = await pool.query(
+      `SELECT p.id, p.full_name FROM profiles p 
+       JOIN roles r ON r.id = p.role_id 
+       WHERE p.id = $1 AND r.name = 'TI'`,
+      [transferData.reportingTiId]
+    );
+    if (tiCheck.rows.length === 0) {
+      throw new Error("Selected Reporting TI is invalid or does not have TI role.");
+    }
+
+    // Verify destination station is assigned to the selected Reporting TI
+    const tiStationCheck = await pool.query(
+      `SELECT 1 FROM station_assignments 
+       WHERE profile_id = $1 AND station_id = $2 AND assignment_type = 'TI_AREA' AND assigned_to IS NULL`,
+      [transferData.reportingTiId, transferData.newStationId]
+    );
+    if (tiStationCheck.rows.length === 0) {
+      throw new Error("Destination station is not within the jurisdiction of the selected Reporting TI.");
     }
   }
 
@@ -702,8 +731,6 @@ async function transferUserService(
   const newRank = ROLE_HIERARCHY[newRole] || 0;
   const isDemotion = newRank < oldRank;
   const isPromotion = newRank > oldRank;
-
-  const pool = require("../../config/database");
 
   // Update profile role & designation
   let newDesignation = existingUser.designation;
@@ -755,6 +782,12 @@ async function transferUserService(
         [targetUserId, stationId]
       );
     }
+
+    // TI does not report to another TI
+    await pool.query(
+      `UPDATE profiles SET reporting_officer_id = NULL, updated_at = now() WHERE id = $1`,
+      [targetUserId]
+    );
   } else {
     if (oldRole === 'TI') {
       await pool.query(
@@ -775,6 +808,15 @@ async function transferUserService(
       transferredBy: creatorUserId,
       reason: transferData.reason || (isDemotion ? "Demotion" : isPromotion ? "Promotion" : "Transfer"),
     });
+
+    // Update reporting TI
+    const reportingTiId = transferData.reportingTiId;
+    if (reportingTiId) {
+      await pool.query(
+        `UPDATE profiles SET reporting_officer_id = $1, updated_at = now() WHERE id = $2`,
+        [reportingTiId, targetUserId]
+      );
+    }
   }
 
   const actionVerb = isDemotion ? "demoted" : isPromotion ? "promoted" : "transferred/reassigned";
@@ -786,12 +828,14 @@ async function transferUserService(
     { 
       stationId: currentPosting?.station_id || null, 
       role: oldRole, 
-      designation: existingUser.designation 
+      designation: existingUser.designation,
+      reportingOfficerId: existingUser.reporting_officer_id || null
     },
     { 
       stationId: isTargetTi ? null : (transferData.newStationId || currentPosting?.station_id), 
       role: newRole, 
       designation: newDesignation,
+      reportingTiId: isTargetTi ? null : transferData.reportingTiId,
       tiAreaStationIds: isTargetTi ? transferData.tiAreaStationIds : null,
       isDemotion,
       isPromotion
@@ -800,6 +844,51 @@ async function transferUserService(
   );
 
   return { success: true };
+}
+
+async function getTrafficInspectorsService(creatorUserId, creatorRole) {
+  const pool = require("../../config/database");
+  let divisionFilter = "";
+  let queryParams = [];
+
+  if (creatorRole === "AOM") {
+    const divRes = await pool.query(
+      `SELECT division_id FROM division_assignments WHERE profile_id = $1 AND is_current = true LIMIT 1`,
+      [creatorUserId]
+    );
+    const divId = divRes.rows[0]?.division_id;
+    if (divId) {
+      divisionFilter = "AND s.division_id = $1";
+      queryParams = [divId];
+    }
+  }
+
+  const query = `
+    SELECT 
+      p.id,
+      p.full_name as "fullName",
+      p.hrms_id as "hrmsId",
+      COALESCE(
+        json_agg(
+          json_build_object(
+            'id', s.id,
+            'station_name', s.station_name,
+            'station_code', s.station_code,
+            'division_id', s.division_id
+          ) ORDER BY s.station_name ASC
+        ) FILTER (WHERE s.id IS NOT NULL),
+        '[]'
+      ) as stations
+    FROM profiles p
+    JOIN roles r ON r.id = p.role_id
+    JOIN station_assignments sa ON sa.profile_id = p.id AND sa.assignment_type = 'TI_AREA' AND sa.assigned_to IS NULL
+    JOIN stations s ON s.id = sa.station_id ${divisionFilter}
+    WHERE r.name = 'TI'
+    GROUP BY p.id, p.full_name, p.hrms_id
+    ORDER BY p.full_name ASC;
+  `;
+  const result = await pool.query(query, queryParams);
+  return result.rows;
 }
 
 async function getWorkforcePresenceService(userId, role) {
@@ -853,4 +942,5 @@ module.exports = {
   getWorkforcePresenceService,
   getEmployeePmeRefStatusService,
   searchEmployeeService,
+  getTrafficInspectorsService,
 };
