@@ -661,6 +661,7 @@ async function getTiDashboardService(profileId) {
         pendingApprovals: 0,
         completedApprovals: 0,
         highRiskStaff: 0,
+        overdueStaff: 0,
       },
       graphs: {
         stationWiseEvaluationProgress: [],
@@ -690,7 +691,8 @@ async function getTiDashboardService(profileId) {
     pipelineData,
     approvalTrendData,
     performanceTrendData,
-    safetyCompliance
+    safetyCompliance,
+    overdueList
   ] = await Promise.all([
     db.getTiSummary(stationIds, profileId),
     db.getTiStationStats(stationIds),
@@ -701,7 +703,8 @@ async function getTiDashboardService(profileId) {
     db.getAssessmentPipelineDb({ type: 'stations', value: stationIds }),
     db.getApprovalTrendDb({ type: 'stations', value: stationIds }),
     db.getPerformanceTrendDb({ type: 'stations', value: stationIds }),
-    db.getSafetyComplianceDb({ type: 'stations', value: stationIds })
+    db.getSafetyComplianceDb({ type: 'stations', value: stationIds }),
+    db.getOverdueStaffDb({ userId: profileId, role: 'TI' })
   ]);
 
   const totalEmployees = roleWiseData.reduce((sum, row) => sum + (row.count || 0), 0);
@@ -715,6 +718,7 @@ async function getTiDashboardService(profileId) {
     pendingApprovals: summaryData.pending_approvals || 0,
     completedApprovals: summaryData.completed_approvals || 0,
     highRiskStaff: summaryData.high_risk_staff || 0,
+    overdueStaff: overdueList ? overdueList.length : 0,
     averageSectionScore,
     totalEmployees,
   };
@@ -823,6 +827,7 @@ async function getAomDashboardService(profileId) {
         completedApprovals: 0,
         averageDivisionScore: 0,
         highRiskStaff: 0,
+        overdueStaff: 0,
       },
       graphs: {
         stationWiseEvaluationProgress: [],
@@ -853,7 +858,8 @@ async function getAomDashboardService(profileId) {
     pipelineData,
     approvalTrendData,
     performanceTrendData,
-    safetyCompliance
+    safetyCompliance,
+    overdueList
   ] = await Promise.all([
     db.getAomSummary(divisionId),
     db.getAomStationStats(divisionId),
@@ -864,7 +870,8 @@ async function getAomDashboardService(profileId) {
     db.getAssessmentPipelineDb({ type: 'division', value: divisionId }),
     db.getApprovalTrendDb({ type: 'division', value: divisionId }),
     db.getPerformanceTrendDb({ type: 'division', value: divisionId }),
-    db.getSafetyComplianceDb({ type: 'division', value: divisionId })
+    db.getSafetyComplianceDb({ type: 'division', value: divisionId }),
+    db.getOverdueStaffDb({ userId: profileId, role: 'AOM' })
   ]);
 
   // Extract AOM & TI role counts from roleWiseData
@@ -901,6 +908,7 @@ async function getAomDashboardService(profileId) {
       ? Number(summaryData.average_division_score)
       : 0,
     highRiskStaff: summaryData.high_risk_staff || 0,
+    overdueStaff: overdueList ? overdueList.length : 0,
     totalEmployees: roleWiseData.reduce((sum, row) => sum + (row.count || 0), 0),
   };
 
@@ -999,7 +1007,8 @@ async function getSuperAdminDashboardService() {
     pipelineData,
     approvalTrendData,
     performanceTrendData,
-    safetyCompliance
+    safetyCompliance,
+    overdueList
   ] = await Promise.all([
     db.getSuperAdminSummary(),
     db.getSuperAdminStationStats(),
@@ -1010,7 +1019,8 @@ async function getSuperAdminDashboardService() {
     db.getAssessmentPipelineDb({ type: 'all' }),
     db.getApprovalTrendDb({ type: 'all' }),
     db.getPerformanceTrendDb({ type: 'all' }),
-    db.getSafetyComplianceDb({ type: 'all' })
+    db.getSafetyComplianceDb({ type: 'all' }),
+    db.getOverdueStaffDb({ role: 'SUPER_ADMIN' })
   ]);
 
   // Extract role counts from roleWiseData
@@ -1048,6 +1058,7 @@ async function getSuperAdminDashboardService() {
     totalAssessments: summaryData.total_assessments || 0,
     pendingApprovals: summaryData.pending_approvals || 0,
     highRiskStaff: summaryData.high_risk_staff || 0,
+    overdueStaff: overdueList ? overdueList.length : 0,
     totalEmployees,
   };
 
@@ -1323,6 +1334,10 @@ async function getDashboardCategoryCandidatesService({
   });
 }
 
+async function getOverdueStaffService({ userId, role }) {
+  return await db.getOverdueStaffDb({ userId, role });
+}
+
 module.exports = {
   getPmDashboardService,
   getTmDashboardService,
@@ -1335,4 +1350,5 @@ module.exports = {
   getSmSupervisorDashboardService,
   getDashboardCategoryCandidatesService,
   getSuperAdminTiAssessmentStatsService,
+  getOverdueStaffService,
 };

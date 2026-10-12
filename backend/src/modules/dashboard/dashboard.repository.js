@@ -2177,7 +2177,160 @@ async function getTiAverageSectionScoreDb(stationIds) {
   return result.rows[0]?.average_section_score || 0;
 }
 
+async function getOverdueStaffDb({ userId, role }) {
+  const roleUpper = (role || "").toUpperCase();
+  let scopeCondition = "";
+  let queryParams = [];
+
+  if (roleUpper === "SUPER_ADMIN" || roleUpper.includes("SUPER")) {
+    scopeCondition = "";
+    queryParams = [];
+  } else if (roleUpper === "TI" || roleUpper.includes("TI")) {
+    const tiStationsRes = await pool.query(
+      `SELECT station_id 
+       FROM station_assignments 
+       WHERE profile_id = $1 
+         AND assignment_type = 'TI_AREA' 
+         AND assigned_to IS NULL`,
+      [userId]
+    );
+    const tiStations = tiStationsRes.rows.map(r => r.station_id);
+    if (tiStations.length === 0) return [];
+    scopeCondition = "AND ssp.station_id = ANY($1::uuid[])";
+    queryParams = [tiStations];
+  } else {
+    // AOM
+    const divRes = await pool.query(
+      `SELECT division_id 
+       FROM division_assignments 
+       WHERE profile_id = $1 AND is_current = true 
+       LIMIT 1`,
+      [userId]
+    );
+    const divisionId = divRes.rows[0]?.division_id || null;
+    if (!divisionId) return [];
+    scopeCondition = "AND s.division_id = $1";
+    queryParams = [divisionId];
+  }
+
+  const query = `
+    SELECT 
+      p.id as "userId",
+      p.full_name as "fullName",
+      p.hrms_id as "hrmsId",
+      r.name as "role",
+      eff_cat.category_code as "category",
+      lca.percentage as "latestScore",
+      s.station_name as "stationName",
+      s.station_code as "stationCode",
+      d.name as "divisionName",
+      (
+        SELECT MAX(completed_at) 
+        FROM staff_counseling_history 
+        WHERE profile_id = p.id
+      ) as "prevCounselingDate",
+      (
+        SELECT COUNT(*)::int 
+        FROM staff_counseling_history 
+        WHERE profile_id = p.id
+      ) as "historyCount",
+      lca.evaluated_at as "lastAssessmentDate"
+    FROM staff_station_postings ssp
+    JOIN stations s ON s.id = ssp.station_id
+    JOIN divisions d ON d.id = s.division_id
+    JOIN profiles p ON p.id = ssp.profile_id
+    JOIN roles r ON r.id = p.role_id
+    LEFT JOIN LATERAL (
+      SELECT 
+        COALESCE(
+          sc_inner.category_code,
+          CASE
+            WHEN a_inner.alcoholic_status = 'Alcoholic' OR a_inner.percentage <= 25 THEN 'D'
+            WHEN a_inner.mcq_score < 15 OR a_inner.alertness_score < 15 THEN 'C'
+            WHEN a_inner.percentage >= 80 THEN 'A'
+            WHEN a_inner.percentage >= 50 THEN 'B'
+            WHEN a_inner.percentage >= 26 THEN 'C'
+            WHEN a_inner.percentage IS NOT NULL THEN 'D'
+            ELSE NULL
+          END
+        ) as category_code
+      FROM profiles p_inner
+      LEFT JOIN LATERAL (
+        SELECT category_id FROM employee_categories ec_inner
+        WHERE ec_inner.profile_id = p_inner.id
+        ORDER BY ec_inner.created_at DESC
+        LIMIT 1
+      ) ec ON true
+      LEFT JOIN staff_categories sc_inner ON sc_inner.id = ec.category_id
+      LEFT JOIN LATERAL (
+        SELECT percentage, alcoholic_status, mcq_score, alertness_score
+        FROM assessments
+        WHERE assessed_user_id = p_inner.id AND status = 'completed' AND (approval_status = 'approved' OR approval_status IS NULL)
+        ORDER BY created_at DESC
+        LIMIT 1
+      ) a_inner ON true
+      WHERE p_inner.id = p.id
+    ) eff_cat ON true
+    LEFT JOIN LATERAL (
+      SELECT percentage, evaluated_at, due_date FROM assessments
+      WHERE assessed_user_id = p.id AND status = 'completed' AND approval_status = 'approved'
+      ORDER BY created_at DESC
+      LIMIT 1
+    ) lca ON true
+    WHERE ssp.is_current = true
+      AND eff_cat.category_code IN ('C', 'D')
+      AND NOT EXISTS (
+        SELECT 1 FROM assessments a_active
+        WHERE a_active.assessed_user_id = p.id
+          AND a_active.status IN ('scheduled', 'mcq_access_sent', 'mcq_pending', 'mcq_submitted', 'evaluation_pending', 'evaluation_submitted', 'pending_approval', 'created')
+      )
+      ${scopeCondition}
+    ORDER BY p.full_name ASC;
+  `;
+
+  const result = await pool.query(query, queryParams);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return result.rows.map(cand => {
+    let nextDueDate = null;
+    let nextDueDateStr = 'Immediate';
+    let isOverdue = true;
+
+    if (cand.prevCounselingDate) {
+      const prevDate = new Date(cand.prevCounselingDate);
+      const monthsToAdd = cand.category === 'D' ? 1 : 3;
+      nextDueDate = new Date(prevDate);
+      nextDueDate.setMonth(nextDueDate.getMonth() + monthsToAdd);
+      nextDueDate.setHours(0, 0, 0, 0);
+
+      const diffTime = nextDueDate.getTime() - today.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      if (diffDays < 0) {
+        isOverdue = true;
+        nextDueDateStr = nextDueDate.toISOString();
+      } else {
+        isOverdue = false;
+        nextDueDateStr = nextDueDate.toISOString();
+      }
+    } else {
+      isOverdue = true;
+      nextDueDate = null;
+      nextDueDateStr = 'Immediate';
+    }
+
+    return {
+      ...cand,
+      nextDueDate,
+      nextDueDateStr,
+      status: isOverdue ? 'overdue' : 'scheduled'
+    };
+  }).filter(c => c.status === 'overdue');
+}
+
 module.exports = {
+  getOverdueStaffDb,
   getSmStation,
   getTiStations,
   getAomDivision,

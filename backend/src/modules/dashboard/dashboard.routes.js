@@ -20,6 +20,7 @@ const {
   getSmSupervisorDashboard,
   getDashboardCategoryCandidates,
   getTiAssessmentStats,
+  getOverdueStaff,
 } = require("./dashboard.controller");
 
 // PM Dashboard
@@ -124,6 +125,14 @@ router.get(
   enforcePasswordChange,
   authorize("SUPER_ADMIN", "AOM"),
   getTiAssessmentStats
+);
+
+router.get(
+  "/overdue-staff",
+  authenticate,
+  enforcePasswordChange,
+  authorize("SUPER_ADMIN", "AOM", "TI"),
+  getOverdueStaff
 );
 
 module.exports = router;

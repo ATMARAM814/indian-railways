@@ -283,7 +283,7 @@ const TIDashboard = () => {
         </div>
 
         {/* KPI Cards Grid */}
-        <div className="kpi-grid">
+        <div className="kpi-grid-6">
           <StatCard 
             title="Total Assigned Stations"
             value={summary.totalStations}
@@ -313,6 +313,14 @@ const TIDashboard = () => {
             type="success"
             trend="Approved safety audits"
             onClick={() => navigate('/approvals?tab=completed')}
+          />
+          <StatCard 
+            title="TI Overdue"
+            value={summary.overdueStaff || 0}
+            icon={<AlertTriangle size={20} />}
+            type="danger"
+            trend="Overdue assessments"
+            onClick={() => navigate('/workforce/overdue')}
           />
           <StatCard 
             title="Section Average Score"

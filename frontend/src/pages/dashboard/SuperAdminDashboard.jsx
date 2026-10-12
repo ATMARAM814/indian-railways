@@ -327,7 +327,7 @@ const SuperAdminDashboard = () => {
           </p>
         </div>
 
-        <div className="kpi-grid-4">
+        <div className="kpi-grid">
           <StatCard
             title="Total Stations"
             value={summary.totalStations}
@@ -341,6 +341,14 @@ const SuperAdminDashboard = () => {
             icon={<Users size={20} />}
             type="normal"
             trend="Total active safety crew"
+          />
+          <StatCard
+            title="Overdue Staff"
+            value={summary.overdueStaff || 0}
+            icon={<AlertTriangle size={20} />}
+            type="danger"
+            trend="System-wide overdue assessments"
+            onClick={() => navigate('/workforce/overdue')}
           />
           <StatCard
             title="TI Wise Status"

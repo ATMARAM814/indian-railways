@@ -10,6 +10,7 @@ const {
   getSmSupervisorDashboardService,
   getDashboardCategoryCandidatesService,
   getSuperAdminTiAssessmentStatsService,
+  getOverdueStaffService,
 } = require("./dashboard.service");
 
 async function getPmDashboard(req, res) {
@@ -218,6 +219,24 @@ async function getTiAssessmentStats(req, res) {
   }
 }
 
+async function getOverdueStaff(req, res) {
+  try {
+    const data = await getOverdueStaffService({
+      userId: req.user.userId,
+      role: req.user.role,
+    });
+    return res.status(200).json({
+      success: true,
+      data,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+}
+
 module.exports = {
   getPmDashboard,
   getTmDashboard,
@@ -230,4 +249,5 @@ module.exports = {
   getSmSupervisorDashboard,
   getDashboardCategoryCandidates,
   getTiAssessmentStats,
+  getOverdueStaff,
 };

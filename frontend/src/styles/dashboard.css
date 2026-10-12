@@ -262,6 +262,12 @@
   gap: 20px;
 }
 
+.kpi-grid-6 {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 20px;
+}
+
 .kpi-grid-4 {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -274,6 +280,12 @@
   gap: 20px;
 }
 
+@media (max-width: 1400px) {
+  .kpi-grid-6 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
 @media (max-width: 1200px) {
   .kpi-grid {
     grid-template-columns: repeat(3, 1fr);
@@ -284,13 +296,13 @@
 }
 
 @media (max-width: 768px) {
-  .kpi-grid, .kpi-grid-4, .kpi-grid-3 {
+  .kpi-grid, .kpi-grid-6, .kpi-grid-4, .kpi-grid-3 {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
 @media (max-width: 480px) {
-  .kpi-grid, .kpi-grid-4, .kpi-grid-3 {
+  .kpi-grid, .kpi-grid-6, .kpi-grid-4, .kpi-grid-3 {
     grid-template-columns: 1fr;
   }
 }

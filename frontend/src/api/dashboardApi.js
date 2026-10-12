@@ -174,3 +174,8 @@ export const getSuperAdminTiAssessmentStats = async () => {
   const res = await apiClient.get('/dashboard/super-admin/ti-assessment-stats');
   return res.data;
 };
+
+export const getOverdueStaff = async () => {
+  const res = await apiClient.get('/dashboard/overdue-staff');
+  return res.data;
+};

@@ -257,7 +257,7 @@ const AOMDashboard = () => {
         </div>
 
         {/* KPI Cards Grid */}
-        <div className="kpi-grid-4">
+        <div className="kpi-grid">
           <StatCard
             title="Total Stations"
             value={summary.totalStations}
@@ -271,6 +271,14 @@ const AOMDashboard = () => {
             icon={<Users size={20} />}
             type="normal"
             trend="Active division personnel"
+          />
+          <StatCard
+            title="Overdue Staff"
+            value={summary.overdueStaff || 0}
+            icon={<AlertTriangle size={20} />}
+            type="danger"
+            trend="Overdue assessments in division"
+            onClick={() => navigate('/workforce/overdue')}
           />
           <StatCard
             title="TI Wise Status"

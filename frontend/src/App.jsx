@@ -75,6 +75,7 @@ const TiApprovalsPage = React.lazy(() => import('./pages/reports/TiApprovalsPage
 const StationListPage = React.lazy(() => import('./pages/stations/StationListPage'));
 const StationIntelligencePage = React.lazy(() => import('./pages/stations/StationIntelligencePage'));
 const CategoryCandidatesPage = React.lazy(() => import('./pages/dashboard/CategoryCandidatesPage'));
+const OverdueStaffPage = React.lazy(() => import('./pages/workforce/OverdueStaffPage'));
 
 import './styles/theme.css';
 import './styles/auth.css';
@@ -341,6 +342,26 @@ function App() {
                 <ProtectedRoute>
                   <RoleRoute allowedRoles={['SUPER_ADMIN', 'AOM', 'TI']}>
                     <CategoryCandidatesPage />
+                  </RoleRoute>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/workforce/overdue"
+              element={
+                <ProtectedRoute>
+                  <RoleRoute allowedRoles={['SUPER_ADMIN', 'AOM', 'TI']}>
+                    <OverdueStaffPage />
+                  </RoleRoute>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/overdue-staff"
+              element={
+                <ProtectedRoute>
+                  <RoleRoute allowedRoles={['SUPER_ADMIN', 'AOM', 'TI']}>
+                    <OverdueStaffPage />
                   </RoleRoute>
                 </ProtectedRoute>
               }
