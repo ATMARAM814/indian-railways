@@ -16,6 +16,29 @@ export const getShuntingMasterDashboardData = async () => {
   return res.data;
 };
 
+const mapStaffItem = (s) => ({
+  id: s.id,
+  employeeId: s.employeeId || s.employee_id || s.hrmsId || s.hrms_id || s.id,
+  fullName: s.full_name || s.fullName,
+  hrmsId: s.hrms_id || s.hrmsId,
+  designation: s.designation,
+  category: s.category || s.category_code || null,
+  categoryCode: s.category_code || s.category || null,
+  phone: s.phone,
+  email: s.email,
+  status: s.status || 'Active',
+  role: s.role,
+  stationName: s.stationName || s.station_name,
+  divisionName: s.divisionName || s.division_name,
+  zoneName: s.zoneName || s.zone_name,
+  reportingOfficer: s.reportingOfficer || s.reporting_officer,
+  latestScore: s.latestScore ?? s.latest_score ?? null,
+  totalScore: s.totalScore ?? s.total_score ?? null,
+  approvalStatus: s.approvalStatus || s.approval_status || null,
+  latestAssessmentStatus: s.latestAssessmentStatus || s.latest_assessment_status || null,
+  evaluatedAt: s.evaluatedAt || s.evaluated_at || null,
+});
+
 const supplementStationStaff = async (dashboardData) => {
   if (!dashboardData) return dashboardData;
   const stationId = dashboardData.station?.id;
@@ -34,55 +57,11 @@ const supplementStationStaff = async (dashboardData) => {
         const allStaff = staffRes.data.data;
         const activeStaff = allStaff.filter(s => !s.status || s.status.toLowerCase() === 'active');
 
-        const smList = activeStaff.filter(s => s.role === 'SM').map(s => ({
-          id: s.id,
-          fullName: s.full_name || s.fullName,
-          hrmsId: s.hrms_id || s.hrmsId,
-          designation: s.designation,
-          category: s.category_code || s.category,
-          phone: s.phone,
-          role: s.role
-        }));
-
-        const ssList = activeStaff.filter(s => s.role === 'SS').map(s => ({
-          id: s.id,
-          fullName: s.full_name || s.fullName,
-          hrmsId: s.hrms_id || s.hrmsId,
-          designation: s.designation,
-          category: s.category_code || s.category,
-          phone: s.phone,
-          role: s.role
-        }));
-
-        const cmList = activeStaff.filter(s => ['Cabin Master', 'CABIN MASTER', 'CM'].includes(s.role)).map(s => ({
-          id: s.id,
-          fullName: s.full_name || s.fullName,
-          hrmsId: s.hrms_id || s.hrmsId,
-          designation: s.designation,
-          category: s.category_code || s.category,
-          phone: s.phone,
-          role: s.role
-        }));
-
-        const shmList = activeStaff.filter(s => ['Shunting Master', 'SHUNTING MASTER', 'SHM'].includes(s.role)).map(s => ({
-          id: s.id,
-          fullName: s.full_name || s.fullName,
-          hrmsId: s.hrms_id || s.hrmsId,
-          designation: s.designation,
-          category: s.category_code || s.category,
-          phone: s.phone,
-          role: s.role
-        }));
-
-        const pmList = activeStaff.filter(s => s.role === 'PM').map(s => ({
-          id: s.id,
-          fullName: s.full_name || s.fullName,
-          hrmsId: s.hrms_id || s.hrmsId,
-          designation: s.designation,
-          category: s.category_code || s.category,
-          phone: s.phone,
-          role: s.role
-        }));
+        const smList = activeStaff.filter(s => s.role === 'SM').map(mapStaffItem);
+        const ssList = activeStaff.filter(s => s.role === 'SS').map(mapStaffItem);
+        const cmList = activeStaff.filter(s => ['Cabin Master', 'CABIN MASTER', 'CM'].includes(s.role)).map(mapStaffItem);
+        const shmList = activeStaff.filter(s => ['Shunting Master', 'SHUNTING MASTER', 'SHM'].includes(s.role)).map(mapStaffItem);
+        const pmList = activeStaff.filter(s => s.role === 'PM').map(mapStaffItem);
 
         const catA = pmList.filter(p => (p.category || '').toUpperCase() === 'A').length;
         const catB = pmList.filter(p => (p.category || '').toUpperCase() === 'B').length;
@@ -102,15 +81,44 @@ const supplementStationStaff = async (dashboardData) => {
         if (!dashboardData.summary.totalPM || dashboardData.summary.totalPM === 0) {
           dashboardData.summary.totalPM = pmList.length;
         }
-        if (!dashboardData.summary.categoryA) dashboardData.summary.categoryA = catA;
-        if (!dashboardData.summary.categoryB) dashboardData.summary.categoryB = catB;
-        if (!dashboardData.summary.categoryC) dashboardData.summary.categoryC = catC;
-        if (!dashboardData.summary.categoryD) dashboardData.summary.categoryD = catD;
-        if (!dashboardData.summary.highRiskStaff) dashboardData.summary.highRiskStaff = catD;
+        if (dashboardData.summary.categoryA === undefined || dashboardData.summary.categoryA === null || dashboardData.summary.categoryA === 0) {
+          dashboardData.summary.categoryA = catA;
+        }
+        if (dashboardData.summary.categoryB === undefined || dashboardData.summary.categoryB === null || dashboardData.summary.categoryB === 0) {
+          dashboardData.summary.categoryB = catB;
+        }
+        if (dashboardData.summary.categoryC === undefined || dashboardData.summary.categoryC === null || dashboardData.summary.categoryC === 0) {
+          dashboardData.summary.categoryC = catC;
+        }
+        if (dashboardData.summary.categoryD === undefined || dashboardData.summary.categoryD === null || dashboardData.summary.categoryD === 0) {
+          dashboardData.summary.categoryD = catD;
+        }
+        if (dashboardData.summary.highRiskStaff === undefined || dashboardData.summary.highRiskStaff === null || dashboardData.summary.highRiskStaff === 0) {
+          dashboardData.summary.highRiskStaff = catD;
+        }
       }
     } catch (err) {
       console.error('Failed to supplement staff from station endpoint:', err);
     }
+  }
+
+  // Ensure pointsmen list items are normalized with full fields
+  if (Array.isArray(dashboardData.pointsmen)) {
+    dashboardData.pointsmen = dashboardData.pointsmen.map(mapStaffItem);
+  }
+  if (Array.isArray(dashboardData.shuntingMasters)) {
+    dashboardData.shuntingMasters = dashboardData.shuntingMasters.map(mapStaffItem);
+  }
+
+  // Keep graphs.categoryDistribution aligned with summary
+  if (!dashboardData.graphs) dashboardData.graphs = {};
+  if (!dashboardData.graphs.categoryDistribution || dashboardData.graphs.categoryDistribution.every(c => c.count === 0)) {
+    dashboardData.graphs.categoryDistribution = [
+      { category: 'A', count: Number(dashboardData.summary?.categoryA || 0) },
+      { category: 'B', count: Number(dashboardData.summary?.categoryB || 0) },
+      { category: 'C', count: Number(dashboardData.summary?.categoryC || 0) },
+      { category: 'D', count: Number(dashboardData.summary?.categoryD || 0) },
+    ];
   }
 
   return dashboardData;

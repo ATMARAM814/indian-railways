@@ -19,46 +19,189 @@ async function getStationStaff(stationId) {
     SELECT
       p.id,
       p.full_name,
+      p.full_name as "fullName",
       p.hrms_id,
+      p.hrms_id as "hrmsId",
       p.phone,
+      p.email,
+      p.employee_id as employee_id,
+      p.employee_id as "employeeId",
       p.designation,
       p.status,
-      sc.category_code,
-      r.name as role
+      r.name as role,
+      s.station_name as "stationName",
+      s.station_name as station_name,
+      d.name as "divisionName",
+      d.name as division_name,
+      d.zone as "zoneName",
+      d.zone as zone_name,
+      (
+        SELECT p_ti.full_name || ' (TI)'
+        FROM station_assignments sa
+        JOIN profiles p_ti ON p_ti.id = sa.profile_id
+        WHERE sa.station_id = s.id 
+          AND sa.assignment_type = 'TI_AREA'
+          AND sa.assigned_to IS NULL
+        LIMIT 1
+      ) as "reportingOfficer",
+      (
+        SELECT p_ti.full_name || ' (TI)'
+        FROM station_assignments sa
+        JOIN profiles p_ti ON p_ti.id = sa.profile_id
+        WHERE sa.station_id = s.id 
+          AND sa.assignment_type = 'TI_AREA'
+          AND sa.assigned_to IS NULL
+        LIMIT 1
+      ) as reporting_officer,
+      COALESCE(
+        (
+          SELECT sc.category_code
+          FROM employee_categories ec
+          JOIN staff_categories sc ON sc.id = ec.category_id
+          WHERE ec.profile_id = p.id
+          ORDER BY ec.created_at DESC
+          LIMIT 1
+        ),
+        (
+          SELECT 
+            CASE
+              WHEN a.alcoholic_status = 'Alcoholic' OR a.percentage <= 25 THEN 'D'
+              WHEN a.mcq_score < 15 OR a.alertness_score < 15 THEN 'C'
+              WHEN a.percentage >= 80 THEN 'A'
+              WHEN a.percentage >= 50 THEN 'B'
+              WHEN a.percentage >= 26 THEN 'C'
+              WHEN a.percentage IS NOT NULL THEN 'D'
+              ELSE NULL
+            END
+          FROM assessments a
+          WHERE a.assessed_user_id = p.id 
+            AND a.status = 'completed'
+            AND (a.approval_status = 'approved' OR a.approval_status IS NULL)
+          ORDER BY a.created_at DESC
+          LIMIT 1
+        )
+      ) as category_code,
+      COALESCE(
+        (
+          SELECT sc.category_code
+          FROM employee_categories ec
+          JOIN staff_categories sc ON sc.id = ec.category_id
+          WHERE ec.profile_id = p.id
+          ORDER BY ec.created_at DESC
+          LIMIT 1
+        ),
+        (
+          SELECT 
+            CASE
+              WHEN a.alcoholic_status = 'Alcoholic' OR a.percentage <= 25 THEN 'D'
+              WHEN a.mcq_score < 15 OR a.alertness_score < 15 THEN 'C'
+              WHEN a.percentage >= 80 THEN 'A'
+              WHEN a.percentage >= 50 THEN 'B'
+              WHEN a.percentage >= 26 THEN 'C'
+              WHEN a.percentage IS NOT NULL THEN 'D'
+              ELSE NULL
+            END
+          FROM assessments a
+          WHERE a.assessed_user_id = p.id 
+            AND a.status = 'completed'
+            AND (a.approval_status = 'approved' OR a.approval_status IS NULL)
+          ORDER BY a.created_at DESC
+          LIMIT 1
+        )
+      ) as category,
+      (
+        SELECT a.percentage
+        FROM assessments a
+        WHERE a.assessed_user_id = p.id AND a.status = 'completed'
+        ORDER BY a.created_at DESC
+        LIMIT 1
+      ) as "latestScore",
+      (
+        SELECT a.total_score
+        FROM assessments a
+        WHERE a.assessed_user_id = p.id AND a.status = 'completed'
+        ORDER BY a.created_at DESC
+        LIMIT 1
+      ) as "totalScore",
+      (
+        SELECT a.approval_status
+        FROM assessments a
+        WHERE a.assessed_user_id = p.id AND a.status = 'completed'
+        ORDER BY a.created_at DESC
+        LIMIT 1
+      ) as "approvalStatus",
+      (
+        SELECT a.status
+        FROM assessments a
+        WHERE a.assessed_user_id = p.id
+        ORDER BY a.created_at DESC
+        LIMIT 1
+      ) as "latestAssessmentStatus",
+      (
+        SELECT a.evaluated_at
+        FROM assessments a
+        WHERE a.assessed_user_id = p.id AND a.status = 'completed'
+        ORDER BY a.created_at DESC
+        LIMIT 1
+      ) as "evaluatedAt"
     FROM staff_station_postings ssp
-    JOIN profiles p
-      ON p.id = ssp.profile_id
-    LEFT JOIN employee_categories ec
-      ON ec.profile_id = p.id
-    LEFT JOIN staff_categories sc
-      ON sc.id = ec.category_id
-    JOIN roles r
-      ON r.id = p.role_id
+    JOIN profiles p ON p.id = ssp.profile_id
+    JOIN roles r ON r.id = p.role_id
+    JOIN stations s ON s.id = ssp.station_id
+    LEFT JOIN divisions d ON d.id = s.division_id
     WHERE ssp.station_id = $1
       AND ssp.is_current = true
     ORDER BY p.designation, p.full_name;
   `;
 
   const result = await pool.query(query, [stationId]);
-
   return result.rows;
 }
 
 async function getStationStaffSummary(stationId) {
   const query = `
     SELECT
-      COUNT(*) as total_staff,
-      COUNT(*) FILTER (WHERE r.name = 'SM') as total_sm,
-      COUNT(*) FILTER (WHERE r.name = 'PM') as total_pm,
-      COUNT(*) FILTER (WHERE sc.category_code = 'A') as category_a,
-      COUNT(*) FILTER (WHERE sc.category_code = 'B') as category_b,
-      COUNT(*) FILTER (WHERE sc.category_code = 'C') as category_c,
-      COUNT(*) FILTER (WHERE sc.category_code = 'D') as category_d
+      COUNT(DISTINCT p.id) as total_staff,
+      COUNT(DISTINCT p.id) FILTER (WHERE r.name = 'SM') as total_sm,
+      COUNT(DISTINCT p.id) FILTER (WHERE r.name = 'PM') as total_pm,
+      COUNT(DISTINCT p.id) FILTER (WHERE eff_cat.category_code = 'A' AND r.name = 'PM') as category_a,
+      COUNT(DISTINCT p.id) FILTER (WHERE eff_cat.category_code = 'B' AND r.name = 'PM') as category_b,
+      COUNT(DISTINCT p.id) FILTER (WHERE eff_cat.category_code = 'C' AND r.name = 'PM') as category_c,
+      COUNT(DISTINCT p.id) FILTER (WHERE eff_cat.category_code = 'D' AND r.name = 'PM') as category_d
     FROM staff_station_postings ssp
     JOIN profiles p ON p.id = ssp.profile_id
     JOIN roles r ON r.id = p.role_id
-    LEFT JOIN employee_categories ec ON ec.profile_id = p.id
-    LEFT JOIN staff_categories sc ON sc.id = ec.category_id
+    LEFT JOIN LATERAL (
+      SELECT 
+        COALESCE(
+          sc_inner.category_code,
+          CASE
+            WHEN a_inner.alcoholic_status = 'Alcoholic' OR a_inner.percentage <= 25 THEN 'D'
+            WHEN a_inner.mcq_score < 15 OR a_inner.alertness_score < 15 THEN 'C'
+            WHEN a_inner.percentage >= 80 THEN 'A'
+            WHEN a_inner.percentage >= 50 THEN 'B'
+            WHEN a_inner.percentage >= 26 THEN 'C'
+            WHEN a_inner.percentage IS NOT NULL THEN 'D'
+            ELSE NULL
+          END
+        ) as category_code
+      FROM profiles p_inner
+      LEFT JOIN LATERAL (
+        SELECT category_id FROM employee_categories ec_inner
+        WHERE ec_inner.profile_id = p_inner.id
+        ORDER BY ec_inner.created_at DESC
+        LIMIT 1
+      ) ec ON true
+      LEFT JOIN staff_categories sc_inner ON sc_inner.id = ec.category_id
+      LEFT JOIN LATERAL (
+        SELECT percentage, alcoholic_status, mcq_score, alertness_score
+        FROM assessments
+        WHERE assessed_user_id = p_inner.id AND status = 'completed' AND (approval_status = 'approved' OR approval_status IS NULL)
+        ORDER BY created_at DESC
+        LIMIT 1
+      ) a_inner ON true
+      WHERE p_inner.id = p.id
+    ) eff_cat ON true
     WHERE ssp.station_id = $1
       AND ssp.is_current = true;
   `;

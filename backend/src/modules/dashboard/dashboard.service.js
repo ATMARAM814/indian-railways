@@ -575,18 +575,25 @@ async function getSmDashboardService(profileId) {
 
   const summary = {
     totalPM: pointsmen.length,
-    categoryA: categoryACount || summaryData.category_a || 0,
-    categoryB: categoryBCount || summaryData.category_b || 0,
-    categoryC: categoryCCount || summaryData.category_c || 0,
-    categoryD: categoryDCount || summaryData.category_d || 0,
+    categoryA: summaryData.category_a !== undefined && summaryData.category_a !== null ? summaryData.category_a : categoryACount,
+    categoryB: summaryData.category_b !== undefined && summaryData.category_b !== null ? summaryData.category_b : categoryBCount,
+    categoryC: summaryData.category_c !== undefined && summaryData.category_c !== null ? summaryData.category_c : categoryCCount,
+    categoryD: summaryData.category_d !== undefined && summaryData.category_d !== null ? summaryData.category_d : categoryDCount,
     completedAssessments: summaryData.completed_assessments || 0,
     pendingAssessments: summaryData.pending_assessments || 0,
-    highRiskStaff: categoryDCount || summaryData.high_risk_staff || 0,
+    highRiskStaff: summaryData.high_risk_staff !== undefined && summaryData.high_risk_staff !== null ? summaryData.high_risk_staff : categoryDCount,
     totalEmployees: activeStaff.length,
   };
 
   const roleWiseStaffDistribution = fillRoleDistribution(roleWiseData);
-  const categoryDistribution = fillCategoryDistribution(categoryData);
+  const categoryDistribution = (categoryData && categoryData.length > 0)
+    ? fillCategoryDistribution(categoryData)
+    : [
+        { category: "A", count: summary.categoryA },
+        { category: "B", count: summary.categoryB },
+        { category: "C", count: summary.categoryC },
+        { category: "D", count: summary.categoryD },
+      ];
   const safetyComplianceAnalytics = makeSafetyCompliance(
     summary.completedAssessments,
     summary.pendingAssessments
@@ -1209,6 +1216,11 @@ async function getSmSupervisorDashboardService(profileId) {
   const trainManagers = activeStaff.filter((s) => s.role === "TM");
   const pointsmen = activeStaff.filter((s) => s.role === "PM" || s.role === "Shunting Master" || s.role === "SHUNTING MASTER" || s.role === "SHM");
 
+  const categoryACount = pointsmen.filter(p => (p.category || '').toUpperCase() === 'A').length;
+  const categoryBCount = pointsmen.filter(p => (p.category || '').toUpperCase() === 'B').length;
+  const categoryCCount = pointsmen.filter(p => (p.category || '').toUpperCase() === 'C').length;
+  const categoryDCount = pointsmen.filter(p => (p.category || '').toUpperCase() === 'D').length;
+
   const summary = {
     totalPM: pointsmen.length,
     totalSM: stationMasters.length,
@@ -1216,22 +1228,29 @@ async function getSmSupervisorDashboardService(profileId) {
     totalSS: stationMasterIncharges.length,
     totalCM: cabinMasters.length,
     totalSHM: summaryData.total_shm || 0,
-    categoryA: summaryData.category_a || 0,
-    categoryB: summaryData.category_b || 0,
-    categoryC: summaryData.category_c || 0,
-    categoryD: summaryData.category_d || 0,
+    categoryA: summaryData.category_a !== undefined && summaryData.category_a !== null ? summaryData.category_a : categoryACount,
+    categoryB: summaryData.category_b !== undefined && summaryData.category_b !== null ? summaryData.category_b : categoryBCount,
+    categoryC: summaryData.category_c !== undefined && summaryData.category_c !== null ? summaryData.category_c : categoryCCount,
+    categoryD: summaryData.category_d !== undefined && summaryData.category_d !== null ? summaryData.category_d : categoryDCount,
     completedAssessments: summaryData.completed_assessments || 0,
     pendingAssessments: summaryData.pending_assessments || 0,
     pendingApprovals: summaryData.pending_approvals || 0,
     completedApprovals: summaryData.completed_approvals || 0,
-    highRiskStaff: summaryData.high_risk_staff || 0,
+    highRiskStaff: summaryData.high_risk_staff !== undefined && summaryData.high_risk_staff !== null ? summaryData.high_risk_staff : categoryDCount,
     totalEmployees: activeStaff.length,
   };
 
   const roleWiseStaffDistribution = fillRoleDistribution(roleWiseData).filter(
     (item) => ["PM", "SM", "TM", "STATION MASTER SUPERVISOR", "CABIN MASTER", "SHUNTING MASTER", "SS"].includes(item.role)
   );
-  const categoryDistribution = fillCategoryDistribution(categoryData);
+  const categoryDistribution = (categoryData && categoryData.length > 0)
+    ? fillCategoryDistribution(categoryData)
+    : [
+        { category: "A", count: summary.categoryA },
+        { category: "B", count: summary.categoryB },
+        { category: "C", count: summary.categoryC },
+        { category: "D", count: summary.categoryD },
+      ];
   const safetyComplianceAnalytics = makeSafetyCompliance(
     summary.completedAssessments,
     summary.pendingAssessments
