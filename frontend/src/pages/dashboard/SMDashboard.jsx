@@ -45,7 +45,15 @@ const SMDashboard = () => {
   const [officialsPage, setOfficialsPage] = useState(1);
   const [pointsmenPage, setPointsmenPage] = useState(1);
   const [shuntingPage, setShuntingPage] = useState(1);
+  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState(null);
   const pageSize = 10;
+
+  const scrollToSection = (id) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
 
   const formatDate = (dateStr) => {
     if (!dateStr) return 'N/A';
@@ -141,8 +149,13 @@ const SMDashboard = () => {
   const totalOfficialsPages = Math.ceil(allStationOfficials.length / pageSize);
   const currentOfficials = allStationOfficials.slice((officialsPage - 1) * pageSize, officialsPage * pageSize);
 
-  const totalPointsmenPages = Math.ceil((isSS ? actualPointsmen.length : allFieldStaff.length) / pageSize);
-  const currentPointsmen = (isSS ? actualPointsmen : allFieldStaff).slice((pointsmenPage - 1) * pageSize, pointsmenPage * pageSize);
+  const basePointsmenStaff = isSS ? actualPointsmen : allFieldStaff;
+  const filteredPointsmen = selectedCategoryFilter
+    ? basePointsmenStaff.filter((s) => (s.category || '').toUpperCase() === selectedCategoryFilter)
+    : basePointsmenStaff;
+
+  const totalPointsmenPages = Math.ceil(filteredPointsmen.length / pageSize);
+  const currentPointsmen = filteredPointsmen.slice((pointsmenPage - 1) * pageSize, pointsmenPage * pageSize);
 
   const totalShuntingPages = Math.ceil(actualShuntingMasters.length / pageSize);
   const currentShunting = actualShuntingMasters.slice((shuntingPage - 1) * pageSize, shuntingPage * pageSize);
@@ -288,6 +301,11 @@ const SMDashboard = () => {
             icon={<Users size={20} />}
             type="normal"
             trend="Total active station crew"
+            onClick={() => {
+              setSelectedCategoryFilter(null);
+              setPointsmenPage(1);
+              scrollToSection('staff-tables-container');
+            }}
           />
           <StatCard 
             title="Total Pointsmen"
@@ -295,6 +313,11 @@ const SMDashboard = () => {
             icon={<Users size={20} />}
             type="normal"
             trend="Active PM postings"
+            onClick={() => {
+              setSelectedCategoryFilter(null);
+              setPointsmenPage(1);
+              scrollToSection('pointsmen-table-card');
+            }}
           />
           <StatCard 
             title="Completed Assessments"
@@ -302,6 +325,7 @@ const SMDashboard = () => {
             icon={<CheckCircle size={20} />}
             type="success"
             trend="Evaluated staff members"
+            link="/assessments"
           />
           <StatCard 
             title="Pending Assessments"
@@ -309,6 +333,7 @@ const SMDashboard = () => {
             icon={<ClipboardCheck size={20} />}
             type="warning"
             trend="Awaiting master evaluation"
+            link="/assessments"
           />
           <StatCard 
             title="High Risk Staff (Cat D)"
@@ -316,13 +341,33 @@ const SMDashboard = () => {
             icon={<ShieldAlert size={20} />}
             type={summary.highRiskStaff > 0 ? 'danger' : 'normal'}
             trend="Requires category audits"
+            onClick={() => {
+              setSelectedCategoryFilter((prev) => (prev === 'D' ? null : 'D'));
+              setPointsmenPage(1);
+              scrollToSection('pointsmen-table-card');
+            }}
           />
         </div>
 
         {/* Responsive Secondary metric card overview for categories */}
         <div className="category-summary-grid">
           {/* Card A */}
-          <div className="category-premium-card cat-a">
+          <div 
+            className={`category-premium-card cat-a ${selectedCategoryFilter === 'A' ? 'active-filter' : ''}`}
+            onClick={() => {
+              setSelectedCategoryFilter((prev) => (prev === 'A' ? null : 'A'));
+              setPointsmenPage(1);
+              scrollToSection('pointsmen-table-card');
+            }}
+            style={{ 
+              cursor: 'pointer', 
+              transition: 'all 0.2s', 
+              outline: selectedCategoryFilter === 'A' ? '2.5px solid #0284C7' : 'none', 
+              outlineOffset: '2px',
+              transform: selectedCategoryFilter === 'A' ? 'translateY(-2px)' : 'none'
+            }}
+            title="Click to filter station staff by Category A"
+          >
             <div className="category-card-info">
               <span className="category-card-label">Category A</span>
               <span className="category-card-value">{summary.categoryA || 0}</span>
@@ -334,7 +379,22 @@ const SMDashboard = () => {
           </div>
 
           {/* Card B */}
-          <div className="category-premium-card cat-b">
+          <div 
+            className={`category-premium-card cat-b ${selectedCategoryFilter === 'B' ? 'active-filter' : ''}`}
+            onClick={() => {
+              setSelectedCategoryFilter((prev) => (prev === 'B' ? null : 'B'));
+              setPointsmenPage(1);
+              scrollToSection('pointsmen-table-card');
+            }}
+            style={{ 
+              cursor: 'pointer', 
+              transition: 'all 0.2s', 
+              outline: selectedCategoryFilter === 'B' ? '2.5px solid #2563EB' : 'none', 
+              outlineOffset: '2px',
+              transform: selectedCategoryFilter === 'B' ? 'translateY(-2px)' : 'none'
+            }}
+            title="Click to filter station staff by Category B"
+          >
             <div className="category-card-info">
               <span className="category-card-label">Category B</span>
               <span className="category-card-value">{summary.categoryB || 0}</span>
@@ -346,7 +406,22 @@ const SMDashboard = () => {
           </div>
 
           {/* Card C */}
-          <div className="category-premium-card cat-c">
+          <div 
+            className={`category-premium-card cat-c ${selectedCategoryFilter === 'C' ? 'active-filter' : ''}`}
+            onClick={() => {
+              setSelectedCategoryFilter((prev) => (prev === 'C' ? null : 'C'));
+              setPointsmenPage(1);
+              scrollToSection('pointsmen-table-card');
+            }}
+            style={{ 
+              cursor: 'pointer', 
+              transition: 'all 0.2s', 
+              outline: selectedCategoryFilter === 'C' ? '2.5px solid #D97706' : 'none', 
+              outlineOffset: '2px',
+              transform: selectedCategoryFilter === 'C' ? 'translateY(-2px)' : 'none'
+            }}
+            title="Click to filter station staff by Category C"
+          >
             <div className="category-card-info">
               <span className="category-card-label">Category C</span>
               <span className="category-card-value">{summary.categoryC || 0}</span>
@@ -358,7 +433,22 @@ const SMDashboard = () => {
           </div>
 
           {/* Card D */}
-          <div className="category-premium-card cat-d">
+          <div 
+            className={`category-premium-card cat-d ${selectedCategoryFilter === 'D' ? 'active-filter' : ''}`}
+            onClick={() => {
+              setSelectedCategoryFilter((prev) => (prev === 'D' ? null : 'D'));
+              setPointsmenPage(1);
+              scrollToSection('pointsmen-table-card');
+            }}
+            style={{ 
+              cursor: 'pointer', 
+              transition: 'all 0.2s', 
+              outline: selectedCategoryFilter === 'D' ? '2.5px solid #DC2626' : 'none', 
+              outlineOffset: '2px',
+              transform: selectedCategoryFilter === 'D' ? 'translateY(-2px)' : 'none'
+            }}
+            title="Click to filter station staff by Category D"
+          >
             <div className="category-card-info">
               <span className="category-card-label">Category D</span>
               <span className="category-card-value">{summary.categoryD || 0}</span>
@@ -416,7 +506,7 @@ const SMDashboard = () => {
         </div>
 
         {/* Staff Lists & Registers */}
-        <div className="staff-tables-container">
+        <div className="staff-tables-container" id="staff-tables-container">
           {/* Station Masters Table */}
           <div className="staff-table-card">
             <div className="staff-table-header">
@@ -548,19 +638,47 @@ const SMDashboard = () => {
           )}
 
           {/* Pointsmen Table */}
-          <div className="staff-table-card">
-            <div className="staff-table-header">
-              <h3 className="staff-table-title">
-                {isSS ? "Assigned Pointsmen" : (shuntingMasters.length > 0 ? "Assigned Pointsmen & Shunting Masters" : "Assigned Pointsmen")}
-              </h3>
+          {/* Pointsmen Table */}
+          <div className="staff-table-card" id="pointsmen-table-card">
+            <div className="staff-table-header" style={{ flexWrap: 'wrap', gap: '8px' }}>
+              <div>
+                <h3 className="staff-table-title">
+                  {isSS ? "Assigned Pointsmen" : (shuntingMasters.length > 0 ? "Assigned Pointsmen & Shunting Masters" : "Assigned Pointsmen")}
+                </h3>
+                {selectedCategoryFilter && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
+                    <span style={{ fontSize: '12px', padding: '2px 8px', borderRadius: '4px', backgroundColor: '#EFF6FF', color: '#1D4ED8', fontWeight: 600, border: '1px solid #BFDBFE' }}>
+                      Filtered: Category {selectedCategoryFilter} ({filteredPointsmen.length} staff)
+                    </span>
+                    <button 
+                      onClick={() => { setSelectedCategoryFilter(null); setPointsmenPage(1); }}
+                      style={{ fontSize: '12px', color: '#DC2626', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', padding: 0 }}
+                    >
+                      Clear Filter
+                    </button>
+                  </div>
+                )}
+              </div>
               <span className="staff-table-badge">
-                {isSS ? actualPointsmen.length : allFieldStaff.length} Active
+                {filteredPointsmen.length} {selectedCategoryFilter ? `Category ${selectedCategoryFilter}` : 'Active'}
               </span>
             </div>
             <div className="staff-table-wrapper">
-              {(isSS ? actualPointsmen.length : allFieldStaff.length) === 0 ? (
-                <div style={{ padding: '24px', textAlign: 'center', color: '#64748B', fontSize: '14px' }}>
-                  No Pointsmen assigned to this station.
+              {filteredPointsmen.length === 0 ? (
+                <div style={{ padding: '28px', textAlign: 'center', color: '#64748B', fontSize: '14px' }}>
+                  {selectedCategoryFilter ? (
+                    <div>
+                      <p style={{ margin: '0 0 10px 0' }}>No Category {selectedCategoryFilter} Pointsmen assigned to this station.</p>
+                      <button
+                        onClick={() => { setSelectedCategoryFilter(null); setPointsmenPage(1); }}
+                        style={{ fontSize: '12px', color: '#2563EB', padding: '6px 12px', borderRadius: '6px', border: '1px solid #93C5FD', backgroundColor: '#EFF6FF', cursor: 'pointer', fontWeight: 600 }}
+                      >
+                        Reset Filter
+                      </button>
+                    </div>
+                  ) : (
+                    "No Pointsmen assigned to this station."
+                  )}
                 </div>
               ) : (
                 <>
@@ -609,7 +727,7 @@ const SMDashboard = () => {
                       ))}
                     </tbody>
                   </table>
-                  {renderPaginationControls(pointsmenPage, totalPointsmenPages, isSS ? actualPointsmen.length : allFieldStaff.length, setPointsmenPage)}
+                  {renderPaginationControls(pointsmenPage, totalPointsmenPages, filteredPointsmen.length, setPointsmenPage)}
                 </>
               )}
             </div>

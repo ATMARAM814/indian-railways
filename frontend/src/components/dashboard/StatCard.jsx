@@ -3,18 +3,29 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
-const StatCard = ({ title, value, icon, trend, type = 'normal', link, clickable = true }) => {
+const StatCard = ({ title, value, icon, trend, type = 'normal', link, onClick, clickable = true }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const handleClick = () => {
+  const handleClick = (e) => {
+    if (onClick) {
+      onClick(e);
+      return;
+    }
+
     if (link) {
       navigate(link);
       return;
     }
 
     const lowerTitle = title?.toLowerCase() || '';
-    const isAssessor = ['SM', 'SS', 'SMS', 'STATION MASTER SUPERVISOR', 'Station Master Supervisor', 'TI', 'AOM', 'SUPER_ADMIN'].includes(user?.role);
+    const normRole = (user?.role || '').trim().toUpperCase();
+    const isAssessor = [
+      'SM', 'STATION MASTER', 'SS', 'STATION MASTER INCHARGE', 
+      'CABIN MASTER', 'CM', 'SHUNTING MASTER', 'SHM',
+      'SMS', 'STATION MASTER SUPERVISOR', 'Station Master Supervisor', 
+      'TI', 'AOM', 'SUPER_ADMIN'
+    ].includes(normRole) || ['SM', 'SS', 'Cabin Master', 'Shunting Master', 'SMS', 'TI', 'AOM', 'SUPER_ADMIN'].includes(user?.role);
 
     // 1. Approvals-related cards
     if (lowerTitle.includes('pending approvals') || lowerTitle.includes('completed approvals') || lowerTitle.includes('approval')) {

@@ -141,14 +141,21 @@ function App() {
       const addScript = document.createElement('script');
       addScript.setAttribute('src', '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit');
       addScript.setAttribute('id', scriptId);
+      addScript.onerror = () => {
+        // Silently handle adblockers blocking external translate script
+      };
       document.body.appendChild(addScript);
 
       window.googleTranslateElementInit = () => {
-        if (window.google && window.google.translate) {
-          new window.google.translate.TranslateElement(
-            { pageLanguage: 'en', includedLanguages: 'en,hi,mr' },
-            'google_translate_element'
-          );
+        try {
+          if (window.google && window.google.translate) {
+            new window.google.translate.TranslateElement(
+              { pageLanguage: 'en', includedLanguages: 'en,hi,mr' },
+              'google_translate_element'
+            );
+          }
+        } catch {
+          // Ignore translate element init failures
         }
       };
     }
