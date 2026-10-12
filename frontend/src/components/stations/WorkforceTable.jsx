@@ -1,7 +1,8 @@
 // WorkforceTable.jsx
 import React from 'react';
+import { Eye } from 'lucide-react';
 
-export const WorkforceTable = ({ workforce }) => {
+export const WorkforceTable = ({ workforce, onSelectStaff }) => {
   // Format Date helper
   const formatDate = (dateStr) => {
     if (!dateStr) return '—';
@@ -83,6 +84,7 @@ export const WorkforceTable = ({ workforce }) => {
               <th style={{ padding: '14px 20px' }}>Latest Status</th>
               <th style={{ padding: '14px 20px' }}>Latest Score</th>
               <th style={{ padding: '14px 20px' }}>Last Assessment Date</th>
+              <th style={{ padding: '14px 20px', textAlign: 'center' }}>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -122,12 +124,37 @@ export const WorkforceTable = ({ workforce }) => {
                   <td style={{ padding: '14px 20px', fontSize: '13.5px', color: '#64748B' }}>
                     {formatDate(row.lastAssessmentDate)}
                   </td>
+                  <td style={{ padding: '14px 20px', textAlign: 'center' }}>
+                    <button
+                      type="button"
+                      className="view-profile-action-btn"
+                      onClick={() => onSelectStaff && onSelectStaff(row)}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '6px 14px',
+                        fontSize: '12.5px',
+                        fontWeight: 600,
+                        color: '#1B365D',
+                        backgroundColor: '#EFF6FF',
+                        border: '1px solid #BFDBFE',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease'
+                      }}
+                      title="View full staff profile"
+                    >
+                      <Eye size={14} />
+                      <span>View Profile</span>
+                    </button>
+                  </td>
                 </tr>
               );
             })}
             {workforce.length === 0 && (
               <tr>
-                <td colSpan={7} style={{ textAlign: 'center', color: '#94A3B8', padding: '36px', fontSize: '13.5px', fontWeight: 500 }}>
+                <td colSpan={8} style={{ textAlign: 'center', color: '#94A3B8', padding: '36px', fontSize: '13.5px', fontWeight: 500 }}>
                   No workforce members match current filters.
                 </td>
               </tr>

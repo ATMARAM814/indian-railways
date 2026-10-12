@@ -12,6 +12,7 @@ import { WorkforceTable } from '../../components/stations/WorkforceTable';
 import { HighRiskWatchlist } from '../../components/stations/HighRiskWatchlist';
 import { StationIntelligenceSkeleton } from '../../components/stations/StationIntelligenceSkeleton';
 import { EmptyState } from '../../components/stations/EmptyState';
+import StaffProfileModal from '../../components/dashboard/StaffProfileModal';
 import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
 import '../../styles/station-intelligence.css';
 
@@ -30,6 +31,18 @@ const StationIntelligencePage = () => {
   } = useStationIntelligence(stationId);
 
   const [activePage, setActivePage] = useState(1);
+  const [selectedStaff, setSelectedStaff] = useState(null);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+
+  const handleOpenProfile = (staff) => {
+    setSelectedStaff(staff);
+    setIsProfileModalOpen(true);
+  };
+
+  const handleCloseProfile = () => {
+    setIsProfileModalOpen(false);
+    setSelectedStaff(null);
+  };
 
   // Pagination parameters
   const limit = 10;
@@ -68,6 +81,11 @@ const StationIntelligencePage = () => {
               onRoleClick={(roleKey) => {
                 handleFilterChange('role', roleKey);
                 setActivePage(1);
+                // Smooth scroll to workforce section so user immediately sees the filtered records
+                const section = document.getElementById('station-workforce-section');
+                if (section) {
+                  section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
               }}
               selectedRole={filters.role}
             />
@@ -84,8 +102,8 @@ const StationIntelligencePage = () => {
               data={data.operationalReadiness} 
             />
 
-            {/* SECTION 7 — STATION WORKFORCE */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+            {/* SECTION 5 — STATION WORKFORCE */}
+            <div id="station-workforce-section" style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
               <WorkforceFilters 
                 filters={filters} 
                 onFilterChange={(name, value) => {
@@ -99,6 +117,7 @@ const StationIntelligencePage = () => {
               />
               <WorkforceTable 
                 workforce={paginatedWorkforce} 
+                onSelectStaff={handleOpenProfile}
               />
               {/* Pagination Controls */}
               {totalPages > 1 && (
@@ -154,9 +173,16 @@ const StationIntelligencePage = () => {
               )}
             </div>
 
-            {/* SECTION 7 — HIGH RISK WATCHLIST */}
+            {/* SECTION 6 — HIGH RISK WATCHLIST */}
             <HighRiskWatchlist 
               list={data.highRiskWatchlist || []} 
+            />
+
+            {/* STAFF PROFILE MODAL */}
+            <StaffProfileModal
+              isOpen={isProfileModalOpen}
+              onClose={handleCloseProfile}
+              staff={selectedStaff}
             />
           </>
         )}

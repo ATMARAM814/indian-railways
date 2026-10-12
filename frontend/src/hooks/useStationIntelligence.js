@@ -2,6 +2,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { getStationIntelligence } from '../services/stationIntelligence.service';
 
+import { normalizeRoleKey } from '../components/stations/StationOverviewCards';
+
 export const useStationIntelligence = (stationId) => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -62,24 +64,23 @@ export const useStationIntelligence = (stationId) => {
 
     return data.workforce.filter((emp) => {
       // 1. Role Filter mapping
-      if (filters.role !== 'All') {
-        const roleMapping = {
-          'Pointsman': 'PM',
-          'Station Master': 'SM',
-          'Train Manager': 'TM',
-          'SM Incharge': 'SS',
-        };
-        const mappedRole = roleMapping[filters.role];
-        if (emp.role !== mappedRole) return false;
+      if (filters.role && filters.role !== 'All') {
+        const targetRoleKey = normalizeRoleKey(filters.role);
+        if (targetRoleKey !== 'All') {
+          const empRoleKey = normalizeRoleKey(emp.role);
+          if (empRoleKey !== targetRoleKey) return false;
+        }
       }
 
       // 2. Category Filter
-      if (filters.category !== 'All') {
-        if (emp.category !== filters.category) return false;
+      if (filters.category && filters.category !== 'All') {
+        const empCat = (emp.category || '').toUpperCase().trim();
+        const targetCat = filters.category.toUpperCase().trim();
+        if (empCat !== targetCat) return false;
       }
 
       // 3. Text Search (Name, HRMS ID)
-      if (filters.search.trim()) {
+      if (filters.search && filters.search.trim()) {
         const query = filters.search.toLowerCase().trim();
         const fullName = (emp.fullName || '').toLowerCase();
         const hrmsId = (emp.hrmsId || '').toLowerCase();
