@@ -25,10 +25,8 @@ import {
   Shield, 
   AlertTriangle, 
   Users, 
-  CheckCircle, 
-  ClipboardCheck, 
-  ChevronLeft,
-  ChevronRight
+  ChevronLeft, 
+  ChevronRight 
 } from 'lucide-react';
 
 const SMDashboard = () => {
@@ -266,15 +264,15 @@ const SMDashboard = () => {
               <span className="station-banner-subtitle">Assigned Station Posting</span>
               <h2 className="station-banner-title">{station.name}</h2>
               <div style={{ display: 'flex', gap: '16px', marginTop: '8px', fontSize: '13px', color: '#93C5FD', flexWrap: 'wrap' }}>
-                <span>• {stationMasters.length + (user?.role === 'SM' ? 1 : 0)} Station Masters</span>
-                {stationMasterIncharges.length + (user?.role === 'SS' ? 1 : 0) > 0 && (
-                  <span>• {stationMasterIncharges.length + (user?.role === 'SS' ? 1 : 0)} {(stationMasterIncharges.length + (user?.role === 'SS' ? 1 : 0)) === 1 ? 'SM Incharge' : 'SM Incharges'}</span>
+                <span>• {stationMasters.length} Station Masters</span>
+                {stationMasterIncharges.length > 0 && (
+                  <span>• {stationMasterIncharges.length} {stationMasterIncharges.length === 1 ? 'SM Incharge' : 'SM Incharges'}</span>
                 )}
-                {cabinMasters.length + (['Cabin Master', 'CABIN MASTER'].includes(user?.role) ? 1 : 0) > 0 && (
-                  <span>• {cabinMasters.length + (['Cabin Master', 'CABIN MASTER'].includes(user?.role) ? 1 : 0)} Cabin Masters</span>
+                {cabinMasters.length > 0 && (
+                  <span>• {cabinMasters.length} Cabin Masters</span>
                 )}
-                {shuntingMasters.length + (['Shunting Master', 'SHUNTING MASTER', 'SHM'].includes(user?.role) ? 1 : 0) > 0 && (
-                  <span>• {shuntingMasters.length + (['Shunting Master', 'SHUNTING MASTER', 'SHM'].includes(user?.role) ? 1 : 0)} Shunting Masters</span>
+                {shuntingMasters.length > 0 && (
+                  <span>• {shuntingMasters.length} Shunting Masters</span>
                 )}
                 <span>• {pointsmen.length} Pointsmen</span>
               </div>
@@ -294,7 +292,7 @@ const SMDashboard = () => {
         </div>
 
         {/* KPI Cards Grid */}
-        <div className="kpi-grid">
+        <div className="kpi-grid-3">
           <StatCard 
             title="Total Employees"
             value={summary.totalEmployees}
@@ -318,22 +316,6 @@ const SMDashboard = () => {
               setPointsmenPage(1);
               scrollToSection('pointsmen-table-card');
             }}
-          />
-          <StatCard 
-            title="Completed Assessments"
-            value={summary.completedAssessments}
-            icon={<CheckCircle size={20} />}
-            type="success"
-            trend="Evaluated staff members"
-            link="/assessments"
-          />
-          <StatCard 
-            title="Pending Assessments"
-            value={summary.pendingAssessments}
-            icon={<ClipboardCheck size={20} />}
-            type="warning"
-            trend="Awaiting master evaluation"
-            link="/assessments"
           />
           <StatCard 
             title="High Risk Staff (Cat D)"
@@ -516,7 +498,7 @@ const SMDashboard = () => {
             <div className="staff-table-wrapper">
               {allStationOfficials.length === 0 ? (
                 <div style={{ padding: '24px', textAlign: 'center', color: '#64748B', fontSize: '14px' }}>
-                  No other Station Masters or Supervisors assigned to this station.
+                  No Station Masters or Supervisors assigned to this station.
                 </div>
               ) : (
                 <>

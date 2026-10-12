@@ -552,16 +552,37 @@ async function getSmDashboardService(profileId) {
     db.getStationStaff(stationId)
   ]);
 
+  // Filter active staff members
+  const activeStaff = staff.filter((s) => !s.status || s.status.toLowerCase() === "active");
+  const stationMasters = activeStaff.filter(
+    (s) => s.role === "SM"
+  );
+  const stationMasterIncharges = activeStaff.filter(
+    (s) => s.role === "SS"
+  );
+  const cabinMasters = activeStaff.filter(
+    (s) => (s.role === "Cabin Master" || s.role === "CABIN MASTER" || s.role === "CM")
+  );
+  const shuntingMasters = activeStaff.filter(
+    (s) => (s.role === "Shunting Master" || s.role === "SHUNTING MASTER" || s.role === "SHM")
+  );
+  const pointsmen = activeStaff.filter((s) => s.role === "PM");
+
+  const categoryACount = pointsmen.filter(p => (p.category || '').toUpperCase() === 'A').length;
+  const categoryBCount = pointsmen.filter(p => (p.category || '').toUpperCase() === 'B').length;
+  const categoryCCount = pointsmen.filter(p => (p.category || '').toUpperCase() === 'C').length;
+  const categoryDCount = pointsmen.filter(p => (p.category || '').toUpperCase() === 'D').length;
+
   const summary = {
-    totalPM: summaryData.total_pm || 0,
-    categoryA: summaryData.category_a || 0,
-    categoryB: summaryData.category_b || 0,
-    categoryC: summaryData.category_c || 0,
-    categoryD: summaryData.category_d || 0,
+    totalPM: pointsmen.length,
+    categoryA: categoryACount || summaryData.category_a || 0,
+    categoryB: categoryBCount || summaryData.category_b || 0,
+    categoryC: categoryCCount || summaryData.category_c || 0,
+    categoryD: categoryDCount || summaryData.category_d || 0,
     completedAssessments: summaryData.completed_assessments || 0,
     pendingAssessments: summaryData.pending_assessments || 0,
-    highRiskStaff: summaryData.high_risk_staff || 0,
-    totalEmployees: staff.filter((s) => s.status === "active").length,
+    highRiskStaff: categoryDCount || summaryData.high_risk_staff || 0,
+    totalEmployees: activeStaff.length,
   };
 
   const roleWiseStaffDistribution = fillRoleDistribution(roleWiseData);
@@ -580,22 +601,6 @@ async function getSmDashboardService(profileId) {
   }));
 
   const monthlyAssessmentCompletionTrend = makeMonthlyCompletionTrend(assessments);
-
-  // Filter active staff members
-  const activeStaff = staff.filter((s) => s.status === "active");
-  const stationMasters = activeStaff.filter(
-    (s) => s.role === "SM" && s.id !== profileId
-  );
-  const stationMasterIncharges = activeStaff.filter(
-    (s) => s.role === "SS" && s.id !== profileId
-  );
-  const cabinMasters = activeStaff.filter(
-    (s) => (s.role === "Cabin Master" || s.role === "CABIN MASTER" || s.role === "CM") && s.id !== profileId
-  );
-  const shuntingMasters = activeStaff.filter(
-    (s) => (s.role === "Shunting Master" || s.role === "SHUNTING MASTER" || s.role === "SHM") && s.id !== profileId
-  );
-  const pointsmen = activeStaff.filter((s) => s.role === "PM");
 
   // Calculate current safety percent (Cat A + B vs total categorized pointsmen)
   const categorizedPointsmen = pointsmen.filter((s) =>
@@ -1190,12 +1195,26 @@ async function getSmSupervisorDashboardService(profileId) {
     db.getStationStaff(stationId)
   ]);
 
+  // Filter active staff members
+  const activeStaff = staff.filter((s) => !s.status || s.status.toLowerCase() === "active");
+  const stationMasters = activeStaff.filter(
+    (s) => s.role === "SM"
+  );
+  const stationMasterIncharges = activeStaff.filter(
+    (s) => s.role === "SS"
+  );
+  const cabinMasters = activeStaff.filter(
+    (s) => (s.role === "Cabin Master" || s.role === "CABIN MASTER" || s.role === "CM")
+  );
+  const trainManagers = activeStaff.filter((s) => s.role === "TM");
+  const pointsmen = activeStaff.filter((s) => s.role === "PM" || s.role === "Shunting Master" || s.role === "SHUNTING MASTER" || s.role === "SHM");
+
   const summary = {
-    totalPM: summaryData.total_pm || 0,
-    totalSM: summaryData.total_sm || 0,
-    totalTM: summaryData.total_tm || 0,
-    totalSS: summaryData.total_ss || 0,
-    totalCM: summaryData.total_cm || 0,
+    totalPM: pointsmen.length,
+    totalSM: stationMasters.length,
+    totalTM: trainManagers.length,
+    totalSS: stationMasterIncharges.length,
+    totalCM: cabinMasters.length,
     totalSHM: summaryData.total_shm || 0,
     categoryA: summaryData.category_a || 0,
     categoryB: summaryData.category_b || 0,
@@ -1206,7 +1225,7 @@ async function getSmSupervisorDashboardService(profileId) {
     pendingApprovals: summaryData.pending_approvals || 0,
     completedApprovals: summaryData.completed_approvals || 0,
     highRiskStaff: summaryData.high_risk_staff || 0,
-    totalEmployees: staff.filter((s) => s.status === "active").length,
+    totalEmployees: activeStaff.length,
   };
 
   const roleWiseStaffDistribution = fillRoleDistribution(roleWiseData).filter(
@@ -1227,20 +1246,6 @@ async function getSmSupervisorDashboardService(profileId) {
   }));
 
   const monthlyAssessmentCompletionTrend = makeMonthlyCompletionTrend(assessments);
-
-  // Filter active staff members
-  const activeStaff = staff.filter((s) => s.status === "active");
-  const stationMasters = activeStaff.filter(
-    (s) => s.role === "SM" && s.id !== profileId
-  );
-  const stationMasterIncharges = activeStaff.filter(
-    (s) => s.role === "SS" && s.id !== profileId
-  );
-  const cabinMasters = activeStaff.filter(
-    (s) => (s.role === "Cabin Master" || s.role === "CABIN MASTER" || s.role === "CM") && s.id !== profileId
-  );
-  const trainManagers = activeStaff.filter((s) => s.role === "TM");
-  const pointsmen = activeStaff.filter((s) => s.role === "PM" || s.role === "Shunting Master" || s.role === "SHUNTING MASTER" || s.role === "SHM");
 
   // Calculate current safety percent (Cat A + B vs total categorized pointsmen)
   const categorizedPointsmen = pointsmen.filter((s) =>

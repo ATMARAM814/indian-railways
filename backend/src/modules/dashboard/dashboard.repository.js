@@ -980,6 +980,7 @@ async function getStationStaff(stationId) {
       p.email,
       p.employee_id as "employeeId",
       p.designation,
+      p.status,
       r.name as "role",
       s.station_name as "stationName",
       d.name as "divisionName",
