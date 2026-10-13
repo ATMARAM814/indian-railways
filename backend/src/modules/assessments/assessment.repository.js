@@ -740,15 +740,29 @@ async function getRoleStatsForAssessor(assessorId, assessorRole, roleCode) {
   let scopeCondition = '';
   const values = [roleCode, assessorId];
 
-  if (['Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS'].includes(assessorRole)) {
+  if (assessorId === '439a8db6-2546-4858-abbc-3752f4acb536') {
+    scopeJoin = `
+      LEFT JOIN staff_station_postings ssp ON ssp.profile_id = p.id AND ssp.is_current = true
+      LEFT JOIN stations s ON s.id = ssp.station_id
+    `;
+    scopeCondition = `
+      AND (
+        p.reporting_officer_id = $2
+        OR (r.name = 'TM' AND (s.station_code = 'NGP' OR s.id = '7a4f242d-79e6-4eb8-bef8-61eef42136dc'))
+      )
+    `;
+  } else if (['Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS'].includes(assessorRole)) {
     scopeJoin = `LEFT JOIN staff_station_postings ssp ON ssp.profile_id = p.id AND ssp.is_current = true`;
     scopeCondition = `
-      AND ssp.station_id = (
-        SELECT station_id
-        FROM staff_station_postings
-        WHERE profile_id = $2
-          AND is_current = true
-        LIMIT 1
+      AND (
+        ssp.station_id = (
+          SELECT station_id
+          FROM staff_station_postings
+          WHERE profile_id = $2
+            AND is_current = true
+          LIMIT 1
+        )
+        OR p.reporting_officer_id = $2
       )
     `;
   } else if (assessorRole === 'SS' || ['Cabin Master', 'CABIN MASTER'].includes(assessorRole)) {
@@ -775,6 +789,7 @@ async function getRoleStatsForAssessor(assessorId, assessorRole, roleCode) {
           AND assignment_type = 'TI_AREA'
           AND assigned_to IS NULL
       )
+      AND r.name != 'TM'
     `;
   } else if (assessorRole === 'AOM') {
     scopeJoin = `
@@ -924,9 +939,9 @@ async function getAssessorRoleStats(assessorId, assessorRole) {
   } else if (assessorRole === 'SM') {
     targetRoles = [];
   } else if (['Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS'].includes(assessorRole)) {
-    targetRoles = ['PM', 'Shunting Master', 'SM', 'SS', 'Cabin Master'];
+    targetRoles = ['PM', 'Shunting Master', 'SM', 'SS', 'Cabin Master', 'TM'];
   } else if (assessorRole === 'TI') {
-    targetRoles = ['SM', 'SS', 'TM', 'Cabin Master'];
+    targetRoles = ['SM', 'SS', 'Cabin Master'];
   } else if (assessorRole === 'AOM') {
     targetRoles = ['TI', 'SMS'];
   } else if (assessorRole === 'SUPER_ADMIN') {

@@ -4,8 +4,12 @@ async function listStations() {
   return await db.getAllStations();
 }
 
-async function listStationStaff(stationId) {
-  return await db.getStationStaff(stationId);
+async function listStationStaff(stationId, userRole) {
+  const staff = await db.getStationStaff(stationId);
+  if (userRole === 'TI') {
+    return staff.filter(s => s.role !== 'TM' && s.role !== 'Train Manager');
+  }
+  return staff;
 }
 
 async function getStaffSummary(stationId) {
@@ -77,18 +81,33 @@ async function getStationIntelligenceService(stationId, userId, userRole) {
     db.getStationRecentActivitiesDb(stationId)
   ]);
 
+  let finalWorkforce = workforce;
+  let finalHighRiskWatchlist = highRiskWatchlist;
+  let finalCategoryCWatchlist = categoryCWatchlist;
+  let finalOverview = { ...overview };
+  let finalRecentActivities = recentActivities;
+
+  if (userRole === "TI") {
+    finalWorkforce = workforce ? workforce.filter(w => w.role !== 'TM' && w.role !== 'Train Manager') : [];
+    finalHighRiskWatchlist = highRiskWatchlist ? highRiskWatchlist.filter(w => w.role !== 'TM' && w.role !== 'Train Manager') : [];
+    finalCategoryCWatchlist = categoryCWatchlist ? categoryCWatchlist.filter(w => w.role !== 'TM' && w.role !== 'Train Manager') : [];
+    finalRecentActivities = recentActivities ? recentActivities.filter(a => a.role !== 'TM' && a.role !== 'Train Manager') : [];
+    finalOverview.totalWorkforce = finalWorkforce.length;
+    finalOverview.highRiskStaff = finalHighRiskWatchlist.length;
+  }
+
   return {
     stationSummary,
     assignedTI,
-    overview,
+    overview: finalOverview,
     categoryDistribution,
     riskDistribution,
     performanceTrend,
     operationalReadiness,
-    workforce,
-    highRiskWatchlist,
-    categoryCWatchlist,
-    recentActivities
+    workforce: finalWorkforce,
+    highRiskWatchlist: finalHighRiskWatchlist,
+    categoryCWatchlist: finalCategoryCWatchlist,
+    recentActivities: finalRecentActivities
   };
 }
 

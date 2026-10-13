@@ -269,7 +269,7 @@ async function getCounselingDirectoryCandidatesDb({ assessorId, assessorRole }) 
   } else if (roleUpper === "TI" || roleUpper.includes("TI")) {
     const tiStations = await getTiStations(assessorId);
     if (tiStations.length === 0) return [];
-    scopeCondition = "AND ssp.station_id = ANY($1)";
+    scopeCondition = "AND ssp.station_id = ANY($1) AND r.name != 'TM' AND r.name != 'Train Manager'";
     queryParams = [tiStations];
   } else {
     const divisionId = await getUserDivisionId(assessorId);
@@ -376,7 +376,7 @@ async function getEligibleCandidatesForSchedulingDb({ assessorId, assessorRole, 
   } else if (roleUpper === "TI" || roleUpper.includes("TI")) {
     const tiStations = await getTiStations(assessorId);
     if (tiStations.length === 0) return [];
-    scopeCondition = "AND ssp.station_id = ANY($1)";
+    scopeCondition = "AND ssp.station_id = ANY($1) AND r.name != 'TM' AND r.name != 'Train Manager'";
     queryParams = [tiStations];
   } else {
     const divisionId = await getUserDivisionId(assessorId);

@@ -20,7 +20,8 @@ const AssessmentsLandingPage = () => {
   const [myResultsLoading, setMyResultsLoading] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState('');
 
-  const isExaminee = ['PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'SM'].includes(user?.role);
+  const isKakirwar = user?.hrmsId === 'BKFOEQ' || user?.hrms_id === 'BKFOEQ' || user?.id === '439a8db6-2546-4858-abbc-3752f4acb536';
+  const isExaminee = !isKakirwar && ['PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'SM'].includes(user?.role);
 
   useEffect(() => {
     if (user && !isExaminee) {
