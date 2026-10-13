@@ -1082,14 +1082,23 @@ async function getStationStaff(stationId, profileId = null) {
       s.station_code as "stationCode",
       d.name as "divisionName",
       d.zone as "zoneName",
-      (
-        SELECT p_ti.full_name || ' (TI)'
-        FROM station_assignments sa
-        JOIN profiles p_ti ON p_ti.id = sa.profile_id
-        WHERE sa.station_id = s.id 
-          AND sa.assignment_type = 'TI_AREA'
-          AND sa.assigned_to IS NULL
-        LIMIT 1
+      COALESCE(
+        (
+          SELECT ro.full_name || ' (' || r_ro.name || ')'
+          FROM profiles ro
+          JOIN roles r_ro ON r_ro.id = ro.role_id
+          WHERE ro.id = p.reporting_officer_id
+          LIMIT 1
+        ),
+        (
+          SELECT p_ti.full_name || ' (TI)'
+          FROM station_assignments sa
+          JOIN profiles p_ti ON p_ti.id = sa.profile_id
+          WHERE sa.station_id = s.id 
+            AND sa.assignment_type = 'TI_AREA'
+            AND sa.assigned_to IS NULL
+          LIMIT 1
+        )
       ) as "reportingOfficer",
       COALESCE(
         (
