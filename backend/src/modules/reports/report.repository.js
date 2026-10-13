@@ -540,6 +540,16 @@ async function getStationSummaryReport(filters, scope) {
       COUNT(DISTINCT a.id) FILTER (WHERE a.status = 'completed')::int as "completedAssessments",
       COUNT(DISTINCT a.id) FILTER (WHERE a.status IN ('created', 'mcq_submitted'))::int as "pendingAssessments",
       COALESCE(AVG(a.percentage) FILTER (WHERE a.status = 'completed')::numeric(10,2), 0) as "averageScore",
+      CASE
+        WHEN COUNT(DISTINCT a.id) FILTER (WHERE a.status = 'completed') > 0 THEN
+          CASE
+            WHEN COALESCE(AVG(a.percentage) FILTER (WHERE a.status = 'completed'), 0) >= 80 THEN 'A'
+            WHEN COALESCE(AVG(a.percentage) FILTER (WHERE a.status = 'completed'), 0) >= 50 THEN 'B'
+            WHEN COALESCE(AVG(a.percentage) FILTER (WHERE a.status = 'completed'), 0) >= 26 THEN 'C'
+            ELSE 'D'
+          END
+        ELSE NULL
+      END as "stationCategory",
       COUNT(DISTINCT p.id) FILTER (WHERE sc.category_code = 'D')::int as "highRiskStaff"
     FROM stations s
     LEFT JOIN staff_station_postings ssp ON ssp.station_id = s.id AND ssp.is_current = true
