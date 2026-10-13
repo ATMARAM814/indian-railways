@@ -1159,8 +1159,8 @@ async function getStationStaff(stationId, profileId = null) {
     JOIN roles r ON r.id = p.role_id
     JOIN stations s ON s.id = ssp.station_id
     LEFT JOIN divisions d ON d.id = s.division_id
-    WHERE (ssp.station_id = $1 AND ssp.is_current = true)
-       OR ($2::uuid IS NOT NULL AND p.reporting_officer_id = $2::uuid)
+    WHERE ssp.is_current = true
+      AND (ssp.station_id = $1 OR ($2::uuid IS NOT NULL AND p.reporting_officer_id = $2::uuid))
     ORDER BY p.full_name;
   `;
   const result = await pool.query(query, [stationId, profileId]);

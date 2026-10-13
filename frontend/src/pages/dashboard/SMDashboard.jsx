@@ -1,5 +1,6 @@
 // SMDashboard.jsx
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getSmDashboardData } from '../../api/dashboardApi';
 import { 
@@ -31,6 +32,8 @@ import {
 
 const SMDashboard = () => {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const isKakirwar = user?.hrmsId === 'BKFOEQ' || user?.hrms_id === 'BKFOEQ' || user?.id === '439a8db6-2546-4858-abbc-3752f4acb536';
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -308,9 +311,13 @@ const SMDashboard = () => {
             type="normal"
             trend="Total active station crew"
             onClick={() => {
-              setSelectedCategoryFilter(null);
-              setPointsmenPage(1);
-              scrollToSection('staff-tables-container');
+              if (isKakirwar) {
+                navigate('/workforce/train-managers');
+              } else {
+                setSelectedCategoryFilter(null);
+                setPointsmenPage(1);
+                scrollToSection('staff-tables-container');
+              }
             }}
           />
           <StatCard 
@@ -320,9 +327,13 @@ const SMDashboard = () => {
             type="normal"
             trend="Active PM postings"
             onClick={() => {
-              setSelectedCategoryFilter(null);
-              setPointsmenPage(1);
-              scrollToSection('pointsmen-table-card');
+              if (isKakirwar) {
+                navigate('/workforce/train-managers');
+              } else {
+                setSelectedCategoryFilter(null);
+                setPointsmenPage(1);
+                scrollToSection('pointsmen-table-card');
+              }
             }}
           />
           {trainManagers.length > 0 && (
@@ -333,7 +344,7 @@ const SMDashboard = () => {
               type="normal"
               trend="Reporting Train Managers"
               onClick={() => {
-                scrollToSection('train-managers-table-card');
+                navigate('/workforce/train-managers');
               }}
             />
           )}
@@ -508,6 +519,48 @@ const SMDashboard = () => {
         </div>
 
         {/* Staff Lists & Registers */}
+        {isKakirwar ? (
+          <div style={{
+            background: '#FFFFFF',
+            border: '1px solid #E2E8F0',
+            borderRadius: '12px',
+            padding: '24px',
+            marginTop: '24px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+          }}>
+            <div>
+              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#0B2341' }}>
+                Workforce Management Console
+              </h3>
+              <p style={{ margin: '6px 0 0 0', fontSize: '14px', color: '#64748B' }}>
+                All {trainManagers.length || 328} Train Managers are assigned under your direct supervision. Access the complete roster, individual profiles, and evaluations in the dedicated Workforce Management section.
+              </p>
+            </div>
+            <button
+              onClick={() => navigate('/workforce/train-managers')}
+              style={{
+                backgroundColor: '#2B5CE6',
+                color: '#FFFFFF',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '10px 20px',
+                fontSize: '14px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              <Users size={16} />
+              Open Train Managers Roster
+            </button>
+          </div>
+        ) : (
         <div className="staff-tables-container" id="staff-tables-container">
           {/* Station Masters Table */}
           <div className="staff-table-card">
@@ -797,6 +850,7 @@ const SMDashboard = () => {
             </div>
           )}
         </div>
+        )}
       </div>
 
       {/* Reusable Detailed Staff Card Modal Popup */}

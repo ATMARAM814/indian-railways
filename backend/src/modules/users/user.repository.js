@@ -801,6 +801,7 @@ async function getUserById(userId) {
       p.phone,
       p.designation,
       p.status,
+      p.reporting_officer_id,
       p.created_at,
       p.updated_at,
       p.pme_due,
@@ -859,6 +860,17 @@ async function getUserProfileDetails(userId) {
 
   // 4. Reporting Hierarchy
   const hierarchy = {};
+
+  if (userBase.reporting_officer_id) {
+    const roQuery = `
+      SELECT p.id, p.full_name, p.phone, p.email, p.hrms_id, r.name as role
+      FROM profiles p
+      JOIN roles r ON r.id = p.role_id
+      WHERE p.id = $1
+    `;
+    const roRes = await pool.query(roQuery, [userBase.reporting_officer_id]);
+    hierarchy.reportingOfficer = roRes.rows[0] || null;
+  }
   
   // Station ID is either the user's direct posting station or, for assignments:
   let stationId = posting.station_id;
@@ -1031,6 +1043,7 @@ async function getUserProfileDetails(userId) {
     categoryName: category.category_name || null,
     categoryId: category.category_id || null,
     riskLevel,
+    reportingOfficer: hierarchy.reportingOfficer || null,
     lastAssessmentDate,
     hierarchy,
     summary: {

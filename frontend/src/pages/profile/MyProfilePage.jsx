@@ -523,8 +523,17 @@ const MyProfilePage = () => {
                 icon={<User />} 
                 label="Reporting Officer" 
                 value={(() => {
+                  const directRo = profile.reportingOfficer || profile.hierarchy?.reportingOfficer;
+                  if (directRo?.full_name) {
+                    return `${directRo.full_name} (${directRo.role || 'Reporting Officer'})`;
+                  }
                   const role = profile.role;
-                  const { assignedSm, assignedTi, assignedAom } = profile.hierarchy || {};
+                  const { assignedSm, assignedTi, assignedAom, assignedSms } = profile.hierarchy || {};
+                  if (role === 'TM') {
+                    if (assignedSms?.full_name) return `${assignedSms.full_name} (SMS)`;
+                    if (assignedSm?.full_name) return `${assignedSm.full_name} (SM)`;
+                    return '—';
+                  }
                   if (role === 'PM' || role === 'Shunting Master' || role === 'SHUNTING MASTER' || role === 'SHM') {
                     if (assignedSm?.full_name) return `${assignedSm.full_name} (SM)`;
                     if (assignedTi?.full_name) return `${assignedTi.full_name} (TI)`;
@@ -533,9 +542,6 @@ const MyProfilePage = () => {
                     if (assignedTi?.full_name) return `${assignedTi.full_name} (TI)`;
                     if (assignedAom?.full_name) return `${assignedAom.full_name} (AOM)`;
                   } else if (role === 'TI') {
-                    if (assignedAom?.full_name) return `${assignedAom.full_name} (AOM)`;
-                  } else if (role === 'TM') {
-                    if (assignedTi?.full_name) return `${assignedTi.full_name} (TI)`;
                     if (assignedAom?.full_name) return `${assignedAom.full_name} (AOM)`;
                   } else if (role === 'AOM') {
                     return 'Sr. DOM';
