@@ -554,43 +554,44 @@ async function getSmDashboardService(profileId) {
 
   const isKakirwar = (profileId === '439a8db6-2546-4858-abbc-3752f4acb536');
 
-  // Filter active staff members, isolating Nagpur TMs exclusively to Kakirwar
+  // Filter active staff members:
+  // For Kakirwar (Lobby Supervisor), he ONLY manages Train Managers (revoke PM, Shunting Master, SM, etc.)
   const staff = isKakirwar
-    ? rawStaff
+    ? rawStaff.filter((s) => s.role === "TM")
     : rawStaff.filter((s) => !(s.role === "TM" && (station.station_code === "NGP" || s.station_code === "NGP" || s.reporting_officer_id === "439a8db6-2546-4858-abbc-3752f4acb536")));
 
   const activeStaff = staff.filter((s) => !s.status || s.status.toLowerCase() === "active");
-  const stationMasters = activeStaff.filter(
+  const stationMasters = isKakirwar ? [] : activeStaff.filter(
     (s) => s.role === "SM"
   );
-  const stationMasterIncharges = activeStaff.filter(
+  const stationMasterIncharges = isKakirwar ? [] : activeStaff.filter(
     (s) => s.role === "SS"
   );
-  const cabinMasters = activeStaff.filter(
+  const cabinMasters = isKakirwar ? [] : activeStaff.filter(
     (s) => (s.role === "Cabin Master" || s.role === "CABIN MASTER" || s.role === "CM")
   );
-  const shuntingMasters = activeStaff.filter(
+  const shuntingMasters = isKakirwar ? [] : activeStaff.filter(
     (s) => (s.role === "Shunting Master" || s.role === "SHUNTING MASTER" || s.role === "SHM")
   );
-  const pointsmen = activeStaff.filter((s) => s.role === "PM");
-  const trainManagers = isKakirwar ? activeStaff.filter((s) => s.role === "TM") : [];
+  const pointsmen = isKakirwar ? [] : activeStaff.filter((s) => s.role === "PM");
+  const trainManagers = activeStaff.filter((s) => s.role === "TM");
 
-  const categoryACount = pointsmen.filter(p => (p.category || '').toUpperCase() === 'A').length;
-  const categoryBCount = pointsmen.filter(p => (p.category || '').toUpperCase() === 'B').length;
-  const categoryCCount = pointsmen.filter(p => (p.category || '').toUpperCase() === 'C').length;
-  const categoryDCount = pointsmen.filter(p => (p.category || '').toUpperCase() === 'D').length;
+  const categoryACount = (isKakirwar ? trainManagers : pointsmen).filter(p => (p.category || '').toUpperCase() === 'A').length;
+  const categoryBCount = (isKakirwar ? trainManagers : pointsmen).filter(p => (p.category || '').toUpperCase() === 'B').length;
+  const categoryCCount = (isKakirwar ? trainManagers : pointsmen).filter(p => (p.category || '').toUpperCase() === 'C').length;
+  const categoryDCount = (isKakirwar ? trainManagers : pointsmen).filter(p => (p.category || '').toUpperCase() === 'D').length;
 
   const summary = {
-    totalPM: pointsmen.length,
+    totalPM: isKakirwar ? 0 : pointsmen.length,
     totalTM: trainManagers.length,
-    categoryA: summaryData.category_a !== undefined && summaryData.category_a !== null ? summaryData.category_a : categoryACount,
-    categoryB: summaryData.category_b !== undefined && summaryData.category_b !== null ? summaryData.category_b : categoryBCount,
-    categoryC: summaryData.category_c !== undefined && summaryData.category_c !== null ? summaryData.category_c : categoryCCount,
-    categoryD: summaryData.category_d !== undefined && summaryData.category_d !== null ? summaryData.category_d : categoryDCount,
+    categoryA: isKakirwar ? categoryACount : (summaryData.category_a !== undefined && summaryData.category_a !== null ? summaryData.category_a : categoryACount),
+    categoryB: isKakirwar ? categoryBCount : (summaryData.category_b !== undefined && summaryData.category_b !== null ? summaryData.category_b : categoryBCount),
+    categoryC: isKakirwar ? categoryCCount : (summaryData.category_c !== undefined && summaryData.category_c !== null ? summaryData.category_c : categoryCCount),
+    categoryD: isKakirwar ? categoryDCount : (summaryData.category_d !== undefined && summaryData.category_d !== null ? summaryData.category_d : categoryDCount),
     completedAssessments: summaryData.completed_assessments || 0,
     pendingAssessments: summaryData.pending_assessments || 0,
-    highRiskStaff: summaryData.high_risk_staff !== undefined && summaryData.high_risk_staff !== null ? summaryData.high_risk_staff : categoryDCount,
-    totalEmployees: activeStaff.length,
+    highRiskStaff: isKakirwar ? categoryDCount : (summaryData.high_risk_staff !== undefined && summaryData.high_risk_staff !== null ? summaryData.high_risk_staff : categoryDCount),
+    totalEmployees: isKakirwar ? trainManagers.length : activeStaff.length,
   };
 
   const roleWiseStaffDistribution = fillRoleDistribution(roleWiseData);
@@ -617,16 +618,17 @@ async function getSmDashboardService(profileId) {
 
   const monthlyAssessmentCompletionTrend = makeMonthlyCompletionTrend(assessments);
 
-  // Calculate current safety percent (Cat A + B vs total categorized pointsmen)
-  const categorizedPointsmen = pointsmen.filter((s) =>
+  // Calculate current safety percent (Cat A + B vs total categorized target staff)
+  const targetStaffForSafety = isKakirwar ? trainManagers : pointsmen;
+  const categorizedStaff = targetStaffForSafety.filter((s) =>
     ["A", "B", "C", "D"].includes(s.category)
   );
-  const catAAndBCount = categorizedPointsmen.filter((s) =>
+  const catAAndBCount = categorizedStaff.filter((s) =>
     ["A", "B"].includes(s.category)
   );
   const currentSafetyPercent =
-    categorizedPointsmen.length > 0
-      ? Math.round((catAAndBCount.length / categorizedPointsmen.length) * 100)
+    categorizedStaff.length > 0
+      ? Math.round((catAAndBCount.length / categorizedStaff.length) * 100)
       : 100;
 
   const scoreSafetyTrend = makeScoreSafetyTrend(assessments, currentSafetyPercent);

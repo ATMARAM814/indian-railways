@@ -409,12 +409,12 @@ const Sidebar = ({ isOpen, onClose }) => {
           {role === 'AOM' || role === 'SUPER_ADMIN' ? (
             <div className="sidebar-user-info" style={{ display: 'flex', flexDirection: 'column', textDecoration: 'none' }}>
               <span className="sidebar-username">{user.fullName || user.full_name || 'Railway Staff'}</span>
-              <span className="sidebar-role-badge">{role === 'SS' ? 'SM Incharge' : role.replace('_', ' ')}</span>
+              <span className="sidebar-role-badge">{isKakirwar ? 'Lobby Supervisor' : (role === 'SS' ? 'SM Incharge' : role.replace('_', ' '))}</span>
             </div>
           ) : (
             <Link to="/profile" className="sidebar-user-info" style={{ display: 'flex', flexDirection: 'column', textDecoration: 'none', cursor: 'pointer' }}>
               <span className="sidebar-username">{user.fullName || user.full_name || 'Railway Staff'}</span>
-              <span className="sidebar-role-badge">{role === 'SS' ? 'SM Incharge' : role.replace('_', ' ')}</span>
+              <span className="sidebar-role-badge">{isKakirwar ? 'Lobby Supervisor' : (role === 'SS' ? 'SM Incharge' : role.replace('_', ' '))}</span>
             </Link>
           )}
 

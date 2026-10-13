@@ -175,9 +175,9 @@ function validateAssessmentHierarchy(
     AOM: ["TI", "Station Master Supervisor", "SMS", "STATION MASTER SUPERVISOR"],
   };
 
-  // Exception for Anant Kakirwar
+  // Exception for Anant Kakirwar (Lobby Supervisor) - exclusively manages Train Managers
   if (assessorId === '439a8db6-2546-4858-abbc-3752f4acb536' && ['SM', 'SS', 'Cabin Master', 'CABIN MASTER'].includes(assessorRoleCode)) {
-    allowedMap[assessorRoleCode] = ["PM", "Shunting Master", "SHUNTING MASTER", "SHM", "TM", "Train Manager"];
+    allowedMap[assessorRoleCode] = ["TM", "Train Manager"];
   }
 
   const allowedRoles =

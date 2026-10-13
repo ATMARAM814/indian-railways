@@ -263,6 +263,7 @@ async function getUsers(filters = {}) {
         OR p.reporting_officer_id = $${values.length}
         OR (r.name = 'TM' AND (s.station_code = 'NGP' OR s.id = '7a4f242d-79e6-4eb8-bef8-61eef42136dc'))
       )
+      AND (r.name = 'TM' OR p.id = $${values.length})
     `);
   } else if (creatorRole === "SM") {
     values.push(creatorUserId);
@@ -715,6 +716,7 @@ async function countUsers(filters = {}) {
         OR p.reporting_officer_id = $${values.length}
         OR (r.name = 'TM' AND (s.station_code = 'NGP' OR s.id = '7a4f242d-79e6-4eb8-bef8-61eef42136dc'))
       )
+      AND (r.name = 'TM' OR p.id = $${values.length})
     `);
   } else if (creatorRole === "SM") {
     values.push(creatorUserId);
@@ -1160,9 +1162,11 @@ async function getActiveRolesInScope(userId, role) {
       if (userId === '439a8db6-2546-4858-abbc-3752f4acb536') {
         roleCondition = `
           (
-            (r.name IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'TM') AND p.reporting_officer_id IS NULL)
-            OR
-            (p.reporting_officer_id = $1)
+            r.name = 'TM'
+            AND (
+              p.reporting_officer_id = $1
+              OR ssp.station_id = (SELECT station_id FROM staff_station_postings WHERE profile_id = $1 AND is_current = true LIMIT 1)
+            )
           )
         `;
       } else {

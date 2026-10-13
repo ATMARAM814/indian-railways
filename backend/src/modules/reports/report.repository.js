@@ -54,7 +54,7 @@ function buildAssessmentsWhere(filters, scope, values) {
     conditions.push(`ssp.station_id = $${values.length}`);
     values.push(scope.userId);
     const allowedRolesStr = scope.userId === '439a8db6-2546-4858-abbc-3752f4acb536'
-      ? "'PM', 'Shunting Master', 'TM'"
+      ? "'TM'"
       : "'PM', 'Shunting Master'";
     conditions.push(`
       (
@@ -241,7 +241,7 @@ function buildStaffPerformanceWhere(filters, scope, values) {
     conditions.push(`ssp.station_id = $${values.length}`);
     values.push(scope.userId);
     const allowedRolesStr = scope.userId === '439a8db6-2546-4858-abbc-3752f4acb536'
-      ? "'PM', 'Shunting Master', 'TM'"
+      ? "'TM'"
       : "'PM', 'Shunting Master'";
     conditions.push(`
       (
@@ -613,7 +613,7 @@ function buildApprovalWhere(filters, scope, values) {
     conditions.push(`ssp.station_id = $${values.length}`);
     values.push(scope.userId);
     const allowedRolesStr = scope.userId === '439a8db6-2546-4858-abbc-3752f4acb536'
-      ? "'PM', 'Shunting Master', 'TM'"
+      ? "'TM'"
       : "'PM', 'Shunting Master'";
     conditions.push(`
       (
@@ -765,7 +765,7 @@ function buildProfileScopeConditions(scope, values, tableAlias = 'p') {
     conditions.push(`ssp.station_id = $${values.length}`);
     values.push(scope.userId);
     const allowedRolesStr = scope.userId === '439a8db6-2546-4858-abbc-3752f4acb536'
-      ? "'PM', 'Shunting Master', 'TM'"
+      ? "'TM'"
       : "'PM', 'Shunting Master'";
     conditions.push(`
       (

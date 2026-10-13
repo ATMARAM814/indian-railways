@@ -307,7 +307,7 @@ async function listUsersService(
       CREATE_PERMISSIONS[creatorRole] || [];
 
     if (creatorUserId === '439a8db6-2546-4858-abbc-3752f4acb536') {
-      allowedRoles = [...allowedRoles, 'TM', 'Train Manager'];
+      allowedRoles = ['TM', 'Train Manager'];
     } else if (role === 'TM' && (creatorRole === 'TI' || ['SM', 'SS', 'Cabin Master', 'CABIN MASTER'].includes(creatorRole))) {
       allowedRoles = allowedRoles.filter(r => r !== 'TM' && r !== 'Train Manager');
     }
@@ -370,7 +370,7 @@ async function getUserDetailsService(
     CREATE_PERMISSIONS[creatorRole] || [];
 
   if (creatorUserId === '439a8db6-2546-4858-abbc-3752f4acb536') {
-    allowedRoles = [...allowedRoles, 'TM', 'Train Manager'];
+    allowedRoles = ['TM', 'Train Manager'];
   } else if ((user.role === 'TM' || user.role === 'Train Manager') && (creatorRole === 'TI' || ['SM', 'SS', 'Cabin Master', 'CABIN MASTER'].includes(creatorRole))) {
     allowedRoles = allowedRoles.filter(r => r !== 'TM' && r !== 'Train Manager');
   }

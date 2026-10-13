@@ -269,22 +269,28 @@ const SMDashboard = () => {
         {station && (
           <div className="station-banner-card" style={{ marginBottom: '8px' }}>
             <div className="station-banner-info">
-              <span className="station-banner-subtitle">Assigned Station Posting</span>
+              <span className="station-banner-subtitle">{isKakirwar ? 'Assigned Lobby' : 'Assigned Station Posting'}</span>
               <h2 className="station-banner-title">{station.name}</h2>
               <div style={{ display: 'flex', gap: '16px', marginTop: '8px', fontSize: '13px', color: '#93C5FD', flexWrap: 'wrap' }}>
-                <span>• {stationMasters.length} Station Masters</span>
-                {stationMasterIncharges.length > 0 && (
-                  <span>• {stationMasterIncharges.length} {stationMasterIncharges.length === 1 ? 'SM Incharge' : 'SM Incharges'}</span>
-                )}
-                {cabinMasters.length > 0 && (
-                  <span>• {cabinMasters.length} Cabin Masters</span>
-                )}
-                {shuntingMasters.length > 0 && (
-                  <span>• {shuntingMasters.length} Shunting Masters</span>
-                )}
-                <span>• {pointsmen.length} Pointsmen</span>
-                {trainManagers.length > 0 && (
+                {isKakirwar ? (
                   <span>• {trainManagers.length} Train Managers</span>
+                ) : (
+                  <>
+                    <span>• {stationMasters.length} Station Masters</span>
+                    {stationMasterIncharges.length > 0 && (
+                      <span>• {stationMasterIncharges.length} {stationMasterIncharges.length === 1 ? 'SM Incharge' : 'SM Incharges'}</span>
+                    )}
+                    {cabinMasters.length > 0 && (
+                      <span>• {cabinMasters.length} Cabin Masters</span>
+                    )}
+                    {shuntingMasters.length > 0 && (
+                      <span>• {shuntingMasters.length} Shunting Masters</span>
+                    )}
+                    <span>• {pointsmen.length} Pointsmen</span>
+                    {trainManagers.length > 0 && (
+                      <span>• {trainManagers.length} Train Managers</span>
+                    )}
+                  </>
                 )}
               </div>
             </div>
@@ -296,9 +302,13 @@ const SMDashboard = () => {
         )}
 
         <div className="page-header-container">
-          <h1 className="page-title">Station Dashboard</h1>
+          <h1 className="page-title">{isKakirwar ? 'Lobby Supervisor Dashboard' : 'Station Dashboard'}</h1>
           <p className="page-subtitle">
-            Station Master console for <strong>{user?.fullName || user?.full_name || 'SM User'}</strong>. Monitoring station safety evaluations and staff readiness.
+            {isKakirwar ? (
+              <>Lobby Supervisor console for <strong>{user?.fullName || user?.full_name || 'ANANT KAKIRWAR'}</strong>. Managing train managers safety evaluations and staff readiness.</>
+            ) : (
+              <>Station Master console for <strong>{user?.fullName || user?.full_name || 'SM User'}</strong>. Monitoring station safety evaluations and staff readiness.</>
+            )}
           </p>
         </div>
 
@@ -306,10 +316,10 @@ const SMDashboard = () => {
         <div className="kpi-grid-3">
           <StatCard 
             title="Total Employees"
-            value={summary.totalEmployees}
+            value={isKakirwar ? trainManagers.length : summary.totalEmployees}
             icon={<Users size={20} />}
             type="normal"
-            trend="Total active station crew"
+            trend={isKakirwar ? "Total managed train managers" : "Total active station crew"}
             onClick={() => {
               if (isKakirwar) {
                 navigate('/workforce/train-managers');
@@ -320,22 +330,20 @@ const SMDashboard = () => {
               }
             }}
           />
-          <StatCard 
-            title="Total Pointsmen"
-            value={summary.totalPM}
-            icon={<Users size={20} />}
-            type="normal"
-            trend="Active PM postings"
-            onClick={() => {
-              if (isKakirwar) {
-                navigate('/workforce/train-managers');
-              } else {
+          {!isKakirwar && (
+            <StatCard 
+              title="Total Pointsmen"
+              value={summary.totalPM}
+              icon={<Users size={20} />}
+              type="normal"
+              trend="Active PM postings"
+              onClick={() => {
                 setSelectedCategoryFilter(null);
                 setPointsmenPage(1);
                 scrollToSection('pointsmen-table-card');
-              }
-            }}
-          />
+              }}
+            />
+          )}
           {trainManagers.length > 0 && (
             <StatCard 
               title="Total Train Managers"
@@ -519,48 +527,7 @@ const SMDashboard = () => {
         </div>
 
         {/* Staff Lists & Registers */}
-        {isKakirwar ? (
-          <div style={{
-            background: '#FFFFFF',
-            border: '1px solid #E2E8F0',
-            borderRadius: '12px',
-            padding: '24px',
-            marginTop: '24px',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
-          }}>
-            <div>
-              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#0B2341' }}>
-                Workforce Management Console
-              </h3>
-              <p style={{ margin: '6px 0 0 0', fontSize: '14px', color: '#64748B' }}>
-                All {trainManagers.length || 328} Train Managers are assigned under your direct supervision. Access the complete roster, individual profiles, and evaluations in the dedicated Workforce Management section.
-              </p>
-            </div>
-            <button
-              onClick={() => navigate('/workforce/train-managers')}
-              style={{
-                backgroundColor: '#2B5CE6',
-                color: '#FFFFFF',
-                border: 'none',
-                borderRadius: '8px',
-                padding: '10px 20px',
-                fontSize: '14px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                whiteSpace: 'nowrap'
-              }}
-            >
-              <Users size={16} />
-              Open Train Managers Roster
-            </button>
-          </div>
-        ) : (
+        {isKakirwar ? null : (
         <div className="staff-tables-container" id="staff-tables-container">
           {/* Station Masters Table */}
           <div className="staff-table-card">

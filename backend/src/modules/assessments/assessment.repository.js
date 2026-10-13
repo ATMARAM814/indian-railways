@@ -741,6 +741,16 @@ async function getRoleStatsForAssessor(assessorId, assessorRole, roleCode) {
   const values = [roleCode, assessorId];
 
   if (assessorId === '439a8db6-2546-4858-abbc-3752f4acb536') {
+    if (roleCode !== 'TM') {
+      return {
+        roleCode,
+        roleName: roleCode,
+        totalUsers: 0,
+        completedAssessments: 0,
+        pendingAssessments: 0,
+        averageScore: null,
+      };
+    }
     scopeJoin = `
       LEFT JOIN staff_station_postings ssp ON ssp.profile_id = p.id AND ssp.is_current = true
       LEFT JOIN stations s ON s.id = ssp.station_id
@@ -999,13 +1009,17 @@ async function getEligibleStaff(assessorId, assessorRole, roleCode, filters = {}
       )
     `);
   } else if (assessorId === '439a8db6-2546-4858-abbc-3752f4acb536') {
-    values.push(assessorId);
-    conditions.push(`
-      (
-        p.reporting_officer_id = $${values.length}
-        OR (r.name = 'TM' AND (s.station_code = 'NGP' OR s.id = '7a4f242d-79e6-4eb8-bef8-61eef42136dc'))
-      )
-    `);
+    if (roleCode !== 'TM') {
+      conditions.push('1 = 0');
+    } else {
+      values.push(assessorId);
+      conditions.push(`
+        (
+          p.reporting_officer_id = $${values.length}
+          OR (r.name = 'TM' AND (s.station_code = 'NGP' OR s.id = '7a4f242d-79e6-4eb8-bef8-61eef42136dc'))
+        )
+      `);
+    }
   } else if (assessorRole === 'SM') {
     conditions.push('1 = 0');
   } else if (assessorRole === 'TI') {
@@ -1332,13 +1346,17 @@ async function getBulkEligibleStaff(assessorId, assessorRole, roleCode) {
       )
     `);
   } else if (assessorId === '439a8db6-2546-4858-abbc-3752f4acb536') {
-    values.push(assessorId);
-    conditions.push(`
-      (
-        p.reporting_officer_id = $${values.length}
-        OR (r.name = 'TM' AND (s.station_code = 'NGP' OR s.id = '7a4f242d-79e6-4eb8-bef8-61eef42136dc'))
-      )
-    `);
+    if (roleCode !== 'TM') {
+      conditions.push('1 = 0');
+    } else {
+      values.push(assessorId);
+      conditions.push(`
+        (
+          p.reporting_officer_id = $${values.length}
+          OR (r.name = 'TM' AND (s.station_code = 'NGP' OR s.id = '7a4f242d-79e6-4eb8-bef8-61eef42136dc'))
+        )
+      `);
+    }
   } else if (assessorRole === 'SM') {
     conditions.push('1 = 0');
   } else if (assessorRole === 'TI') {

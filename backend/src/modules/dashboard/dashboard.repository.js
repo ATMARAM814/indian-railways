@@ -1084,7 +1084,7 @@ async function getStationStaff(stationId, profileId = null) {
       d.zone as "zoneName",
       COALESCE(
         (
-          SELECT ro.full_name || ' (' || r_ro.name || ')'
+          SELECT ro.full_name || ' (' || CASE WHEN ro.id = '439a8db6-2546-4858-abbc-3752f4acb536' THEN 'Lobby Supervisor' ELSE r_ro.name END || ')'
           FROM profiles ro
           JOIN roles r_ro ON r_ro.id = ro.role_id
           WHERE ro.id = p.reporting_officer_id
