@@ -76,7 +76,10 @@ async function createAssessment({
     );
   }
 
-  if (assessmentType !== 'Retest' && assessmentCycle !== 'Retest after Counseling' && finalAssessorRoleCode === "TI" && assessedRoleCode !== "TM") {
+  if (assessmentType !== 'Retest' && assessmentCycle !== 'Retest after Counseling' && finalAssessorRoleCode === "TI") {
+    if (assessedRoleCode === "TM" || assessedRoleCode === "Train Manager") {
+      throw new Error("TI cannot conduct assessments for Train Managers. Train Managers are assessed by Station Supervisors.");
+    }
     const hasSms = await hasStationSupervisor(assessedUserId);
     if (hasSms) {
       throw new Error(
@@ -165,10 +168,10 @@ function validateAssessmentHierarchy(
     SS: ["PM", "Shunting Master", "SHUNTING MASTER", "SHM", "Cabin Master", "CABIN MASTER", "SM"],
     "Cabin Master": ["PM", "Shunting Master", "SHUNTING MASTER", "SHM"],
     "CABIN MASTER": ["PM", "Shunting Master", "SHUNTING MASTER", "SHM"],
-    TI: ["SM", "SS", "TM", "Cabin Master", "CABIN MASTER"],
-    "Station Master Supervisor": ["SM", "SS", "Cabin Master", "CABIN MASTER", "PM", "Shunting Master", "SHUNTING MASTER", "SHM"],
-    SMS: ["SM", "SS", "Cabin Master", "CABIN MASTER", "PM", "Shunting Master", "SHUNTING MASTER", "SHM"],
-    "STATION MASTER SUPERVISOR": ["SM", "SS", "Cabin Master", "CABIN MASTER", "PM", "Shunting Master", "SHUNTING MASTER", "SHM"],
+    TI: ["SM", "SS", "Cabin Master", "CABIN MASTER"],
+    "Station Master Supervisor": ["SM", "SS", "Cabin Master", "CABIN MASTER", "PM", "Shunting Master", "SHUNTING MASTER", "SHM", "TM", "Train Manager"],
+    SMS: ["SM", "SS", "Cabin Master", "CABIN MASTER", "PM", "Shunting Master", "SHUNTING MASTER", "SHM", "TM", "Train Manager"],
+    "STATION MASTER SUPERVISOR": ["SM", "SS", "Cabin Master", "CABIN MASTER", "PM", "Shunting Master", "SHUNTING MASTER", "SHM", "TM", "Train Manager"],
     AOM: ["TI", "Station Master Supervisor", "SMS", "STATION MASTER SUPERVISOR"],
   };
 
@@ -263,8 +266,12 @@ async function submitEvaluation(assessmentId, userId, submittedAnswers, operatio
     [userId]
   );
   const userRoleName = userRoleRes.rows[0]?.name;
-  if (['SM', 'Station Master', 'STATION MASTER'].includes(userRoleName)) {
+  if (['SM', 'Station Master', 'STATION MASTER'].includes(userRoleName) && userId !== '439a8db6-2546-4858-abbc-3752f4acb536') {
     throw new Error("Station Masters do not have authority to evaluate assessments.");
+  }
+
+  if (userRoleName === 'TI' && assessment.assessed_role_code === 'TM') {
+    throw new Error("TI does not have authority to evaluate Train Managers.");
   }
 
   const checkAuthRes = await pool.query(
@@ -280,7 +287,9 @@ async function submitEvaluation(assessmentId, userId, submittedAnswers, operatio
              AND ssp1.is_current = true 
              AND ssp2.is_current = true
          )
-       ) as "isStationAuthority"
+       ) OR ($2 = '439a8db6-2546-4858-abbc-3752f4acb536' AND EXISTS (
+         SELECT 1 FROM profiles sub WHERE sub.id = $1 AND sub.reporting_officer_id = $2
+       )) as "isStationAuthority"
      FROM profiles p_user
      JOIN roles r_user ON r_user.id = p_user.role_id
      WHERE p_user.id = $2`,

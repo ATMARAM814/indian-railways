@@ -280,6 +280,7 @@ async function getUsers(filters = {}) {
           AND assignment_type = 'TI_AREA'
           AND assigned_to IS NULL
       )
+      AND r.name != 'TM'
     `);
   }
 
@@ -731,6 +732,7 @@ async function countUsers(filters = {}) {
           AND assignment_type = 'TI_AREA'
           AND assigned_to IS NULL
       )
+      AND r.name != 'TM'
     `);
   }
 
@@ -1129,7 +1131,8 @@ async function getActiveRolesInScope(userId, role) {
         AND ssp.station_id IN (
           SELECT station_id FROM station_assignments
           WHERE profile_id = $1 AND assignment_type = 'TI_AREA' AND assigned_to IS NULL
-        );
+        )
+        AND r.name != 'TM';
     `;
   } else if (role === "SM" || role === "SS" || ["Cabin Master", "CABIN MASTER"].includes(role) || ["Station Master Supervisor", "STATION MASTER SUPERVISOR", "SMS", "Station Master Supervisior", "Station Master Supervisio"].includes(role)) {
     values.push(userId);
@@ -1258,7 +1261,7 @@ async function getEmployeePmeRefStatus(filters) {
           AND assignment_type = 'TI_AREA'
           AND assigned_to IS NULL
       )
-      AND r.name NOT IN ('SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'Station Master Supervisior', 'Station Master Supervisio')
+      AND r.name NOT IN ('SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'Station Master Supervisior', 'Station Master Supervisio', 'TM', 'Train Manager')
     `);
   } else if (creatorRole === "AOM") {
     values.push(creatorUserId);
@@ -1437,7 +1440,7 @@ async function countEmployeePmeRefStatus(filters) {
           AND assignment_type = 'TI_AREA'
           AND assigned_to IS NULL
       )
-      AND r.name NOT IN ('SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'Station Master Supervisior', 'Station Master Supervisio')
+      AND r.name NOT IN ('SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'Station Master Supervisior', 'Station Master Supervisio', 'TM', 'Train Manager')
     `);
   } else if (creatorRole === "AOM") {
     values.push(creatorUserId);

@@ -154,7 +154,7 @@ const Sidebar = ({ isOpen, onClose }) => {
       if (hasRole('SM')) {
         workforce.push({ name: 'Station Masters', path: '/workforce/station-masters', icon: <Users size={18} /> });
       }
-      if (hasRole('TM')) {
+      if (role !== 'TI' && hasRole('TM')) {
         workforce.push({ name: 'Train Managers', path: '/workforce/train-managers', icon: <Users size={18} /> });
       }
       if (hasRole('Cabin Master')) {

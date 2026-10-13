@@ -722,7 +722,7 @@ async function getTiDashboardService(profileId) {
     totalStations: summaryData.total_stations || 0,
     totalPM: summaryData.total_pm || 0,
     totalSM: summaryData.total_sm || 0,
-    totalTM: summaryData.total_tm || 0,
+    totalTM: 0,
     totalSS: summaryData.total_ss || 0,
     pendingApprovals: summaryData.pending_approvals || 0,
     completedApprovals: summaryData.completed_approvals || 0,
@@ -746,7 +746,7 @@ async function getTiDashboardService(profileId) {
   }));
 
   const roleWiseStaffDistribution = fillRoleDistribution(roleWiseData).filter(
-    (item) => ["PM", "SM", "TM", "STATION MASTER SUPERVISOR", "CABIN MASTER", "SHUNTING MASTER"].includes(item.role)
+    (item) => ["PM", "SM", "STATION MASTER SUPERVISOR", "CABIN MASTER", "SHUNTING MASTER"].includes(item.role)
   );
   const categoryDistribution = fillCategoryDistribution(categoryData);
 
@@ -1219,7 +1219,7 @@ async function getSmSupervisorDashboardService(profileId) {
     db.getSmCategoryDistribution(stationId),
     db.getSmStationCategoryDistribution(stationId),
     db.getSmAssessments(stationId),
-    db.getStationStaff(stationId)
+    db.getStationStaff(stationId, profileId)
   ]);
 
   // Filter active staff members

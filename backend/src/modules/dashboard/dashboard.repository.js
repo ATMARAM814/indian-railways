@@ -492,13 +492,7 @@ async function getTiSummary(stationIds, profileId) {
         JOIN roles r ON r.id = p.role_id
         WHERE ssp.station_id = ANY($1::uuid[]) AND ssp.is_current = true AND r.name = 'SM'
       ) as total_sm,
-      (
-        SELECT COUNT(DISTINCT p.id)::int
-        FROM staff_station_postings ssp
-        JOIN profiles p ON p.id = ssp.profile_id
-        JOIN roles r ON r.id = p.role_id
-        WHERE ssp.station_id = ANY($1::uuid[]) AND ssp.is_current = true AND r.name = 'TM'
-      ) as total_tm,
+      0::int as total_tm,
       (
         SELECT COUNT(DISTINCT p.id)::int
         FROM staff_station_postings ssp
@@ -619,7 +613,7 @@ async function getTiRoleDistribution(stationIds) {
     FROM staff_station_postings ssp
     JOIN profiles p ON p.id = ssp.profile_id
     JOIN roles r ON r.id = p.role_id
-    WHERE ssp.station_id = ANY($1::uuid[]) AND ssp.is_current = true
+    WHERE ssp.station_id = ANY($1::uuid[]) AND ssp.is_current = true AND r.name != 'TM'
     GROUP BY r.name;
   `;
   const result = await pool.query(query, [stationIds]);
@@ -631,6 +625,7 @@ async function getTiCategoryDistribution(stationIds) {
     SELECT sc.category_code as category, COUNT(DISTINCT p.id)::int as count
     FROM staff_station_postings ssp
     JOIN profiles p ON p.id = ssp.profile_id
+    JOIN roles r ON r.id = p.role_id
     LEFT JOIN LATERAL (
       SELECT category_id FROM employee_categories ec_inner
       WHERE ec_inner.profile_id = p.id
@@ -638,7 +633,7 @@ async function getTiCategoryDistribution(stationIds) {
       LIMIT 1
     ) ec ON true
     LEFT JOIN staff_categories sc ON sc.id = ec.category_id
-    WHERE ssp.station_id = ANY($1::uuid[]) AND ssp.is_current = true AND sc.category_code IS NOT NULL
+    WHERE ssp.station_id = ANY($1::uuid[]) AND ssp.is_current = true AND sc.category_code IS NOT NULL AND r.name != 'TM'
     GROUP BY sc.category_code;
   `;
   const result = await pool.query(query, [stationIds]);
@@ -659,9 +654,11 @@ async function getTiAssessments(stationIds) {
       percentage
     FROM assessments
     WHERE assessed_user_id IN (
-      SELECT profile_id 
-      FROM staff_station_postings 
-      WHERE station_id = ANY($1::uuid[]) AND is_current = true
+      SELECT ssp.profile_id 
+      FROM staff_station_postings ssp
+      JOIN profiles p ON p.id = ssp.profile_id
+      JOIN roles r ON r.id = p.role_id
+      WHERE ssp.station_id = ANY($1::uuid[]) AND ssp.is_current = true AND r.name != 'TM'
     );
   `;
   const result = await pool.query(query, [stationIds]);

@@ -961,7 +961,7 @@ async function getEligibleStaff(assessorId, assessorRole, roleCode, filters = {}
     `);
     conditions.push(`
       (
-        r.name IN ('SM', 'SS', 'Cabin Master', 'CABIN MASTER', 'PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM')
+        r.name IN ('SM', 'SS', 'Cabin Master', 'CABIN MASTER', 'PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'TM')
       )
     `);
   } else if (assessorRole === 'SS' || ['Cabin Master', 'CABIN MASTER'].includes(assessorRole)) {
@@ -1003,6 +1003,7 @@ async function getEligibleStaff(assessorId, assessorRole, roleCode, filters = {}
           AND assignment_type = 'TI_AREA'
           AND assigned_to IS NULL
       )
+      AND r.name != 'TM'
     `);
   } else if (assessorRole === 'AOM') {
     values.push(assessorId);
@@ -1293,7 +1294,7 @@ async function getBulkEligibleStaff(assessorId, assessorRole, roleCode) {
     `);
     conditions.push(`
       (
-        r.name IN ('SM', 'SS', 'Cabin Master', 'CABIN MASTER', 'PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM')
+        r.name IN ('SM', 'SS', 'Cabin Master', 'CABIN MASTER', 'PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'TM')
       )
     `);
   } else if (assessorRole === 'SS' || ['Cabin Master', 'CABIN MASTER'].includes(assessorRole)) {
@@ -1335,6 +1336,7 @@ async function getBulkEligibleStaff(assessorId, assessorRole, roleCode) {
           AND assignment_type = 'TI_AREA'
           AND assigned_to IS NULL
       )
+      AND r.name != 'TM'
     `);
   } else if (assessorRole === 'AOM') {
     values.push(assessorId);
