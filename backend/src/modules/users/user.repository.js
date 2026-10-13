@@ -238,43 +238,57 @@ async function getUsers(filters = {}) {
           r.name IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'Cabin Master', 'CABIN MASTER', 'SM')
         )
       `);
+    } else if (creatorUserId === '439a8db6-2546-4858-abbc-3752f4acb536') {
+      conditions.push(`
+        (
+          p.id = $${values.length}
+          OR p.reporting_officer_id = $${values.length}
+          OR (r.name = 'TM' AND (s.station_code = 'NGP' OR s.id = '7a4f242d-79e6-4eb8-bef8-61eef42136dc'))
+        )
+      `);
     } else {
-      if (creatorUserId === '439a8db6-2546-4858-abbc-3752f4acb536') {
-        conditions.push(`
-          (
-            (r.name IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'TM') AND p.reporting_officer_id IS NULL)
-            OR
-            (p.reporting_officer_id = $${values.length})
-          )
-        `);
-      } else {
-        conditions.push(`
-          (
-            (r.name IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM') AND p.reporting_officer_id IS NULL)
-            OR
-            (p.reporting_officer_id = $${values.length})
-          )
-        `);
-      }
+      conditions.push(`
+        (
+          (r.name IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM') AND p.reporting_officer_id IS NULL)
+          OR
+          (p.reporting_officer_id = $${values.length})
+        )
+      `);
     }
+  } else if (creatorUserId === '439a8db6-2546-4858-abbc-3752f4acb536') {
+    values.push(creatorUserId);
+    conditions.push(`
+      (
+        p.id = $${values.length}
+        OR p.reporting_officer_id = $${values.length}
+        OR (r.name = 'TM' AND (s.station_code = 'NGP' OR s.id = '7a4f242d-79e6-4eb8-bef8-61eef42136dc'))
+      )
+    `);
   } else if (creatorRole === "SM") {
     values.push(creatorUserId);
     conditions.push(`p.id = $${values.length}`);
   }
 
-if (creatorRole === "TI") {
-  values.push(creatorUserId);
+  if (creatorRole === "TI") {
+    values.push(creatorUserId);
 
-  conditions.push(`
-    s.id IN (
-      SELECT station_id
-      FROM station_assignments
-      WHERE profile_id = $${values.length}
-        AND assignment_type = 'TI_AREA'
-        AND assigned_to IS NULL
-    )
-  `);
-}
+    conditions.push(`
+      s.id IN (
+        SELECT station_id
+        FROM station_assignments
+        WHERE profile_id = $${values.length}
+          AND assignment_type = 'TI_AREA'
+          AND assigned_to IS NULL
+      )
+    `);
+  }
+
+  // Ensure Nagpur Train Managers are ONLY visible to Anant Kakirwar (and division admins AOM/SUPER_ADMIN)
+  if (!['AOM', 'SUPER_ADMIN'].includes(creatorRole) && creatorUserId !== '439a8db6-2546-4858-abbc-3752f4acb536') {
+    conditions.push(`
+      NOT (r.name = 'TM' AND (s.station_code = 'NGP' OR s.id = '7a4f242d-79e6-4eb8-bef8-61eef42136dc' OR p.reporting_officer_id = '439a8db6-2546-4858-abbc-3752f4acb536'))
+    `);
+  }
 
 if (creatorRole === "AOM") {
   values.push(creatorUserId);
@@ -675,43 +689,57 @@ async function countUsers(filters = {}) {
           r.name IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'Cabin Master', 'CABIN MASTER', 'SM')
         )
       `);
+    } else if (creatorUserId === '439a8db6-2546-4858-abbc-3752f4acb536') {
+      conditions.push(`
+        (
+          p.id = $${values.length}
+          OR p.reporting_officer_id = $${values.length}
+          OR (r.name = 'TM' AND (s.station_code = 'NGP' OR s.id = '7a4f242d-79e6-4eb8-bef8-61eef42136dc'))
+        )
+      `);
     } else {
-      if (creatorUserId === '439a8db6-2546-4858-abbc-3752f4acb536') {
-        conditions.push(`
-          (
-            (r.name IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'TM') AND p.reporting_officer_id IS NULL)
-            OR
-            (p.reporting_officer_id = $${values.length})
-          )
-        `);
-      } else {
-        conditions.push(`
-          (
-            (r.name IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM') AND p.reporting_officer_id IS NULL)
-            OR
-            (p.reporting_officer_id = $${values.length})
-          )
-        `);
-      }
+      conditions.push(`
+        (
+          (r.name IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM') AND p.reporting_officer_id IS NULL)
+          OR
+          (p.reporting_officer_id = $${values.length})
+        )
+      `);
     }
+  } else if (creatorUserId === '439a8db6-2546-4858-abbc-3752f4acb536') {
+    values.push(creatorUserId);
+    conditions.push(`
+      (
+        p.id = $${values.length}
+        OR p.reporting_officer_id = $${values.length}
+        OR (r.name = 'TM' AND (s.station_code = 'NGP' OR s.id = '7a4f242d-79e6-4eb8-bef8-61eef42136dc'))
+      )
+    `);
   } else if (creatorRole === "SM") {
     values.push(creatorUserId);
     conditions.push(`p.id = $${values.length}`);
   }
 
-if (creatorRole === "TI") {
-  values.push(creatorUserId);
+  if (creatorRole === "TI") {
+    values.push(creatorUserId);
 
-  conditions.push(`
-    s.id IN (
-      SELECT station_id
-      FROM station_assignments
-      WHERE profile_id = $${values.length}
-        AND assignment_type = 'TI_AREA'
-        AND assigned_to IS NULL
-    )
-  `);
-}
+    conditions.push(`
+      s.id IN (
+        SELECT station_id
+        FROM station_assignments
+        WHERE profile_id = $${values.length}
+          AND assignment_type = 'TI_AREA'
+          AND assigned_to IS NULL
+      )
+    `);
+  }
+
+  // Ensure Nagpur Train Managers are ONLY visible to Anant Kakirwar (and division admins AOM/SUPER_ADMIN)
+  if (!['AOM', 'SUPER_ADMIN'].includes(creatorRole) && creatorUserId !== '439a8db6-2546-4858-abbc-3752f4acb536') {
+    conditions.push(`
+      NOT (r.name = 'TM' AND (s.station_code = 'NGP' OR s.id = '7a4f242d-79e6-4eb8-bef8-61eef42136dc' OR p.reporting_officer_id = '439a8db6-2546-4858-abbc-3752f4acb536'))
+    `);
+  }
 
 if (creatorRole === "AOM") {
   values.push(creatorUserId);
@@ -1133,15 +1161,17 @@ async function getActiveRolesInScope(userId, role) {
     }
     query = `
       SELECT DISTINCT r.name
-      FROM staff_station_postings ssp
-      JOIN profiles p ON p.id = ssp.profile_id
+      FROM profiles p
       JOIN roles r ON r.id = p.role_id
+      LEFT JOIN staff_station_postings ssp ON ssp.profile_id = p.id AND ssp.is_current = true
       WHERE p.status = 'active'
-        AND ssp.is_current = true
-        AND ssp.station_id = (
-          SELECT station_id FROM staff_station_postings
-          WHERE profile_id = $1 AND is_current = true
-          LIMIT 1
+        AND (
+          (ssp.station_id = (
+            SELECT station_id FROM staff_station_postings
+            WHERE profile_id = $1 AND is_current = true
+            LIMIT 1
+          ))
+          OR (p.reporting_officer_id = $1)
         )
         AND ${roleCondition};
     `;

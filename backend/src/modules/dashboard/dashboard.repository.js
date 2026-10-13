@@ -1068,7 +1068,7 @@ async function getSuperAdminAssessments() {
   return result.rows;
 }
 
-async function getStationStaff(stationId) {
+async function getStationStaff(stationId, profileId = null) {
   const query = `
     SELECT 
       p.id, 
@@ -1079,8 +1079,10 @@ async function getStationStaff(stationId) {
       p.employee_id as "employeeId",
       p.designation,
       p.status,
+      p.reporting_officer_id as "reportingOfficerId",
       r.name as "role",
       s.station_name as "stationName",
+      s.station_code as "stationCode",
       d.name as "divisionName",
       d.zone as "zoneName",
       (
@@ -1160,11 +1162,11 @@ async function getStationStaff(stationId) {
     JOIN roles r ON r.id = p.role_id
     JOIN stations s ON s.id = ssp.station_id
     LEFT JOIN divisions d ON d.id = s.division_id
-    WHERE ssp.station_id = $1 
-      AND ssp.is_current = true
+    WHERE (ssp.station_id = $1 AND ssp.is_current = true)
+       OR ($2::uuid IS NOT NULL AND p.reporting_officer_id = $2::uuid)
     ORDER BY p.full_name;
   `;
-  const result = await pool.query(query, [stationId]);
+  const result = await pool.query(query, [stationId, profileId]);
   return result.rows;
 }
 

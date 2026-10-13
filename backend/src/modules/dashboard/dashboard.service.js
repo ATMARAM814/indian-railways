@@ -542,17 +542,23 @@ async function getSmDashboardService(profileId) {
     categoryData,
     stationCategoryDist,
     assessments,
-    staff
+    rawStaff
   ] = await Promise.all([
     db.getSmSummary(stationId),
     db.getSmRoleWiseStaff(stationId),
     db.getSmCategoryDistribution(stationId),
     db.getSmStationCategoryDistribution(stationId),
     db.getSmAssessments(stationId),
-    db.getStationStaff(stationId)
+    db.getStationStaff(stationId, profileId)
   ]);
 
-  // Filter active staff members
+  const isKakirwar = (profileId === '439a8db6-2546-4858-abbc-3752f4acb536');
+
+  // Filter active staff members, isolating Nagpur TMs exclusively to Kakirwar
+  const staff = isKakirwar
+    ? rawStaff
+    : rawStaff.filter((s) => !(s.role === "TM" && (station.station_code === "NGP" || s.station_code === "NGP" || s.reporting_officer_id === "439a8db6-2546-4858-abbc-3752f4acb536")));
+
   const activeStaff = staff.filter((s) => !s.status || s.status.toLowerCase() === "active");
   const stationMasters = activeStaff.filter(
     (s) => s.role === "SM"
@@ -567,6 +573,7 @@ async function getSmDashboardService(profileId) {
     (s) => (s.role === "Shunting Master" || s.role === "SHUNTING MASTER" || s.role === "SHM")
   );
   const pointsmen = activeStaff.filter((s) => s.role === "PM");
+  const trainManagers = isKakirwar ? activeStaff.filter((s) => s.role === "TM") : [];
 
   const categoryACount = pointsmen.filter(p => (p.category || '').toUpperCase() === 'A').length;
   const categoryBCount = pointsmen.filter(p => (p.category || '').toUpperCase() === 'B').length;
@@ -575,6 +582,7 @@ async function getSmDashboardService(profileId) {
 
   const summary = {
     totalPM: pointsmen.length,
+    totalTM: trainManagers.length,
     categoryA: summaryData.category_a !== undefined && summaryData.category_a !== null ? summaryData.category_a : categoryACount,
     categoryB: summaryData.category_b !== undefined && summaryData.category_b !== null ? summaryData.category_b : categoryBCount,
     categoryC: summaryData.category_c !== undefined && summaryData.category_c !== null ? summaryData.category_c : categoryCCount,
@@ -634,6 +642,7 @@ async function getSmDashboardService(profileId) {
     cabinMasters,
     shuntingMasters,
     pointsmen,
+    trainManagers,
     summary,
     graphs: {
       roleWiseStaffDistribution,

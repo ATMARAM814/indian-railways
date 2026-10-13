@@ -917,11 +917,10 @@ async function getRoleStatsForAssessor(assessorId, assessorRole, roleCode) {
 
 async function getAssessorRoleStats(assessorId, assessorRole) {
   let targetRoles = [];
-  if (assessorRole === 'SS' || ['Cabin Master', 'CABIN MASTER'].includes(assessorRole)) {
+  if (assessorId === '439a8db6-2546-4858-abbc-3752f4acb536') {
+    targetRoles = ['TM'];
+  } else if (assessorRole === 'SS' || ['Cabin Master', 'CABIN MASTER'].includes(assessorRole)) {
     targetRoles = ['PM', 'Shunting Master', 'SM'];
-    if (assessorId === '439a8db6-2546-4858-abbc-3752f4acb536') {
-      targetRoles.push('TM');
-    }
   } else if (assessorRole === 'SM') {
     targetRoles = [];
   } else if (['Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS'].includes(assessorRole)) {
@@ -977,23 +976,21 @@ async function getEligibleStaff(assessorId, assessorRole, roleCode, filters = {}
       )
     `);
 
-    if (assessorId === '439a8db6-2546-4858-abbc-3752f4acb536') {
-      conditions.push(`
-        (
-          (r.name IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'TM', 'Train Manager', 'SM') AND p.reporting_officer_id IS NULL)
-          OR
-          (p.reporting_officer_id = $${values.length})
-        )
-      `);
-    } else {
-      conditions.push(`
-        (
-          (r.name IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'SM') AND p.reporting_officer_id IS NULL)
-          OR
-          (p.reporting_officer_id = $${values.length})
-        )
-      `);
-    }
+    conditions.push(`
+      (
+        (r.name IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'SM') AND p.reporting_officer_id IS NULL)
+        OR
+        (p.reporting_officer_id = $${values.length})
+      )
+    `);
+  } else if (assessorId === '439a8db6-2546-4858-abbc-3752f4acb536') {
+    values.push(assessorId);
+    conditions.push(`
+      (
+        p.reporting_officer_id = $${values.length}
+        OR (r.name = 'TM' AND (s.station_code = 'NGP' OR s.id = '7a4f242d-79e6-4eb8-bef8-61eef42136dc'))
+      )
+    `);
   } else if (assessorRole === 'SM') {
     conditions.push('1 = 0');
   } else if (assessorRole === 'TI') {
@@ -1007,7 +1004,6 @@ async function getEligibleStaff(assessorId, assessorRole, roleCode, filters = {}
           AND assigned_to IS NULL
       )
     `);
-
   } else if (assessorRole === 'AOM') {
     values.push(assessorId);
     conditions.push(`
@@ -1048,7 +1044,13 @@ async function getEligibleStaff(assessorId, assessorRole, roleCode, filters = {}
         )
       )
     `);
-  } else {
+  }
+
+  // Ensure Nagpur Train Managers are ONLY visible to Anant Kakirwar (and division admins AOM/SUPER_ADMIN)
+  if (!['AOM', 'SUPER_ADMIN'].includes(assessorRole) && assessorId !== '439a8db6-2546-4858-abbc-3752f4acb536') {
+    conditions.push(`
+      NOT (r.name = 'TM' AND (s.station_code = 'NGP' OR s.id = '7a4f242d-79e6-4eb8-bef8-61eef42136dc' OR p.reporting_officer_id = '439a8db6-2546-4858-abbc-3752f4acb536'))
+    `);
   }
 
   // Filter: search
@@ -1306,23 +1308,21 @@ async function getBulkEligibleStaff(assessorId, assessorRole, roleCode) {
       )
     `);
 
-    if (assessorId === '439a8db6-2546-4858-abbc-3752f4acb536') {
-      conditions.push(`
-        (
-          (r.name IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'TM', 'Train Manager', 'SM') AND p.reporting_officer_id IS NULL)
-          OR
-          (p.reporting_officer_id = $${values.length})
-        )
-      `);
-    } else {
-      conditions.push(`
-        (
-          (r.name IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'SM') AND p.reporting_officer_id IS NULL)
-          OR
-          (p.reporting_officer_id = $${values.length})
-        )
-      `);
-    }
+    conditions.push(`
+      (
+        (r.name IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'SM') AND p.reporting_officer_id IS NULL)
+        OR
+        (p.reporting_officer_id = $${values.length})
+      )
+    `);
+  } else if (assessorId === '439a8db6-2546-4858-abbc-3752f4acb536') {
+    values.push(assessorId);
+    conditions.push(`
+      (
+        p.reporting_officer_id = $${values.length}
+        OR (r.name = 'TM' AND (s.station_code = 'NGP' OR s.id = '7a4f242d-79e6-4eb8-bef8-61eef42136dc'))
+      )
+    `);
   } else if (assessorRole === 'SM') {
     conditions.push('1 = 0');
   } else if (assessorRole === 'TI') {
@@ -1336,7 +1336,6 @@ async function getBulkEligibleStaff(assessorId, assessorRole, roleCode) {
           AND assigned_to IS NULL
       )
     `);
-
   } else if (assessorRole === 'AOM') {
     values.push(assessorId);
     conditions.push(`
@@ -1377,7 +1376,13 @@ async function getBulkEligibleStaff(assessorId, assessorRole, roleCode) {
         )
       )
     `);
-  } else {
+  }
+
+  // Ensure Nagpur Train Managers are ONLY visible to Anant Kakirwar (and division admins AOM/SUPER_ADMIN)
+  if (!['AOM', 'SUPER_ADMIN'].includes(assessorRole) && assessorId !== '439a8db6-2546-4858-abbc-3752f4acb536') {
+    conditions.push(`
+      NOT (r.name = 'TM' AND (s.station_code = 'NGP' OR s.id = '7a4f242d-79e6-4eb8-bef8-61eef42136dc' OR p.reporting_officer_id = '439a8db6-2546-4858-abbc-3752f4acb536'))
+    `);
   }
 
   // Enforce no active assessment cycle

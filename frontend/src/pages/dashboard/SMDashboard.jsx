@@ -43,6 +43,7 @@ const SMDashboard = () => {
   const [officialsPage, setOfficialsPage] = useState(1);
   const [pointsmenPage, setPointsmenPage] = useState(1);
   const [shuntingPage, setShuntingPage] = useState(1);
+  const [trainManagersPage, setTrainManagersPage] = useState(1);
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState(null);
   const pageSize = 10;
 
@@ -117,6 +118,7 @@ const SMDashboard = () => {
   const cabinMasters = data?.cabinMasters || [];
   const shuntingMasters = data?.shuntingMasters || [];
   const pointsmen = data?.pointsmen || [];
+  const trainManagers = data?.trainManagers || [];
 
   const allStationOfficials = [
     ...stationMasters,
@@ -157,6 +159,9 @@ const SMDashboard = () => {
 
   const totalShuntingPages = Math.ceil(actualShuntingMasters.length / pageSize);
   const currentShunting = actualShuntingMasters.slice((shuntingPage - 1) * pageSize, shuntingPage * pageSize);
+
+  const totalTrainManagersPages = Math.ceil(trainManagers.length / pageSize);
+  const currentTrainManagers = trainManagers.slice((trainManagersPage - 1) * pageSize, trainManagersPage * pageSize);
 
   // Formatted data
   const userGraphRoleMap = {
@@ -275,6 +280,9 @@ const SMDashboard = () => {
                   <span>• {shuntingMasters.length} Shunting Masters</span>
                 )}
                 <span>• {pointsmen.length} Pointsmen</span>
+                {trainManagers.length > 0 && (
+                  <span>• {trainManagers.length} Train Managers</span>
+                )}
               </div>
             </div>
             <div className="station-banner-code-block">
@@ -317,6 +325,18 @@ const SMDashboard = () => {
               scrollToSection('pointsmen-table-card');
             }}
           />
+          {trainManagers.length > 0 && (
+            <StatCard 
+              title="Total Train Managers"
+              value={trainManagers.length}
+              icon={<Users size={20} />}
+              type="normal"
+              trend="Reporting Train Managers"
+              onClick={() => {
+                scrollToSection('train-managers-table-card');
+              }}
+            />
+          )}
           <StatCard 
             title="High Risk Staff (Cat D)"
             value={summary.highRiskStaff}
@@ -714,6 +734,68 @@ const SMDashboard = () => {
               )}
             </div>
           </div>
+
+          {/* Train Managers Table (shown for Reporting Officers like Kakirwar) */}
+          {trainManagers.length > 0 && (
+            <div className="staff-table-card" id="train-managers-table-card" style={{ marginTop: '24px' }}>
+              <div className="staff-table-header" style={{ flexWrap: 'wrap', gap: '8px' }}>
+                <div>
+                  <h3 className="staff-table-title">Assigned Train Managers</h3>
+                </div>
+                <span className="staff-table-badge">
+                  {trainManagers.length} Active
+                </span>
+              </div>
+              <div className="staff-table-wrapper">
+                <table className="staff-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>HRMS ID</th>
+                      <th>Designation</th>
+                      <th>Category</th>
+                      <th>Phone Number</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {currentTrainManagers.map((tm) => (
+                      <tr key={tm.id}>
+                        <td>
+                          <div className="staff-name-col">
+                            <div className="staff-initials-avatar">
+                              {tm.fullName
+                                ? tm.fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
+                                : 'TM'}
+                            </div>
+                            <span className="staff-name-text">{tm.fullName || 'N/A'}</span>
+                          </div>
+                        </td>
+                        <td>{tm.hrmsId || 'N/A'}</td>
+                        <td>{cleanDesignationText(tm.designation || 'Train Manager')}</td>
+                        <td>
+                          <span className={`category-tag cat-${(tm.category || 'none').toLowerCase()}`}>
+                            {tm.category ? `Category ${tm.category}` : 'Uncategorized'}
+                          </span>
+                        </td>
+                        <td>{tm.phone || 'N/A'}</td>
+                        <td>
+                          <a 
+                            href={`/staff/profile/${tm.id}`} 
+                            className="staff-link-btn" 
+                            onClick={(e) => handleViewProfile(tm, e)}
+                          >
+                            View Profile
+                          </a>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {renderPaginationControls(trainManagersPage, totalTrainManagersPages, trainManagers.length, setTrainManagersPage)}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
