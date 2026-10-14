@@ -1,5 +1,6 @@
 // SMDashboard.jsx
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getSmDashboardData } from '../../api/dashboardApi';
 import { 
@@ -31,6 +32,8 @@ import {
 
 const SMDashboard = () => {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const isKakirwar = user?.hrmsId === 'BKFOEQ' || user?.hrms_id === 'BKFOEQ' || user?.id === '439a8db6-2546-4858-abbc-3752f4acb536';
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -43,6 +46,7 @@ const SMDashboard = () => {
   const [officialsPage, setOfficialsPage] = useState(1);
   const [pointsmenPage, setPointsmenPage] = useState(1);
   const [shuntingPage, setShuntingPage] = useState(1);
+  const [trainManagersPage, setTrainManagersPage] = useState(1);
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState(null);
   const pageSize = 10;
 
@@ -117,6 +121,7 @@ const SMDashboard = () => {
   const cabinMasters = data?.cabinMasters || [];
   const shuntingMasters = data?.shuntingMasters || [];
   const pointsmen = data?.pointsmen || [];
+  const trainManagers = data?.trainManagers || [];
 
   const allStationOfficials = [
     ...stationMasters,
@@ -157,6 +162,9 @@ const SMDashboard = () => {
 
   const totalShuntingPages = Math.ceil(actualShuntingMasters.length / pageSize);
   const currentShunting = actualShuntingMasters.slice((shuntingPage - 1) * pageSize, shuntingPage * pageSize);
+
+  const totalTrainManagersPages = Math.ceil(trainManagers.length / pageSize);
+  const currentTrainManagers = trainManagers.slice((trainManagersPage - 1) * pageSize, trainManagersPage * pageSize);
 
   // Formatted data
   const userGraphRoleMap = {
@@ -261,20 +269,29 @@ const SMDashboard = () => {
         {station && (
           <div className="station-banner-card" style={{ marginBottom: '8px' }}>
             <div className="station-banner-info">
-              <span className="station-banner-subtitle">Assigned Station Posting</span>
+              <span className="station-banner-subtitle">{isKakirwar ? 'Assigned Lobby' : 'Assigned Station Posting'}</span>
               <h2 className="station-banner-title">{station.name}</h2>
               <div style={{ display: 'flex', gap: '16px', marginTop: '8px', fontSize: '13px', color: '#93C5FD', flexWrap: 'wrap' }}>
-                <span>• {stationMasters.length} Station Masters</span>
-                {stationMasterIncharges.length > 0 && (
-                  <span>• {stationMasterIncharges.length} {stationMasterIncharges.length === 1 ? 'SM Incharge' : 'SM Incharges'}</span>
+                {isKakirwar ? (
+                  <span>• {trainManagers.length} Train Managers</span>
+                ) : (
+                  <>
+                    <span>• {stationMasters.length} Station Masters</span>
+                    {stationMasterIncharges.length > 0 && (
+                      <span>• {stationMasterIncharges.length} {stationMasterIncharges.length === 1 ? 'SM Incharge' : 'SM Incharges'}</span>
+                    )}
+                    {cabinMasters.length > 0 && (
+                      <span>• {cabinMasters.length} Cabin Masters</span>
+                    )}
+                    {shuntingMasters.length > 0 && (
+                      <span>• {shuntingMasters.length} Shunting Masters</span>
+                    )}
+                    <span>• {pointsmen.length} Pointsmen</span>
+                    {trainManagers.length > 0 && (
+                      <span>• {trainManagers.length} Train Managers</span>
+                    )}
+                  </>
                 )}
-                {cabinMasters.length > 0 && (
-                  <span>• {cabinMasters.length} Cabin Masters</span>
-                )}
-                {shuntingMasters.length > 0 && (
-                  <span>• {shuntingMasters.length} Shunting Masters</span>
-                )}
-                <span>• {pointsmen.length} Pointsmen</span>
               </div>
             </div>
             <div className="station-banner-code-block">
@@ -285,9 +302,13 @@ const SMDashboard = () => {
         )}
 
         <div className="page-header-container">
-          <h1 className="page-title">Station Dashboard</h1>
+          <h1 className="page-title">{isKakirwar ? 'Lobby Supervisor Dashboard' : 'Station Dashboard'}</h1>
           <p className="page-subtitle">
-            Station Master console for <strong>{user?.fullName || user?.full_name || 'SM User'}</strong>. Monitoring station safety evaluations and staff readiness.
+            {isKakirwar ? (
+              <>Lobby Supervisor console for <strong>{user?.fullName || user?.full_name || 'ANANT KAKIRWAR'}</strong>. Managing train managers safety evaluations and staff readiness.</>
+            ) : (
+              <>Station Master console for <strong>{user?.fullName || user?.full_name || 'SM User'}</strong>. Monitoring station safety evaluations and staff readiness.</>
+            )}
           </p>
         </div>
 
@@ -295,28 +316,46 @@ const SMDashboard = () => {
         <div className="kpi-grid-3">
           <StatCard 
             title="Total Employees"
-            value={summary.totalEmployees}
+            value={isKakirwar ? trainManagers.length : summary.totalEmployees}
             icon={<Users size={20} />}
             type="normal"
-            trend="Total active station crew"
+            trend={isKakirwar ? "Total managed train managers" : "Total active station crew"}
             onClick={() => {
-              setSelectedCategoryFilter(null);
-              setPointsmenPage(1);
-              scrollToSection('staff-tables-container');
+              if (isKakirwar) {
+                navigate('/workforce/train-managers');
+              } else {
+                setSelectedCategoryFilter(null);
+                setPointsmenPage(1);
+                scrollToSection('staff-tables-container');
+              }
             }}
           />
-          <StatCard 
-            title="Total Pointsmen"
-            value={summary.totalPM}
-            icon={<Users size={20} />}
-            type="normal"
-            trend="Active PM postings"
-            onClick={() => {
-              setSelectedCategoryFilter(null);
-              setPointsmenPage(1);
-              scrollToSection('pointsmen-table-card');
-            }}
-          />
+          {!isKakirwar && (
+            <StatCard 
+              title="Total Pointsmen"
+              value={summary.totalPM}
+              icon={<Users size={20} />}
+              type="normal"
+              trend="Active PM postings"
+              onClick={() => {
+                setSelectedCategoryFilter(null);
+                setPointsmenPage(1);
+                scrollToSection('pointsmen-table-card');
+              }}
+            />
+          )}
+          {trainManagers.length > 0 && (
+            <StatCard 
+              title="Total Train Managers"
+              value={trainManagers.length}
+              icon={<Users size={20} />}
+              type="normal"
+              trend="Reporting Train Managers"
+              onClick={() => {
+                navigate('/workforce/train-managers');
+              }}
+            />
+          )}
           <StatCard 
             title="High Risk Staff (Cat D)"
             value={summary.highRiskStaff}
@@ -488,6 +527,7 @@ const SMDashboard = () => {
         </div>
 
         {/* Staff Lists & Registers */}
+        {isKakirwar ? null : (
         <div className="staff-tables-container" id="staff-tables-container">
           {/* Station Masters Table */}
           <div className="staff-table-card">
@@ -714,7 +754,70 @@ const SMDashboard = () => {
               )}
             </div>
           </div>
+
+          {/* Train Managers Table (shown for Reporting Officers like Kakirwar) */}
+          {trainManagers.length > 0 && (
+            <div className="staff-table-card" id="train-managers-table-card" style={{ marginTop: '24px' }}>
+              <div className="staff-table-header" style={{ flexWrap: 'wrap', gap: '8px' }}>
+                <div>
+                  <h3 className="staff-table-title">Assigned Train Managers</h3>
+                </div>
+                <span className="staff-table-badge">
+                  {trainManagers.length} Active
+                </span>
+              </div>
+              <div className="staff-table-wrapper">
+                <table className="staff-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>HRMS ID</th>
+                      <th>Designation</th>
+                      <th>Category</th>
+                      <th>Phone Number</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {currentTrainManagers.map((tm) => (
+                      <tr key={tm.id}>
+                        <td>
+                          <div className="staff-name-col">
+                            <div className="staff-initials-avatar">
+                              {tm.fullName
+                                ? tm.fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
+                                : 'TM'}
+                            </div>
+                            <span className="staff-name-text">{tm.fullName || 'N/A'}</span>
+                          </div>
+                        </td>
+                        <td>{tm.hrmsId || 'N/A'}</td>
+                        <td>{cleanDesignationText(tm.designation || 'Train Manager')}</td>
+                        <td>
+                          <span className={`category-tag cat-${(tm.category || 'none').toLowerCase()}`}>
+                            {tm.category ? `Category ${tm.category}` : 'Uncategorized'}
+                          </span>
+                        </td>
+                        <td>{tm.phone || 'N/A'}</td>
+                        <td>
+                          <a 
+                            href={`/staff/profile/${tm.id}`} 
+                            className="staff-link-btn" 
+                            onClick={(e) => handleViewProfile(tm, e)}
+                          >
+                            View Profile
+                          </a>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {renderPaginationControls(trainManagersPage, totalTrainManagersPages, trainManagers.length, setTrainManagersPage)}
+              </div>
+            </div>
+          )}
         </div>
+        )}
       </div>
 
       {/* Reusable Detailed Staff Card Modal Popup */}

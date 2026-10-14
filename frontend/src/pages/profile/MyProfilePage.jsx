@@ -163,8 +163,16 @@ const MyProfilePage = () => {
     return name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
   };
 
+  const isKakirwar = 
+    profile?.hrms_id === 'BKFOEQ' || 
+    profile?.hrmsId === 'BKFOEQ' || 
+    profile?.id === '439a8db6-2546-4858-abbc-3752f4acb536' ||
+    user?.hrmsId === 'BKFOEQ' ||
+    user?.id === '439a8db6-2546-4858-abbc-3752f4acb536';
+
   // Derive display designation
   const getDisplayRoleName = (role) => {
+    if (isKakirwar) return 'Lobby Supervisor';
     const rolesMap = {
       PM: 'Pointsman',
       SM: 'Station Master',
@@ -301,7 +309,7 @@ const MyProfilePage = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <h2 style={{ margin: 0, fontSize: '24px', fontWeight: 700, letterSpacing: '-0.5px' }}>{profile.full_name}</h2>
               <div style={{ fontSize: '14px', color: '#94A3B8', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 500 }}>
-                <span>{cleanDesignationText(profile.designation || getDisplayRoleName(profile.role))}</span>
+                <span>{isKakirwar ? 'Lobby Supervisor' : cleanDesignationText(profile.designation || getDisplayRoleName(profile.role))}</span>
               </div>
               
               {/* Location info */}
@@ -491,7 +499,7 @@ const MyProfilePage = () => {
               <DetailField 
                 icon={<Briefcase />} 
                 label="Designation" 
-                value={cleanDesignationText(profile.designation || getDisplayRoleName(profile.role)) || '—'} 
+                value={isKakirwar ? 'Lobby Supervisor' : (cleanDesignationText(profile.designation || getDisplayRoleName(profile.role)) || '—')} 
               />
               <DetailField 
                 icon={<Compass />} 
@@ -523,19 +531,27 @@ const MyProfilePage = () => {
                 icon={<User />} 
                 label="Reporting Officer" 
                 value={(() => {
+                  const directRo = profile.reportingOfficer || profile.hierarchy?.reportingOfficer;
+                  if (directRo?.full_name) {
+                    const isRoKakirwar = directRo.hrms_id === 'BKFOEQ' || directRo.id === '439a8db6-2546-4858-abbc-3752f4acb536' || directRo.full_name?.toUpperCase().includes('KAKIRWAR');
+                    return `${directRo.full_name} (${isRoKakirwar ? 'Lobby Supervisor' : (directRo.role || 'Reporting Officer')})`;
+                  }
                   const role = profile.role;
-                  const { assignedSm, assignedTi, assignedAom } = profile.hierarchy || {};
+                  const { assignedSm, assignedTi, assignedAom, assignedSms } = profile.hierarchy || {};
+                  const isSmKakirwar = assignedSm?.hrms_id === 'BKFOEQ' || assignedSm?.id === '439a8db6-2546-4858-abbc-3752f4acb536' || assignedSm?.full_name?.toUpperCase().includes('KAKIRWAR');
+                  if (role === 'TM') {
+                    if (assignedSms?.full_name) return `${assignedSms.full_name} (SMS)`;
+                    if (assignedSm?.full_name) return `${assignedSm.full_name} (${isSmKakirwar ? 'Lobby Supervisor' : 'SM'})`;
+                    return '—';
+                  }
                   if (role === 'PM' || role === 'Shunting Master' || role === 'SHUNTING MASTER' || role === 'SHM') {
-                    if (assignedSm?.full_name) return `${assignedSm.full_name} (SM)`;
+                    if (assignedSm?.full_name) return `${assignedSm.full_name} (${isSmKakirwar ? 'Lobby Supervisor' : 'SM'})`;
                     if (assignedTi?.full_name) return `${assignedTi.full_name} (TI)`;
                     if (assignedAom?.full_name) return `${assignedAom.full_name} (AOM)`;
                   } else if (role === 'SM' || role === 'SS' || role === 'Cabin Master' || role === 'CABIN MASTER') {
                     if (assignedTi?.full_name) return `${assignedTi.full_name} (TI)`;
                     if (assignedAom?.full_name) return `${assignedAom.full_name} (AOM)`;
                   } else if (role === 'TI') {
-                    if (assignedAom?.full_name) return `${assignedAom.full_name} (AOM)`;
-                  } else if (role === 'TM') {
-                    if (assignedTi?.full_name) return `${assignedTi.full_name} (TI)`;
                     if (assignedAom?.full_name) return `${assignedAom.full_name} (AOM)`;
                   } else if (role === 'AOM') {
                     return 'Sr. DOM';

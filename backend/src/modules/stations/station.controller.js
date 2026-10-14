@@ -53,7 +53,7 @@ async function getStationStaffController(req, res) {
       }
     }
 
-    const staff = await listStationStaff(stationId);
+    const staff = await listStationStaff(stationId, req.user?.role);
 
     return res.status(200).json({
       success: true,

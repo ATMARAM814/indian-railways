@@ -492,13 +492,7 @@ async function getTiSummary(stationIds, profileId) {
         JOIN roles r ON r.id = p.role_id
         WHERE ssp.station_id = ANY($1::uuid[]) AND ssp.is_current = true AND r.name = 'SM'
       ) as total_sm,
-      (
-        SELECT COUNT(DISTINCT p.id)::int
-        FROM staff_station_postings ssp
-        JOIN profiles p ON p.id = ssp.profile_id
-        JOIN roles r ON r.id = p.role_id
-        WHERE ssp.station_id = ANY($1::uuid[]) AND ssp.is_current = true AND r.name = 'TM'
-      ) as total_tm,
+      0::int as total_tm,
       (
         SELECT COUNT(DISTINCT p.id)::int
         FROM staff_station_postings ssp
@@ -619,7 +613,7 @@ async function getTiRoleDistribution(stationIds) {
     FROM staff_station_postings ssp
     JOIN profiles p ON p.id = ssp.profile_id
     JOIN roles r ON r.id = p.role_id
-    WHERE ssp.station_id = ANY($1::uuid[]) AND ssp.is_current = true
+    WHERE ssp.station_id = ANY($1::uuid[]) AND ssp.is_current = true AND r.name != 'TM'
     GROUP BY r.name;
   `;
   const result = await pool.query(query, [stationIds]);
@@ -631,6 +625,7 @@ async function getTiCategoryDistribution(stationIds) {
     SELECT sc.category_code as category, COUNT(DISTINCT p.id)::int as count
     FROM staff_station_postings ssp
     JOIN profiles p ON p.id = ssp.profile_id
+    JOIN roles r ON r.id = p.role_id
     LEFT JOIN LATERAL (
       SELECT category_id FROM employee_categories ec_inner
       WHERE ec_inner.profile_id = p.id
@@ -638,7 +633,7 @@ async function getTiCategoryDistribution(stationIds) {
       LIMIT 1
     ) ec ON true
     LEFT JOIN staff_categories sc ON sc.id = ec.category_id
-    WHERE ssp.station_id = ANY($1::uuid[]) AND ssp.is_current = true AND sc.category_code IS NOT NULL
+    WHERE ssp.station_id = ANY($1::uuid[]) AND ssp.is_current = true AND sc.category_code IS NOT NULL AND r.name != 'TM'
     GROUP BY sc.category_code;
   `;
   const result = await pool.query(query, [stationIds]);
@@ -659,9 +654,11 @@ async function getTiAssessments(stationIds) {
       percentage
     FROM assessments
     WHERE assessed_user_id IN (
-      SELECT profile_id 
-      FROM staff_station_postings 
-      WHERE station_id = ANY($1::uuid[]) AND is_current = true
+      SELECT ssp.profile_id 
+      FROM staff_station_postings ssp
+      JOIN profiles p ON p.id = ssp.profile_id
+      JOIN roles r ON r.id = p.role_id
+      WHERE ssp.station_id = ANY($1::uuid[]) AND ssp.is_current = true AND r.name != 'TM'
     );
   `;
   const result = await pool.query(query, [stationIds]);
@@ -1068,7 +1065,7 @@ async function getSuperAdminAssessments() {
   return result.rows;
 }
 
-async function getStationStaff(stationId) {
+async function getStationStaff(stationId, profileId = null) {
   const query = `
     SELECT 
       p.id, 
@@ -1079,18 +1076,29 @@ async function getStationStaff(stationId) {
       p.employee_id as "employeeId",
       p.designation,
       p.status,
+      p.reporting_officer_id as "reportingOfficerId",
       r.name as "role",
       s.station_name as "stationName",
+      s.station_code as "stationCode",
       d.name as "divisionName",
       d.zone as "zoneName",
-      (
-        SELECT p_ti.full_name || ' (TI)'
-        FROM station_assignments sa
-        JOIN profiles p_ti ON p_ti.id = sa.profile_id
-        WHERE sa.station_id = s.id 
-          AND sa.assignment_type = 'TI_AREA'
-          AND sa.assigned_to IS NULL
-        LIMIT 1
+      COALESCE(
+        (
+          SELECT ro.full_name || ' (' || CASE WHEN ro.id = '439a8db6-2546-4858-abbc-3752f4acb536' THEN 'Lobby Supervisor' ELSE r_ro.name END || ')'
+          FROM profiles ro
+          JOIN roles r_ro ON r_ro.id = ro.role_id
+          WHERE ro.id = p.reporting_officer_id
+          LIMIT 1
+        ),
+        (
+          SELECT p_ti.full_name || ' (TI)'
+          FROM station_assignments sa
+          JOIN profiles p_ti ON p_ti.id = sa.profile_id
+          WHERE sa.station_id = s.id 
+            AND sa.assignment_type = 'TI_AREA'
+            AND sa.assigned_to IS NULL
+          LIMIT 1
+        )
       ) as "reportingOfficer",
       COALESCE(
         (
@@ -1160,11 +1168,11 @@ async function getStationStaff(stationId) {
     JOIN roles r ON r.id = p.role_id
     JOIN stations s ON s.id = ssp.station_id
     LEFT JOIN divisions d ON d.id = s.division_id
-    WHERE ssp.station_id = $1 
-      AND ssp.is_current = true
+    WHERE ssp.is_current = true
+      AND (ssp.station_id = $1 OR ($2::uuid IS NOT NULL AND p.reporting_officer_id = $2::uuid))
     ORDER BY p.full_name;
   `;
-  const result = await pool.query(query, [stationId]);
+  const result = await pool.query(query, [stationId, profileId]);
   return result.rows;
 }
 

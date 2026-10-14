@@ -238,43 +238,59 @@ async function getUsers(filters = {}) {
           r.name IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'Cabin Master', 'CABIN MASTER', 'SM')
         )
       `);
+    } else if (creatorUserId === '439a8db6-2546-4858-abbc-3752f4acb536') {
+      conditions.push(`
+        (
+          p.id = $${values.length}
+          OR p.reporting_officer_id = $${values.length}
+          OR (r.name = 'TM' AND (s.station_code = 'NGP' OR s.id = '7a4f242d-79e6-4eb8-bef8-61eef42136dc'))
+        )
+      `);
     } else {
-      if (creatorUserId === '439a8db6-2546-4858-abbc-3752f4acb536') {
-        conditions.push(`
-          (
-            (r.name IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'TM') AND p.reporting_officer_id IS NULL)
-            OR
-            (p.reporting_officer_id = $${values.length})
-          )
-        `);
-      } else {
-        conditions.push(`
-          (
-            (r.name IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM') AND p.reporting_officer_id IS NULL)
-            OR
-            (p.reporting_officer_id = $${values.length})
-          )
-        `);
-      }
+      conditions.push(`
+        (
+          (r.name IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM') AND p.reporting_officer_id IS NULL)
+          OR
+          (p.reporting_officer_id = $${values.length})
+        )
+      `);
     }
+  } else if (creatorUserId === '439a8db6-2546-4858-abbc-3752f4acb536') {
+    values.push(creatorUserId);
+    conditions.push(`
+      (
+        p.id = $${values.length}
+        OR p.reporting_officer_id = $${values.length}
+        OR (r.name = 'TM' AND (s.station_code = 'NGP' OR s.id = '7a4f242d-79e6-4eb8-bef8-61eef42136dc'))
+      )
+      AND (r.name = 'TM' OR p.id = $${values.length})
+    `);
   } else if (creatorRole === "SM") {
     values.push(creatorUserId);
     conditions.push(`p.id = $${values.length}`);
   }
 
-if (creatorRole === "TI") {
-  values.push(creatorUserId);
+  if (creatorRole === "TI") {
+    values.push(creatorUserId);
 
-  conditions.push(`
-    s.id IN (
-      SELECT station_id
-      FROM station_assignments
-      WHERE profile_id = $${values.length}
-        AND assignment_type = 'TI_AREA'
-        AND assigned_to IS NULL
-    )
-  `);
-}
+    conditions.push(`
+      s.id IN (
+        SELECT station_id
+        FROM station_assignments
+        WHERE profile_id = $${values.length}
+          AND assignment_type = 'TI_AREA'
+          AND assigned_to IS NULL
+      )
+      AND r.name != 'TM'
+    `);
+  }
+
+  // Ensure Nagpur Train Managers are ONLY visible to Anant Kakirwar (and division admins AOM/SUPER_ADMIN)
+  if (!['AOM', 'SUPER_ADMIN'].includes(creatorRole) && creatorUserId !== '439a8db6-2546-4858-abbc-3752f4acb536') {
+    conditions.push(`
+      NOT (r.name = 'TM' AND (s.station_code = 'NGP' OR s.id = '7a4f242d-79e6-4eb8-bef8-61eef42136dc' OR p.reporting_officer_id = '439a8db6-2546-4858-abbc-3752f4acb536'))
+    `);
+  }
 
 if (creatorRole === "AOM") {
   values.push(creatorUserId);
@@ -675,43 +691,59 @@ async function countUsers(filters = {}) {
           r.name IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'Cabin Master', 'CABIN MASTER', 'SM')
         )
       `);
+    } else if (creatorUserId === '439a8db6-2546-4858-abbc-3752f4acb536') {
+      conditions.push(`
+        (
+          p.id = $${values.length}
+          OR p.reporting_officer_id = $${values.length}
+          OR (r.name = 'TM' AND (s.station_code = 'NGP' OR s.id = '7a4f242d-79e6-4eb8-bef8-61eef42136dc'))
+        )
+      `);
     } else {
-      if (creatorUserId === '439a8db6-2546-4858-abbc-3752f4acb536') {
-        conditions.push(`
-          (
-            (r.name IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'TM') AND p.reporting_officer_id IS NULL)
-            OR
-            (p.reporting_officer_id = $${values.length})
-          )
-        `);
-      } else {
-        conditions.push(`
-          (
-            (r.name IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM') AND p.reporting_officer_id IS NULL)
-            OR
-            (p.reporting_officer_id = $${values.length})
-          )
-        `);
-      }
+      conditions.push(`
+        (
+          (r.name IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM') AND p.reporting_officer_id IS NULL)
+          OR
+          (p.reporting_officer_id = $${values.length})
+        )
+      `);
     }
+  } else if (creatorUserId === '439a8db6-2546-4858-abbc-3752f4acb536') {
+    values.push(creatorUserId);
+    conditions.push(`
+      (
+        p.id = $${values.length}
+        OR p.reporting_officer_id = $${values.length}
+        OR (r.name = 'TM' AND (s.station_code = 'NGP' OR s.id = '7a4f242d-79e6-4eb8-bef8-61eef42136dc'))
+      )
+      AND (r.name = 'TM' OR p.id = $${values.length})
+    `);
   } else if (creatorRole === "SM") {
     values.push(creatorUserId);
     conditions.push(`p.id = $${values.length}`);
   }
 
-if (creatorRole === "TI") {
-  values.push(creatorUserId);
+  if (creatorRole === "TI") {
+    values.push(creatorUserId);
 
-  conditions.push(`
-    s.id IN (
-      SELECT station_id
-      FROM station_assignments
-      WHERE profile_id = $${values.length}
-        AND assignment_type = 'TI_AREA'
-        AND assigned_to IS NULL
-    )
-  `);
-}
+    conditions.push(`
+      s.id IN (
+        SELECT station_id
+        FROM station_assignments
+        WHERE profile_id = $${values.length}
+          AND assignment_type = 'TI_AREA'
+          AND assigned_to IS NULL
+      )
+      AND r.name != 'TM'
+    `);
+  }
+
+  // Ensure Nagpur Train Managers are ONLY visible to Anant Kakirwar (and division admins AOM/SUPER_ADMIN)
+  if (!['AOM', 'SUPER_ADMIN'].includes(creatorRole) && creatorUserId !== '439a8db6-2546-4858-abbc-3752f4acb536') {
+    conditions.push(`
+      NOT (r.name = 'TM' AND (s.station_code = 'NGP' OR s.id = '7a4f242d-79e6-4eb8-bef8-61eef42136dc' OR p.reporting_officer_id = '439a8db6-2546-4858-abbc-3752f4acb536'))
+    `);
+  }
 
 if (creatorRole === "AOM") {
   values.push(creatorUserId);
@@ -771,6 +803,7 @@ async function getUserById(userId) {
       p.phone,
       p.designation,
       p.status,
+      p.reporting_officer_id,
       p.created_at,
       p.updated_at,
       p.pme_due,
@@ -829,6 +862,17 @@ async function getUserProfileDetails(userId) {
 
   // 4. Reporting Hierarchy
   const hierarchy = {};
+
+  if (userBase.reporting_officer_id) {
+    const roQuery = `
+      SELECT p.id, p.full_name, p.phone, p.email, p.hrms_id, r.name as role
+      FROM profiles p
+      JOIN roles r ON r.id = p.role_id
+      WHERE p.id = $1
+    `;
+    const roRes = await pool.query(roQuery, [userBase.reporting_officer_id]);
+    hierarchy.reportingOfficer = roRes.rows[0] || null;
+  }
   
   // Station ID is either the user's direct posting station or, for assignments:
   let stationId = posting.station_id;
@@ -1001,6 +1045,7 @@ async function getUserProfileDetails(userId) {
     categoryName: category.category_name || null,
     categoryId: category.category_id || null,
     riskLevel,
+    reportingOfficer: hierarchy.reportingOfficer || null,
     lastAssessmentDate,
     hierarchy,
     summary: {
@@ -1101,7 +1146,8 @@ async function getActiveRolesInScope(userId, role) {
         AND ssp.station_id IN (
           SELECT station_id FROM station_assignments
           WHERE profile_id = $1 AND assignment_type = 'TI_AREA' AND assigned_to IS NULL
-        );
+        )
+        AND r.name != 'TM';
     `;
   } else if (role === "SM" || role === "SS" || ["Cabin Master", "CABIN MASTER"].includes(role) || ["Station Master Supervisor", "STATION MASTER SUPERVISOR", "SMS", "Station Master Supervisior", "Station Master Supervisio"].includes(role)) {
     values.push(userId);
@@ -1116,9 +1162,11 @@ async function getActiveRolesInScope(userId, role) {
       if (userId === '439a8db6-2546-4858-abbc-3752f4acb536') {
         roleCondition = `
           (
-            (r.name IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'TM') AND p.reporting_officer_id IS NULL)
-            OR
-            (p.reporting_officer_id = $1)
+            r.name = 'TM'
+            AND (
+              p.reporting_officer_id = $1
+              OR ssp.station_id = (SELECT station_id FROM staff_station_postings WHERE profile_id = $1 AND is_current = true LIMIT 1)
+            )
           )
         `;
       } else {
@@ -1133,15 +1181,17 @@ async function getActiveRolesInScope(userId, role) {
     }
     query = `
       SELECT DISTINCT r.name
-      FROM staff_station_postings ssp
-      JOIN profiles p ON p.id = ssp.profile_id
+      FROM profiles p
       JOIN roles r ON r.id = p.role_id
+      LEFT JOIN staff_station_postings ssp ON ssp.profile_id = p.id AND ssp.is_current = true
       WHERE p.status = 'active'
-        AND ssp.is_current = true
-        AND ssp.station_id = (
-          SELECT station_id FROM staff_station_postings
-          WHERE profile_id = $1 AND is_current = true
-          LIMIT 1
+        AND (
+          (ssp.station_id = (
+            SELECT station_id FROM staff_station_postings
+            WHERE profile_id = $1 AND is_current = true
+            LIMIT 1
+          ))
+          OR (p.reporting_officer_id = $1)
         )
         AND ${roleCondition};
     `;
@@ -1228,7 +1278,7 @@ async function getEmployeePmeRefStatus(filters) {
           AND assignment_type = 'TI_AREA'
           AND assigned_to IS NULL
       )
-      AND r.name NOT IN ('SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'Station Master Supervisior', 'Station Master Supervisio')
+      AND r.name NOT IN ('SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'Station Master Supervisior', 'Station Master Supervisio', 'TM', 'Train Manager')
     `);
   } else if (creatorRole === "AOM") {
     values.push(creatorUserId);
@@ -1407,7 +1457,7 @@ async function countEmployeePmeRefStatus(filters) {
           AND assignment_type = 'TI_AREA'
           AND assigned_to IS NULL
       )
-      AND r.name NOT IN ('SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'Station Master Supervisior', 'Station Master Supervisio')
+      AND r.name NOT IN ('SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'Station Master Supervisior', 'Station Master Supervisio', 'TM', 'Train Manager')
     `);
   } else if (creatorRole === "AOM") {
     values.push(creatorUserId);

@@ -36,7 +36,6 @@ const CREATE_PERMISSIONS = {
   TI: [
     "PM",
     "SM",
-    "TM",
     "SS",
     "Station Master Supervisor",
     "STATION MASTER SUPERVISOR",
@@ -307,8 +306,10 @@ async function listUsersService(
     let allowedRoles =
       CREATE_PERMISSIONS[creatorRole] || [];
 
-    if (role === 'TM' && ['SM', 'SS', 'Cabin Master', 'CABIN MASTER'].includes(creatorRole) && creatorUserId !== '439a8db6-2546-4858-abbc-3752f4acb536') {
-      allowedRoles = allowedRoles.filter(r => r !== 'TM');
+    if (creatorUserId === '439a8db6-2546-4858-abbc-3752f4acb536') {
+      allowedRoles = ['TM', 'Train Manager'];
+    } else if (role === 'TM' && (creatorRole === 'TI' || ['SM', 'SS', 'Cabin Master', 'CABIN MASTER'].includes(creatorRole))) {
+      allowedRoles = allowedRoles.filter(r => r !== 'TM' && r !== 'Train Manager');
     }
 
     if (!allowedRoles.includes(role)) {
@@ -365,8 +366,14 @@ async function getUserDetailsService(
     return user;
   }
 
-  const allowedRoles =
+  let allowedRoles =
     CREATE_PERMISSIONS[creatorRole] || [];
+
+  if (creatorUserId === '439a8db6-2546-4858-abbc-3752f4acb536') {
+    allowedRoles = ['TM', 'Train Manager'];
+  } else if ((user.role === 'TM' || user.role === 'Train Manager') && (creatorRole === 'TI' || ['SM', 'SS', 'Cabin Master', 'CABIN MASTER'].includes(creatorRole))) {
+    allowedRoles = allowedRoles.filter(r => r !== 'TM' && r !== 'Train Manager');
+  }
 
   if (!allowedRoles.includes(user.role)) {
     throw new Error(

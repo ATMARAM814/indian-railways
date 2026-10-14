@@ -331,7 +331,7 @@ const TIDashboard = () => {
           />
         </div>
         {/* Staff Role Headcount Cards */}
-        <div className="role-stat-grid" style={{ gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' }}>
+        <div className="role-stat-grid" style={{ gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
           {/* Pointsmen Card */}
           <div className="role-stat-card pm">
             <div className="role-stat-info">
@@ -357,20 +357,6 @@ const TIDashboard = () => {
             </div>
             <div className="role-stat-icon-container">
               <UserCheck size={18} />
-            </div>
-          </div>
-
-          {/* Train Managers Card */}
-          <div className="role-stat-card tm">
-            <div className="role-stat-info">
-              <div className="role-stat-title-container">
-                <span className="role-stat-title">Train Managers</span>
-              </div>
-              <span className="role-stat-value">{summary.totalTM}</span>
-              <span className="role-stat-desc">Guard and line controllers</span>
-            </div>
-            <div className="role-stat-icon-container">
-              <UserCog size={18} />
             </div>
           </div>
         </div>

@@ -332,6 +332,23 @@ const WorkforceProfilePage = () => {
               <h3 style={{ margin: '0 0 20px 0', fontSize: '15px', fontWeight: 700, color: '#0F172A', borderBottom: '1px solid #EEF2F6', paddingBottom: '12px' }}>Reporting Hierarchy</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
+                {/* Train Manager specific hierarchy */}
+                {['TM', 'Train Manager'].includes(profile.role) && (
+                  <div style={{ padding: '12px', backgroundColor: '#F8FAFC', borderRadius: '8px', borderLeft: '3px solid #1B365D' }}>
+                    <span style={{ fontSize: '10.5px', color: '#64748B', textTransform: 'uppercase', fontWeight: 600 }}>
+                      Reporting Officer ({profile.reportingOfficer?.role || profile.hierarchy?.reportingOfficer?.role || 'Supervisor'})
+                    </span>
+                    <strong style={{ display: 'block', fontSize: '13.5px', color: '#0F172A', marginTop: '2px' }}>
+                      {profile.reportingOfficer?.full_name || profile.hierarchy?.reportingOfficer?.full_name || profile.hierarchy?.assignedSms?.full_name || profile.hierarchy?.assignedSm?.full_name || 'No Supervisor Assigned'}
+                    </strong>
+                    {(profile.reportingOfficer?.hrms_id || profile.hierarchy?.reportingOfficer?.hrms_id) && (
+                      <span style={{ fontSize: '12px', color: '#64748B' }}>
+                        HRMS: {profile.reportingOfficer?.hrms_id || profile.hierarchy?.reportingOfficer?.hrms_id}
+                      </span>
+                    )}
+                  </div>
+                )}
+
                 {/* Pointsman/Shunting Master specific hierarchy */}
                 {['PM', 'Shunting Master'].includes(profile.role) && (
                   <>

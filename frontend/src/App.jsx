@@ -692,7 +692,7 @@ function App() {
               path="/workforce/train-managers"
               element={
                 <ProtectedRoute>
-                  <RoleRoute allowedRoles={['SS', 'TI', 'AOM', 'SUPER_ADMIN', 'SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'Cabin Master', 'CABIN MASTER']}>
+                  <RoleRoute allowedRoles={['SS', 'AOM', 'SUPER_ADMIN', 'SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'Cabin Master', 'CABIN MASTER']}>
                     <TrainManagersPage />
                   </RoleRoute>
                 </ProtectedRoute>

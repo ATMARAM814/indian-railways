@@ -69,6 +69,7 @@ const Sidebar = ({ isOpen, onClose }) => {
   if (!user) return null;
 
   const role = user.role;
+  const isKakirwar = user?.hrmsId === 'BKFOEQ' || user?.hrms_id === 'BKFOEQ' || user?.id === '439a8db6-2546-4858-abbc-3752f4acb536';
 
   const hasRole = (roleToCheck) => {
     if (!presence) return true; // Show by default while loading
@@ -112,6 +113,11 @@ const Sidebar = ({ isOpen, onClose }) => {
     const isCandidateRole = ['PM', 'TM', 'SHM', 'SHUNTING MASTER', 'Shunting Master', 'SM'].includes(role);
     if (isCandidateRole) {
       main.push({ name: 'My Assessments', path: '/my-assessment', icon: <ClipboardCheck size={18} /> });
+      if (isKakirwar) {
+        main.push({ name: 'Assessments', path: '/assessments', icon: <ClipboardCheck size={18} /> });
+        main.push({ name: 'Reports', path: '/reports', icon: <FileText size={18} /> });
+        workforce.push({ name: 'Train Managers', path: '/workforce/train-managers', icon: <Users size={18} /> });
+      }
     } else if (role === 'SS' || ['Cabin Master', 'CABIN MASTER'].includes(role)) {
       main.push({ name: 'My Assessments', path: '/my-assessment', icon: <ClipboardCheck size={18} /> });
       main.push({ name: 'Assessments', path: '/assessments', icon: <ClipboardCheck size={18} /> });
@@ -148,7 +154,7 @@ const Sidebar = ({ isOpen, onClose }) => {
       if (hasRole('SM')) {
         workforce.push({ name: 'Station Masters', path: '/workforce/station-masters', icon: <Users size={18} /> });
       }
-      if (hasRole('TM')) {
+      if (role !== 'TI' && hasRole('TM')) {
         workforce.push({ name: 'Train Managers', path: '/workforce/train-managers', icon: <Users size={18} /> });
       }
       if (hasRole('Cabin Master')) {
@@ -403,12 +409,12 @@ const Sidebar = ({ isOpen, onClose }) => {
           {role === 'AOM' || role === 'SUPER_ADMIN' ? (
             <div className="sidebar-user-info" style={{ display: 'flex', flexDirection: 'column', textDecoration: 'none' }}>
               <span className="sidebar-username">{user.fullName || user.full_name || 'Railway Staff'}</span>
-              <span className="sidebar-role-badge">{role === 'SS' ? 'SM Incharge' : role.replace('_', ' ')}</span>
+              <span className="sidebar-role-badge">{isKakirwar ? 'Lobby Supervisor' : (role === 'SS' ? 'SM Incharge' : role.replace('_', ' '))}</span>
             </div>
           ) : (
             <Link to="/profile" className="sidebar-user-info" style={{ display: 'flex', flexDirection: 'column', textDecoration: 'none', cursor: 'pointer' }}>
               <span className="sidebar-username">{user.fullName || user.full_name || 'Railway Staff'}</span>
-              <span className="sidebar-role-badge">{role === 'SS' ? 'SM Incharge' : role.replace('_', ' ')}</span>
+              <span className="sidebar-role-badge">{isKakirwar ? 'Lobby Supervisor' : (role === 'SS' ? 'SM Incharge' : role.replace('_', ' '))}</span>
             </Link>
           )}
 

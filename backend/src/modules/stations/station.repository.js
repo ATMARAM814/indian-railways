@@ -35,23 +35,41 @@ async function getStationStaff(stationId) {
       d.name as division_name,
       d.zone as "zoneName",
       d.zone as zone_name,
-      (
-        SELECT p_ti.full_name || ' (TI)'
-        FROM station_assignments sa
-        JOIN profiles p_ti ON p_ti.id = sa.profile_id
-        WHERE sa.station_id = s.id 
-          AND sa.assignment_type = 'TI_AREA'
-          AND sa.assigned_to IS NULL
-        LIMIT 1
+      COALESCE(
+        (
+          SELECT ro.full_name || ' (' || r_ro.name || ')'
+          FROM profiles ro
+          JOIN roles r_ro ON r_ro.id = ro.role_id
+          WHERE ro.id = p.reporting_officer_id
+          LIMIT 1
+        ),
+        (
+          SELECT p_ti.full_name || ' (TI)'
+          FROM station_assignments sa
+          JOIN profiles p_ti ON p_ti.id = sa.profile_id
+          WHERE sa.station_id = s.id 
+            AND sa.assignment_type = 'TI_AREA'
+            AND sa.assigned_to IS NULL
+          LIMIT 1
+        )
       ) as "reportingOfficer",
-      (
-        SELECT p_ti.full_name || ' (TI)'
-        FROM station_assignments sa
-        JOIN profiles p_ti ON p_ti.id = sa.profile_id
-        WHERE sa.station_id = s.id 
-          AND sa.assignment_type = 'TI_AREA'
-          AND sa.assigned_to IS NULL
-        LIMIT 1
+      COALESCE(
+        (
+          SELECT ro.full_name || ' (' || r_ro.name || ')'
+          FROM profiles ro
+          JOIN roles r_ro ON r_ro.id = ro.role_id
+          WHERE ro.id = p.reporting_officer_id
+          LIMIT 1
+        ),
+        (
+          SELECT p_ti.full_name || ' (TI)'
+          FROM station_assignments sa
+          JOIN profiles p_ti ON p_ti.id = sa.profile_id
+          WHERE sa.station_id = s.id 
+            AND sa.assignment_type = 'TI_AREA'
+            AND sa.assigned_to IS NULL
+          LIMIT 1
+        )
       ) as reporting_officer,
       COALESCE(
         (

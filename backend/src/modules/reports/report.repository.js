@@ -54,7 +54,7 @@ function buildAssessmentsWhere(filters, scope, values) {
     conditions.push(`ssp.station_id = $${values.length}`);
     values.push(scope.userId);
     const allowedRolesStr = scope.userId === '439a8db6-2546-4858-abbc-3752f4acb536'
-      ? "'PM', 'Shunting Master', 'TM'"
+      ? "'TM'"
       : "'PM', 'Shunting Master'";
     conditions.push(`
       (
@@ -241,7 +241,7 @@ function buildStaffPerformanceWhere(filters, scope, values) {
     conditions.push(`ssp.station_id = $${values.length}`);
     values.push(scope.userId);
     const allowedRolesStr = scope.userId === '439a8db6-2546-4858-abbc-3752f4acb536'
-      ? "'PM', 'Shunting Master', 'TM'"
+      ? "'TM'"
       : "'PM', 'Shunting Master'";
     conditions.push(`
       (
@@ -540,6 +540,16 @@ async function getStationSummaryReport(filters, scope) {
       COUNT(DISTINCT a.id) FILTER (WHERE a.status = 'completed')::int as "completedAssessments",
       COUNT(DISTINCT a.id) FILTER (WHERE a.status IN ('created', 'mcq_submitted'))::int as "pendingAssessments",
       COALESCE(AVG(a.percentage) FILTER (WHERE a.status = 'completed')::numeric(10,2), 0) as "averageScore",
+      CASE
+        WHEN COUNT(DISTINCT a.id) FILTER (WHERE a.status = 'completed') > 0 THEN
+          CASE
+            WHEN COALESCE(AVG(a.percentage) FILTER (WHERE a.status = 'completed'), 0) >= 80 THEN 'A'
+            WHEN COALESCE(AVG(a.percentage) FILTER (WHERE a.status = 'completed'), 0) >= 50 THEN 'B'
+            WHEN COALESCE(AVG(a.percentage) FILTER (WHERE a.status = 'completed'), 0) >= 26 THEN 'C'
+            ELSE 'D'
+          END
+        ELSE NULL
+      END as "stationCategory",
       COUNT(DISTINCT p.id) FILTER (WHERE sc.category_code = 'D')::int as "highRiskStaff"
     FROM stations s
     LEFT JOIN staff_station_postings ssp ON ssp.station_id = s.id AND ssp.is_current = true
@@ -603,7 +613,7 @@ function buildApprovalWhere(filters, scope, values) {
     conditions.push(`ssp.station_id = $${values.length}`);
     values.push(scope.userId);
     const allowedRolesStr = scope.userId === '439a8db6-2546-4858-abbc-3752f4acb536'
-      ? "'PM', 'Shunting Master', 'TM'"
+      ? "'TM'"
       : "'PM', 'Shunting Master'";
     conditions.push(`
       (
@@ -755,7 +765,7 @@ function buildProfileScopeConditions(scope, values, tableAlias = 'p') {
     conditions.push(`ssp.station_id = $${values.length}`);
     values.push(scope.userId);
     const allowedRolesStr = scope.userId === '439a8db6-2546-4858-abbc-3752f4acb536'
-      ? "'PM', 'Shunting Master', 'TM'"
+      ? "'TM'"
       : "'PM', 'Shunting Master'";
     conditions.push(`
       (
