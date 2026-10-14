@@ -69,6 +69,7 @@ const Sidebar = ({ isOpen, onClose }) => {
   if (!user) return null;
 
   const role = user.role;
+  const isKakirwar = user?.hrmsId === 'BKFOEQ' || user?.hrms_id === 'BKFOEQ' || user?.id === '439a8db6-2546-4858-abbc-3752f4acb536';
 
   const hasRole = (roleToCheck) => {
     if (!presence) return true; // Show by default while loading
@@ -110,7 +111,6 @@ const Sidebar = ({ isOpen, onClose }) => {
     main.push({ name: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={18} /> });
     
     const isCandidateRole = ['PM', 'TM', 'SHM', 'SHUNTING MASTER', 'Shunting Master', 'SM'].includes(role);
-    const isKakirwar = user?.hrmsId === 'BKFOEQ' || user?.hrms_id === 'BKFOEQ' || user?.id === '439a8db6-2546-4858-abbc-3752f4acb536';
     if (isCandidateRole) {
       main.push({ name: 'My Assessments', path: '/my-assessment', icon: <ClipboardCheck size={18} /> });
       if (isKakirwar) {
