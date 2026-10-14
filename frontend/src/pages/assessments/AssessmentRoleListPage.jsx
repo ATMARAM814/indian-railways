@@ -209,6 +209,11 @@ const AssessmentRoleListPage = () => {
 
   if (!user) return <Navigate to="/login" replace />;
 
+  // Station In-Charge must not assess Station Masters
+  if (roleCode === 'SM' && ['SS', 'Cabin Master', 'CABIN MASTER', 'SM'].includes(user?.role)) {
+    return <Navigate to="/assessments" replace />;
+  }
+
   const handleFilterChange = (name, value) => {
     setFilters((prev) => ({ ...prev, [name]: value }));
     setPage(1);

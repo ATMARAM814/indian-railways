@@ -918,7 +918,7 @@ async function getRoleStatsForAssessor(assessorId, assessorRole, roleCode) {
 async function getAssessorRoleStats(assessorId, assessorRole) {
   let targetRoles = [];
   if (assessorRole === 'SS' || ['Cabin Master', 'CABIN MASTER'].includes(assessorRole)) {
-    targetRoles = ['PM', 'Shunting Master', 'SM'];
+    targetRoles = ['PM', 'Shunting Master'];
     if (assessorId === '439a8db6-2546-4858-abbc-3752f4acb536') {
       targetRoles.push('TM');
     }
@@ -966,33 +966,37 @@ async function getEligibleStaff(assessorId, assessorRole, roleCode, filters = {}
       )
     `);
   } else if (assessorRole === 'SS' || ['Cabin Master', 'CABIN MASTER'].includes(assessorRole)) {
-    values.push(assessorId);
-    conditions.push(`
-      ssp.station_id = (
-        SELECT station_id
-        FROM staff_station_postings
-        WHERE profile_id = $${values.length}
-          AND is_current = true
-        LIMIT 1
-      )
-    `);
-
-    if (assessorId === '439a8db6-2546-4858-abbc-3752f4acb536') {
-      conditions.push(`
-        (
-          (r.name IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'TM', 'Train Manager', 'SM') AND p.reporting_officer_id IS NULL)
-          OR
-          (p.reporting_officer_id = $${values.length})
-        )
-      `);
+    if (roleCode === 'SM') {
+      conditions.push('1 = 0');
     } else {
+      values.push(assessorId);
       conditions.push(`
-        (
-          (r.name IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'SM') AND p.reporting_officer_id IS NULL)
-          OR
-          (p.reporting_officer_id = $${values.length})
+        ssp.station_id = (
+          SELECT station_id
+          FROM staff_station_postings
+          WHERE profile_id = $${values.length}
+            AND is_current = true
+          LIMIT 1
         )
       `);
+
+      if (assessorId === '439a8db6-2546-4858-abbc-3752f4acb536') {
+        conditions.push(`
+          (
+            (r.name IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'TM', 'Train Manager') AND p.reporting_officer_id IS NULL)
+            OR
+            (p.reporting_officer_id = $${values.length})
+          )
+        `);
+      } else {
+        conditions.push(`
+          (
+            (r.name IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM') AND p.reporting_officer_id IS NULL)
+            OR
+            (p.reporting_officer_id = $${values.length})
+          )
+        `);
+      }
     }
   } else if (assessorRole === 'SM') {
     conditions.push('1 = 0');

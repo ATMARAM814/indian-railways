@@ -56,19 +56,55 @@ async function createAssessment({
   const reportingOfficerId = checkReportingRes.rows[0]?.reporting_officer_id;
   const reportingOfficerRole = checkReportingRes.rows[0]?.reporting_officer_role;
 
+  // Station In-Charge (SS / Cabin Master / SM) cannot create or conduct assessments for Station Masters
+  if (assessedRoleCode === 'SM' && ['SS', 'Station Master Incharge', 'STATION MASTER INCHARGE', 'Cabin Master', 'CABIN MASTER', 'SM', 'Station Master', 'STATION MASTER'].includes(assessorRoleCode)) {
+    throw new Error("The Station Master assessment must not be conducted by the Station In-Charge. Assessments must be conducted by the Traffic Inspector (TI).");
+  }
+
   let finalAssessorUserId = assessorUserId;
   let finalAssessorRoleCode = assessorRoleCode;
 
   if (reportingOfficerId && (assessmentType === 'Retest' || ['TI', 'AOM', 'SUPER_ADMIN'].includes(assessorRoleCode))) {
-    finalAssessorUserId = reportingOfficerId;
-    finalAssessorRoleCode = reportingOfficerRole || 'SS';
+    // If the assessed employee is an SM, ensure the assessor is NOT an SS / Cabin Master / SM
+    if (assessedRoleCode === 'SM' && ['SS', 'Station Master Incharge', 'STATION MASTER INCHARGE', 'Cabin Master', 'CABIN MASTER', 'SM', 'Station Master', 'STATION MASTER'].includes(reportingOfficerRole)) {
+      if (assessorRoleCode === 'TI') {
+        finalAssessorUserId = assessorUserId;
+        finalAssessorRoleCode = 'TI';
+      } else {
+        // Find the station's assigned TI
+        const tiLookupRes = await pool.query(
+          `SELECT sa.profile_id, r.name as role_name
+           FROM staff_station_postings ssp
+           JOIN station_assignments sa ON sa.station_id = ssp.station_id AND sa.assignment_type = 'TI_AREA' AND sa.assigned_to IS NULL
+           JOIN profiles p ON p.id = sa.profile_id
+           JOIN roles r ON r.id = p.role_id
+           WHERE ssp.profile_id = $1 AND ssp.is_current = true
+           LIMIT 1`,
+          [assessedUserId]
+        );
+        if (tiLookupRes.rows[0]) {
+          finalAssessorUserId = tiLookupRes.rows[0].profile_id;
+          finalAssessorRoleCode = tiLookupRes.rows[0].role_name || 'TI';
+        } else {
+          finalAssessorUserId = assessorUserId;
+          finalAssessorRoleCode = assessorRoleCode;
+        }
+      }
+    } else {
+      finalAssessorUserId = reportingOfficerId;
+      finalAssessorRoleCode = reportingOfficerRole || 'SS';
+    }
   }
 
   if (['SM', 'Station Master', 'STATION MASTER'].includes(finalAssessorRoleCode)) {
     throw new Error("Station Masters do not have authority to create or conduct assessments.");
   }
 
-  if (reportingOfficerId !== finalAssessorUserId && assessmentType !== 'Retest' && assessmentCycle !== 'Retest after Counseling') {
+  if (assessedRoleCode === 'SM' && ['SS', 'Station Master Incharge', 'STATION MASTER INCHARGE', 'Cabin Master', 'CABIN MASTER'].includes(finalAssessorRoleCode)) {
+    throw new Error("The Station Master assessment must not be conducted by the Station In-Charge. Assessments must be conducted by the Traffic Inspector (TI).");
+  }
+
+  if (assessmentType !== 'Retest' && assessmentCycle !== 'Retest after Counseling') {
     validateAssessmentHierarchy(
       finalAssessorRoleCode,
       assessedRoleCode,
@@ -160,9 +196,16 @@ function validateAssessmentHierarchy(
     return;
   }
 
+  // Station In-Charge must not assess Station Masters
+  if (assessedRoleCode === 'SM' && ['SS', 'Station Master Incharge', 'STATION MASTER INCHARGE', 'Cabin Master', 'CABIN MASTER', 'SM', 'Station Master', 'STATION MASTER'].includes(assessorRoleCode)) {
+    throw new Error(
+      "The Station Master assessment must not be conducted by the Station In-Charge. Assessments must be conducted by the Traffic Inspector (TI)."
+    );
+  }
+
   const allowedMap = {
     SM: [],
-    SS: ["PM", "Shunting Master", "SHUNTING MASTER", "SHM", "Cabin Master", "CABIN MASTER", "SM"],
+    SS: ["PM", "Shunting Master", "SHUNTING MASTER", "SHM", "Cabin Master", "CABIN MASTER"],
     "Cabin Master": ["PM", "Shunting Master", "SHUNTING MASTER", "SHM"],
     "CABIN MASTER": ["PM", "Shunting Master", "SHUNTING MASTER", "SHM"],
     TI: ["SM", "SS", "TM", "Cabin Master", "CABIN MASTER"],
@@ -267,31 +310,53 @@ async function submitEvaluation(assessmentId, userId, submittedAnswers, operatio
     throw new Error("Station Masters do not have authority to evaluate assessments.");
   }
 
+  // Station In-Charge must not conduct or evaluate assessments for Station Masters
+  if (assessment.assessed_role_code === 'SM' && ['SS', 'Station Master Incharge', 'STATION MASTER INCHARGE', 'Cabin Master', 'CABIN MASTER', 'SM', 'Station Master', 'STATION MASTER'].includes(userRoleName)) {
+    throw new Error("The Station Master assessment must not be conducted or evaluated by the Station In-Charge. Assessments must be evaluated by the Traffic Inspector (TI).");
+  }
+
   const checkAuthRes = await pool.query(
     `SELECT 
        (
-         r_user.name IN ('Cabin Master', 'CABIN MASTER', 'SS', 'Station Master Incharge', 'STATION MASTER INCHARGE', 'SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR')
-         AND EXISTS (
-           SELECT 1 
-           FROM staff_station_postings ssp1
-           JOIN staff_station_postings ssp2 ON ssp1.station_id = ssp2.station_id
-           WHERE ssp1.profile_id = $1 
-             AND ssp2.profile_id = $2 
-             AND ssp1.is_current = true 
-             AND ssp2.is_current = true
+         (
+           ($3 = 'SM' AND r_user.name IN ('SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'TI', 'AOM', 'SUPER_ADMIN'))
+           OR
+           ($3 != 'SM' AND r_user.name IN ('Cabin Master', 'CABIN MASTER', 'SS', 'Station Master Incharge', 'STATION MASTER INCHARGE', 'SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR'))
+         )
+         AND (
+           r_user.name IN ('AOM', 'SUPER_ADMIN')
+           OR EXISTS (
+             SELECT 1 
+             FROM staff_station_postings ssp1
+             JOIN staff_station_postings ssp2 ON ssp1.station_id = ssp2.station_id
+             WHERE ssp1.profile_id = $1 
+               AND ssp2.profile_id = $2 
+               AND ssp1.is_current = true 
+               AND ssp2.is_current = true
+           )
+           OR EXISTS (
+             SELECT 1
+             FROM staff_station_postings ssp
+             JOIN station_assignments sa ON sa.station_id = ssp.station_id AND sa.assignment_type = 'TI_AREA' AND sa.assigned_to IS NULL
+             WHERE ssp.profile_id = $1 AND ssp.is_current = true AND sa.profile_id = $2
+           )
          )
        ) as "isStationAuthority"
      FROM profiles p_user
      JOIN roles r_user ON r_user.id = p_user.role_id
      WHERE p_user.id = $2`,
-    [assessment.assessed_user_id, userId]
+    [assessment.assessed_user_id, userId, assessment.assessed_role_code]
   );
 
   const isAssessor = assessment.assessor_user_id === userId;
   const isStationAuthority = checkAuthRes.rows[0]?.isStationAuthority || false;
 
+  if (assessment.assessed_role_code === 'SM' && ['SS', 'Station Master Incharge', 'STATION MASTER INCHARGE', 'Cabin Master', 'CABIN MASTER'].includes(userRoleName)) {
+    throw new Error("The Station Master assessment must not be conducted or evaluated by the Station In-Charge. Assessments must be evaluated by the Traffic Inspector (TI).");
+  }
+
   if (!isAssessor && !isStationAuthority) {
-    throw new Error("Only designated assessor or station incharge/supervisor can submit evaluation");
+    throw new Error("Only designated assessor or authorized supervisor can submit evaluation");
   }
 
   const isMcqSubmitted = assessment.status === "mcq_submitted";
@@ -498,31 +563,53 @@ async function saveEvaluationDraftService(
   }
 
   const pool = require("../../config/database");
+  const userRoleRes = await pool.query(
+    `SELECT r.name FROM profiles p JOIN roles r ON r.id = p.role_id WHERE p.id = $1`,
+    [assessorId]
+  );
+  const userRoleName = userRoleRes.rows[0]?.name;
+  if (assessment.assessed_role_code === 'SM' && ['SS', 'Station Master Incharge', 'STATION MASTER INCHARGE', 'Cabin Master', 'CABIN MASTER', 'SM', 'Station Master', 'STATION MASTER'].includes(userRoleName)) {
+    throw new Error("Station In-Charge does not have authority to evaluate Station Masters.");
+  }
+
   const checkAuthRes = await pool.query(
     `SELECT 
        (
-         r_user.name IN ('SM', 'Station Master', 'STATION MASTER', 'Cabin Master', 'CABIN MASTER', 'SS', 'Station Master Incharge', 'STATION MASTER INCHARGE', 'SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR')
-         AND EXISTS (
-           SELECT 1 
-           FROM staff_station_postings ssp1
-           JOIN staff_station_postings ssp2 ON ssp1.station_id = ssp2.station_id
-           WHERE ssp1.profile_id = $1 
-             AND ssp2.profile_id = $2 
-             AND ssp1.is_current = true 
-             AND ssp2.is_current = true
+         (
+           ($3 = 'SM' AND r_user.name IN ('SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'TI', 'AOM', 'SUPER_ADMIN'))
+           OR
+           ($3 != 'SM' AND r_user.name IN ('SM', 'Station Master', 'STATION MASTER', 'Cabin Master', 'CABIN MASTER', 'SS', 'Station Master Incharge', 'STATION MASTER INCHARGE', 'SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR'))
+         )
+         AND (
+           r_user.name IN ('AOM', 'SUPER_ADMIN')
+           OR EXISTS (
+             SELECT 1 
+             FROM staff_station_postings ssp1
+             JOIN staff_station_postings ssp2 ON ssp1.station_id = ssp2.station_id
+             WHERE ssp1.profile_id = $1 
+               AND ssp2.profile_id = $2 
+               AND ssp1.is_current = true 
+               AND ssp2.is_current = true
+           )
+           OR EXISTS (
+             SELECT 1
+             FROM staff_station_postings ssp
+             JOIN station_assignments sa ON sa.station_id = ssp.station_id AND sa.assignment_type = 'TI_AREA' AND sa.assigned_to IS NULL
+             WHERE ssp.profile_id = $1 AND ssp.is_current = true AND sa.profile_id = $2
+           )
          )
        ) as "isStationAuthority"
      FROM profiles p_user
      JOIN roles r_user ON r_user.id = p_user.role_id
      WHERE p_user.id = $2`,
-    [assessment.assessed_user_id, assessorId]
+    [assessment.assessed_user_id, assessorId, assessment.assessed_role_code]
   );
 
   const isAssessor = assessment.assessor_user_id === assessorId;
   const isStationAuthority = checkAuthRes.rows[0]?.isStationAuthority || false;
 
   if (!isAssessor && !isStationAuthority) {
-    throw new Error("Only assessor or station master can save draft");
+    throw new Error("Only designated assessor or authorized supervisor can save draft");
   }
 
   if (operationalDetails) {
@@ -547,31 +634,53 @@ async function getEvaluationDraftService(
   }
 
   const pool = require("../../config/database");
+  const userRoleRes = await pool.query(
+    `SELECT r.name FROM profiles p JOIN roles r ON r.id = p.role_id WHERE p.id = $1`,
+    [userId]
+  );
+  const userRoleName = userRoleRes.rows[0]?.name;
+  if (assessment.assessed_role_code === 'SM' && ['SS', 'Station Master Incharge', 'STATION MASTER INCHARGE', 'Cabin Master', 'CABIN MASTER', 'SM', 'Station Master', 'STATION MASTER'].includes(userRoleName)) {
+    throw new Error("Station In-Charge does not have authority to evaluate Station Masters.");
+  }
+
   const checkAuthRes = await pool.query(
     `SELECT 
        (
-         r_user.name IN ('SM', 'Station Master', 'STATION MASTER', 'Cabin Master', 'CABIN MASTER', 'SS', 'Station Master Incharge', 'STATION MASTER INCHARGE', 'SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR')
-         AND EXISTS (
-           SELECT 1 
-           FROM staff_station_postings ssp1
-           JOIN staff_station_postings ssp2 ON ssp1.station_id = ssp2.station_id
-           WHERE ssp1.profile_id = $1 
-             AND ssp2.profile_id = $2 
-             AND ssp1.is_current = true 
-             AND ssp2.is_current = true
+         (
+           ($3 = 'SM' AND r_user.name IN ('SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'TI', 'AOM', 'SUPER_ADMIN'))
+           OR
+           ($3 != 'SM' AND r_user.name IN ('SM', 'Station Master', 'STATION MASTER', 'Cabin Master', 'CABIN MASTER', 'SS', 'Station Master Incharge', 'STATION MASTER INCHARGE', 'SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR'))
+         )
+         AND (
+           r_user.name IN ('AOM', 'SUPER_ADMIN')
+           OR EXISTS (
+             SELECT 1 
+             FROM staff_station_postings ssp1
+             JOIN staff_station_postings ssp2 ON ssp1.station_id = ssp2.station_id
+             WHERE ssp1.profile_id = $1 
+               AND ssp2.profile_id = $2 
+               AND ssp1.is_current = true 
+               AND ssp2.is_current = true
+           )
+           OR EXISTS (
+             SELECT 1
+             FROM staff_station_postings ssp
+             JOIN station_assignments sa ON sa.station_id = ssp.station_id AND sa.assignment_type = 'TI_AREA' AND sa.assigned_to IS NULL
+             WHERE ssp.profile_id = $1 AND ssp.is_current = true AND sa.profile_id = $2
+           )
          )
        ) as "isStationAuthority"
      FROM profiles p_user
      JOIN roles r_user ON r_user.id = p_user.role_id
      WHERE p_user.id = $2`,
-    [assessment.assessed_user_id, userId]
+    [assessment.assessed_user_id, userId, assessment.assessed_role_code]
   );
 
   const isAssessor = assessment.assessor_user_id === userId;
   const isStationAuthority = checkAuthRes.rows[0]?.isStationAuthority || false;
 
   if (!isAssessor && !isStationAuthority) {
-    throw new Error("Only assessor or station master can view evaluation draft");
+    throw new Error("Only designated assessor or authorized supervisor can view evaluation draft");
   }
 
   return await getEvaluationDraftAnswers(
@@ -853,6 +962,7 @@ async function getPmeRefStatusService(userId) {
 
 module.exports = {
   createAssessment,
+  validateAssessmentHierarchy,
   listAssessmentQuestions,
   submitMcqAnswers,
   submitEvaluation,

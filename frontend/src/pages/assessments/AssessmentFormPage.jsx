@@ -56,7 +56,11 @@ const AssessmentFormPage = () => {
     remarksForApprover: ''
   });
 
-  const isReadOnly = isViewMode || assessmentResult?.approval_status === 'approved';
+  const isSmAssessment = roleCode === 'SM' || assessmentResult?.assessed_role_code === 'SM';
+  const isIncharge = ['SS', 'Cabin Master', 'CABIN MASTER', 'SM'].includes(user?.role);
+  const cannotEvaluateSm = isSmAssessment && isIncharge;
+
+  const isReadOnly = isViewMode || assessmentResult?.approval_status === 'approved' || cannotEvaluateSm;
 
   useEffect(() => {
     const loadFormInfo = async () => {
@@ -66,6 +70,14 @@ const AssessmentFormPage = () => {
         if (detailsRes.success) {
           setAssessmentResult(detailsRes.data);
           setMcqScore(detailsRes.data.mcq_score || 0);
+
+          const isSm = detailsRes.data.assessed_role_code === 'SM' || roleCode === 'SM';
+          if (!isViewMode && isSm && ['SS', 'Cabin Master', 'CABIN MASTER', 'SM'].includes(user?.role)) {
+            setFeedback({
+              type: 'error',
+              message: 'The Station Master assessment must not be conducted or evaluated by the Station In-Charge. Assessments must be conducted by the Traffic Inspector (TI).'
+            });
+          }
 
           // Populate operational details
           setOperationalDetails({
@@ -284,6 +296,10 @@ const AssessmentFormPage = () => {
   }
 
   const onSave = async () => {
+    if (cannotEvaluateSm) {
+      setFeedback({ type: 'error', message: 'The Station Master assessment must not be conducted or evaluated by the Station In-Charge. Assessments must be conducted by the Traffic Inspector (TI).' });
+      return;
+    }
     setFeedback(null);
     setSavingDraft(true);
 
@@ -310,6 +326,10 @@ const AssessmentFormPage = () => {
   };
 
   const onSubmit = async () => {
+    if (cannotEvaluateSm) {
+      setFeedback({ type: 'error', message: 'The Station Master assessment must not be conducted or evaluated by the Station In-Charge. Assessments must be conducted by the Traffic Inspector (TI).' });
+      return;
+    }
     setFeedback(null);
 
     // 1. Validate that all checklist questions have valid marks entered

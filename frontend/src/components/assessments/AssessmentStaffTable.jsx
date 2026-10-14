@@ -23,6 +23,10 @@ export const AssessmentStaffTable = ({
   const navigate = useNavigate();
   const { user: currentUser } = useAuth();
 
+  const isIncharge = ['SS', 'Cabin Master', 'CABIN MASTER', 'SM'].includes(currentUser?.role);
+  const isSmRole = roleCode === 'SM';
+  const cannotConductSm = isIncharge && isSmRole;
+
   // Modals state
   const [selectedRow, setSelectedRow] = useState(null);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
@@ -77,6 +81,10 @@ export const AssessmentStaffTable = ({
 
   // Open scheduling modal
   const handleOpenSchedule = (row) => {
+    if (cannotConductSm) {
+      alert("The Station Master assessment must not be conducted by the Station In-Charge. Assessments must be conducted by the Traffic Inspector (TI).");
+      return;
+    }
     setSelectedRow(row);
     setAssessmentCycle('Monthly Assessment');
     setAssessmentType('Periodic Assessment');
@@ -236,7 +244,7 @@ export const AssessmentStaffTable = ({
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
 
                       {/* Case 1 & 4: Show Schedule */}
-                      {(assessmentCase === 1 || assessmentCase === 4) && (
+                      {(assessmentCase === 1 || assessmentCase === 4) && !cannotConductSm && (
                         <button
                           type="button"
                           onClick={() => handleOpenSchedule(row)}
@@ -913,24 +921,30 @@ export const AssessmentStaffTable = ({
 
                 <div className="status-btn-group">
                   {/* Evaluate button */}
-                  <button
-                    type="button"
-                    disabled={
-                      !['mcq_submitted', 'completed', 'evaluated', 'pending_approval', 'approved'].includes(selectedRow.assessment_status) ||
-                      (selectedRow.assessment_status === 'completed' && selectedRow.approval_status !== 'rejected') ||
-                      selectedRow.approval_status === 'approved'
-                    }
-                    onClick={() => {
-                      setShowStatusModal(false);
-                      navigate(`/assessments/${roleCode}/${selectedRow.assessment_id}/form`);
-                    }}
-                    className={`status-btn-eval ${(['mcq_submitted', 'completed', 'evaluated', 'pending_approval', 'approved'].includes(selectedRow.assessment_status) &&
-                        !(selectedRow.assessment_status === 'completed' && selectedRow.approval_status !== 'rejected') &&
-                        selectedRow.approval_status !== 'approved') ? 'active' : 'disabled'
-                      }`}
-                  >
-                    Evaluate
-                  </button>
+                  {cannotConductSm ? (
+                    <span style={{ fontSize: '12px', color: '#64748B', fontStyle: 'italic', padding: '0 8px' }}>
+                      Station Master assessments must be evaluated by the Traffic Inspector (TI).
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={
+                        !['mcq_submitted', 'completed', 'evaluated', 'pending_approval', 'approved'].includes(selectedRow.assessment_status) ||
+                        (selectedRow.assessment_status === 'completed' && selectedRow.approval_status !== 'rejected') ||
+                        selectedRow.approval_status === 'approved'
+                      }
+                      onClick={() => {
+                        setShowStatusModal(false);
+                        navigate(`/assessments/${roleCode}/${selectedRow.assessment_id}/form`);
+                      }}
+                      className={`status-btn-eval ${(['mcq_submitted', 'completed', 'evaluated', 'pending_approval', 'approved'].includes(selectedRow.assessment_status) &&
+                          !(selectedRow.assessment_status === 'completed' && selectedRow.approval_status !== 'rejected') &&
+                          selectedRow.approval_status !== 'approved') ? 'active' : 'disabled'
+                        }`}
+                    >
+                      Evaluate
+                    </button>
+                  )}
 
                   <button
                     type="button"
