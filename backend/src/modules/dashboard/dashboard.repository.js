@@ -1169,8 +1169,8 @@ async function getStationStaff(stationId, profileId = null) {
     JOIN stations s ON s.id = ssp.station_id
     LEFT JOIN divisions d ON d.id = s.division_id
     WHERE ssp.is_current = true
-      AND (ssp.station_id = $1 OR ($2::uuid IS NOT NULL AND p.reporting_officer_id = $2::uuid))
-      AND ($2 != '75524970-3891-4321-9e96-2c0002d601a3' OR r.name != 'TM')
+      AND (ssp.station_id = $1::uuid OR ($2::uuid IS NOT NULL AND p.reporting_officer_id = $2::uuid))
+      AND ($2::uuid != '75524970-3891-4321-9e96-2c0002d601a3'::uuid OR r.name != 'TM')
     ORDER BY p.full_name;
   `;
   const result = await pool.query(query, [stationId, profileId]);
@@ -1656,23 +1656,23 @@ async function getSmSupervisorSummary(stationId, profileId) {
     SELECT
       COUNT(DISTINCT p.id) FILTER (WHERE r.name = 'PM')::int as total_pm,
       COUNT(DISTINCT p.id) FILTER (WHERE r.name IN ('SM', 'STATION MASTER'))::int as total_sm,
-      COUNT(DISTINCT p.id) FILTER (WHERE r.name IN ('TM', 'TRAIN MANAGER') AND $2 != '75524970-3891-4321-9e96-2c0002d601a3')::int as total_tm,
+      COUNT(DISTINCT p.id) FILTER (WHERE r.name IN ('TM', 'TRAIN MANAGER') AND $2::uuid != '75524970-3891-4321-9e96-2c0002d601a3'::uuid)::int as total_tm,
       COUNT(DISTINCT p.id) FILTER (WHERE r.name = 'SS')::int as total_ss,
       COUNT(DISTINCT p.id) FILTER (WHERE r.name IN ('Cabin Master', 'CABIN MASTER'))::int as total_cm,
       COUNT(DISTINCT p.id) FILTER (WHERE r.name IN ('Shunting Master', 'SHUNTING MASTER', 'SHM'))::int as total_shm,
-      COUNT(DISTINCT p.id) FILTER (WHERE sc.category_code = 'A' AND ($2 != '75524970-3891-4321-9e96-2c0002d601a3' OR r.name != 'TM'))::int as category_a,
-      COUNT(DISTINCT p.id) FILTER (WHERE sc.category_code = 'B' AND ($2 != '75524970-3891-4321-9e96-2c0002d601a3' OR r.name != 'TM'))::int as category_b,
-      COUNT(DISTINCT p.id) FILTER (WHERE sc.category_code = 'C' AND ($2 != '75524970-3891-4321-9e96-2c0002d601a3' OR r.name != 'TM'))::int as category_c,
-      COUNT(DISTINCT p.id) FILTER (WHERE sc.category_code = 'D' AND ($2 != '75524970-3891-4321-9e96-2c0002d601a3' OR r.name != 'TM'))::int as category_d,
+      COUNT(DISTINCT p.id) FILTER (WHERE sc.category_code = 'A' AND ($2::uuid != '75524970-3891-4321-9e96-2c0002d601a3'::uuid OR r.name != 'TM'))::int as category_a,
+      COUNT(DISTINCT p.id) FILTER (WHERE sc.category_code = 'B' AND ($2::uuid != '75524970-3891-4321-9e96-2c0002d601a3'::uuid OR r.name != 'TM'))::int as category_b,
+      COUNT(DISTINCT p.id) FILTER (WHERE sc.category_code = 'C' AND ($2::uuid != '75524970-3891-4321-9e96-2c0002d601a3'::uuid OR r.name != 'TM'))::int as category_c,
+      COUNT(DISTINCT p.id) FILTER (WHERE sc.category_code = 'D' AND ($2::uuid != '75524970-3891-4321-9e96-2c0002d601a3'::uuid OR r.name != 'TM'))::int as category_d,
       (
         SELECT COUNT(*)::int
         FROM assessments a
         JOIN profiles p_sub ON p_sub.id = a.assessed_user_id
         JOIN roles r_sub ON r_sub.id = p_sub.role_id
         WHERE a.status = 'completed'
-          AND ($2 != '75524970-3891-4321-9e96-2c0002d601a3' OR r_sub.name != 'TM')
+          AND ($2::uuid != '75524970-3891-4321-9e96-2c0002d601a3'::uuid OR r_sub.name != 'TM')
           AND a.assessed_user_id IN (
-            SELECT profile_id FROM staff_station_postings WHERE station_id = $1 AND is_current = true
+            SELECT profile_id FROM staff_station_postings WHERE station_id = $1::uuid AND is_current = true
           )
       ) as completed_assessments,
       (
@@ -1681,9 +1681,9 @@ async function getSmSupervisorSummary(stationId, profileId) {
         JOIN profiles p_sub ON p_sub.id = a.assessed_user_id
         JOIN roles r_sub ON r_sub.id = p_sub.role_id
         WHERE a.status IN ('created', 'mcq_submitted')
-          AND ($2 != '75524970-3891-4321-9e96-2c0002d601a3' OR r_sub.name != 'TM')
+          AND ($2::uuid != '75524970-3891-4321-9e96-2c0002d601a3'::uuid OR r_sub.name != 'TM')
           AND a.assessed_user_id IN (
-            SELECT profile_id FROM staff_station_postings WHERE station_id = $1 AND is_current = true
+            SELECT profile_id FROM staff_station_postings WHERE station_id = $1::uuid AND is_current = true
           )
       ) as pending_assessments,
       (
@@ -1694,20 +1694,20 @@ async function getSmSupervisorSummary(stationId, profileId) {
         WHERE a.status = 'completed'
           AND a.approval_status = 'pending_approval'
           AND (
-            (assessed.reporting_officer_id = $2)
+            (assessed.reporting_officer_id = $2::uuid)
             OR
             (assessed.reporting_officer_id IS NULL AND (
               a.assessed_role_code IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM')
-              AND ssp.station_id = $1
+              AND ssp.station_id = $1::uuid
             ))
           )
       ) as pending_approvals,
       (
         SELECT COUNT(*)::int
         FROM assessments
-        WHERE approved_by = $2 AND approval_status = 'approved'
+        WHERE approved_by = $2::uuid AND approval_status = 'approved'
       ) as completed_approvals,
-      COUNT(DISTINCT p.id) FILTER (WHERE sc.category_code = 'D' AND ($2 != '75524970-3891-4321-9e96-2c0002d601a3' OR r.name != 'TM'))::int as high_risk_staff
+      COUNT(DISTINCT p.id) FILTER (WHERE sc.category_code = 'D' AND ($2::uuid != '75524970-3891-4321-9e96-2c0002d601a3'::uuid OR r.name != 'TM'))::int as high_risk_staff
     FROM staff_station_postings ssp
     JOIN profiles p ON p.id = ssp.profile_id
     JOIN roles r ON r.id = p.role_id
@@ -1718,7 +1718,7 @@ async function getSmSupervisorSummary(stationId, profileId) {
       LIMIT 1
     ) ec ON true
     LEFT JOIN staff_categories sc ON sc.id = ec.category_id
-    WHERE ssp.station_id = $1 AND ssp.is_current = true;
+    WHERE ssp.station_id = $1::uuid AND ssp.is_current = true;
   `;
   const result = await pool.query(query, [stationId, profileId]);
   return result.rows[0];
