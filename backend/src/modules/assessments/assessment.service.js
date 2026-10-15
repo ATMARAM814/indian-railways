@@ -104,7 +104,11 @@ async function createAssessment({
     throw new Error("The Station Master assessment must not be conducted by the Station In-Charge. Assessments must be conducted by the Traffic Inspector (TI).");
   }
 
-  if (assessmentType !== 'Retest' && assessmentCycle !== 'Retest after Counseling') {
+  if (finalAssessorUserId === '75524970-3891-4321-9e96-2c0002d601a3' && ['TM', 'Train Manager'].includes(assessedRoleCode)) {
+    throw new Error("P D Raut cannot create or conduct assessments for Train Managers.");
+  }
+
+  if (reportingOfficerId !== finalAssessorUserId && assessmentType !== 'Retest' && assessmentCycle !== 'Retest after Counseling') {
     validateAssessmentHierarchy(
       finalAssessorRoleCode,
       assessedRoleCode,
@@ -223,6 +227,13 @@ function validateAssessmentHierarchy(
     allowedMap[assessorRoleCode] = ["TM", "Train Manager"];
   }
 
+  // Exception for P D Raut - strictly excluded from Train Managers
+  if (assessorId === '75524970-3891-4321-9e96-2c0002d601a3') {
+    allowedMap[assessorRoleCode] = (allowedMap[assessorRoleCode] || []).filter(
+      r => r !== 'TM' && r !== 'Train Manager'
+    );
+  }
+
   const allowedRoles =
     allowedMap[assessorRoleCode] || [];
 
@@ -320,6 +331,10 @@ async function submitEvaluation(assessmentId, userId, submittedAnswers, operatio
 
   if (userRoleName === 'TI' && assessment.assessed_role_code === 'TM') {
     throw new Error("TI does not have authority to evaluate Train Managers.");
+  }
+
+  if (userId === '75524970-3891-4321-9e96-2c0002d601a3' && ['TM', 'Train Manager'].includes(assessment.assessed_role_code)) {
+    throw new Error("P D Raut does not have authority to evaluate Train Managers.");
   }
 
   const checkAuthRes = await pool.query(
@@ -481,6 +496,10 @@ async function verifyAssessmentAccess(assessmentId, userId, userRole) {
     throw new Error("Assessment not found");
   }
 
+  if (userId === '75524970-3891-4321-9e96-2c0002d601a3' && ['TM', 'Train Manager'].includes(assessment.assessed_role_code)) {
+    throw new Error("You are not allowed to access Train Manager assessments");
+  }
+
   if (userRole === "SUPER_ADMIN") {
     return assessment;
   }
@@ -571,6 +590,10 @@ async function saveEvaluationDraftService(
     );
   }
 
+  if (assessorId === '75524970-3891-4321-9e96-2c0002d601a3' && ['TM', 'Train Manager'].includes(assessment.assessed_role_code)) {
+    throw new Error("P D Raut cannot save draft for Train Manager evaluations");
+  }
+
   const pool = require("../../config/database");
   const userRoleRes = await pool.query(
     `SELECT r.name FROM profiles p JOIN roles r ON r.id = p.role_id WHERE p.id = $1`,
@@ -640,6 +663,10 @@ async function getEvaluationDraftService(
 
   if (!assessment) {
     throw new Error("Assessment not found");
+  }
+
+  if (userId === '75524970-3891-4321-9e96-2c0002d601a3' && ['TM', 'Train Manager'].includes(assessment.assessed_role_code)) {
+    throw new Error("P D Raut cannot view draft for Train Manager evaluations");
   }
 
   const pool = require("../../config/database");

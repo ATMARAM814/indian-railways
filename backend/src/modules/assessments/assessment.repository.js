@@ -587,6 +587,7 @@ async function getAssessmentsCreatedByUser(userId) {
     JOIN profiles assessed
       ON assessed.id = a.assessed_user_id
     WHERE a.assessor_user_id = $1
+      ${userId === '75524970-3891-4321-9e96-2c0002d601a3' ? "AND a.assessed_role_code != 'TM'" : ''}
     ORDER BY a.created_at DESC;
   `;
 
@@ -631,6 +632,7 @@ async function getPendingEvaluationsForAssessor(userId) {
       ON assessed.id = a.assessed_user_id
     WHERE a.assessor_user_id = $1
       AND a.status = 'mcq_submitted'
+      ${userId === '75524970-3891-4321-9e96-2c0002d601a3' ? "AND a.assessed_role_code != 'TM'" : ''}
     ORDER BY a.submitted_at DESC;
   `;
 
@@ -736,6 +738,23 @@ async function getEvaluationDraftAnswers(assessmentId) {
 }
 
 async function getRoleStatsForAssessor(assessorId, assessorRole, roleCode) {
+  if (assessorId === '75524970-3891-4321-9e96-2c0002d601a3' && roleCode === 'TM') {
+    return {
+      roleCode,
+      totalStaff: 0,
+      activeExams: 0,
+      pendingEvaluations: 0,
+      completedAssessments: 0,
+      averageScore: 0,
+      statusBreakdown: {
+        completed: 0,
+        pending: 0,
+        inProgress: 0,
+        notStarted: 0
+      }
+    };
+  }
+
   let scopeJoin = '';
   let scopeCondition = '';
   const values = [roleCode, assessorId];
@@ -958,6 +977,10 @@ async function getAssessorRoleStats(assessorId, assessorRole) {
     targetRoles = ['PM', 'SM', 'TM', 'SS', 'TI', 'Cabin Master', 'Shunting Master', 'SMS'];
   }
 
+  if (assessorId === '75524970-3891-4321-9e96-2c0002d601a3') {
+    targetRoles = targetRoles.filter(r => r !== 'TM');
+  }
+
   const results = [];
   for (const roleCode of targetRoles) {
     const stats = await getRoleStatsForAssessor(assessorId, assessorRole, roleCode);
@@ -1085,6 +1108,14 @@ async function getEligibleStaff(assessorId, assessorRole, roleCode, filters = {}
     conditions.push(`
       NOT (r.name = 'TM' AND (s.station_code = 'NGP' OR s.id = '7a4f242d-79e6-4eb8-bef8-61eef42136dc' OR p.reporting_officer_id = '439a8db6-2546-4858-abbc-3752f4acb536'))
     `);
+  }
+
+  // Strictly exclude Train Managers for P D Raut
+  if (assessorId === '75524970-3891-4321-9e96-2c0002d601a3') {
+    conditions.push("r.name != 'TM'");
+    if (roleCode === 'TM') {
+      conditions.push('1 = 0');
+    }
   }
 
   // Filter: search
@@ -1426,6 +1457,14 @@ async function getBulkEligibleStaff(assessorId, assessorRole, roleCode) {
     conditions.push(`
       NOT (r.name = 'TM' AND (s.station_code = 'NGP' OR s.id = '7a4f242d-79e6-4eb8-bef8-61eef42136dc' OR p.reporting_officer_id = '439a8db6-2546-4858-abbc-3752f4acb536'))
     `);
+  }
+
+  // Strictly exclude Train Managers for P D Raut
+  if (assessorId === '75524970-3891-4321-9e96-2c0002d601a3') {
+    conditions.push("r.name != 'TM'");
+    if (roleCode === 'TM') {
+      conditions.push('1 = 0');
+    }
   }
 
   // Enforce no active assessment cycle

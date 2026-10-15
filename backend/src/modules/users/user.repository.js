@@ -227,11 +227,19 @@ async function getUsers(filters = {}) {
     `);
 
     if (["Station Master Supervisor", "STATION MASTER SUPERVISOR", "SMS"].includes(creatorRole)) {
-      conditions.push(`
-        (
-          r.name IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'Cabin Master', 'CABIN MASTER', 'TM', 'SM', 'SS')
-        )
-      `);
+      if (creatorUserId === '75524970-3891-4321-9e96-2c0002d601a3') {
+        conditions.push(`
+          (
+            r.name IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'Cabin Master', 'CABIN MASTER', 'SM', 'SS')
+          )
+        `);
+      } else {
+        conditions.push(`
+          (
+            r.name IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'Cabin Master', 'CABIN MASTER', 'TM', 'SM', 'SS')
+          )
+        `);
+      }
     } else if (creatorRole === "SS") {
       conditions.push(`
         (
@@ -680,11 +688,19 @@ async function countUsers(filters = {}) {
     `);
 
     if (["Station Master Supervisor", "STATION MASTER SUPERVISOR", "SMS"].includes(creatorRole)) {
-      conditions.push(`
-        (
-          r.name IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'Cabin Master', 'CABIN MASTER', 'TM', 'SM', 'SS')
-        )
-      `);
+      if (creatorUserId === '75524970-3891-4321-9e96-2c0002d601a3') {
+        conditions.push(`
+          (
+            r.name IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'Cabin Master', 'CABIN MASTER', 'SM', 'SS')
+          )
+        `);
+      } else {
+        conditions.push(`
+          (
+            r.name IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'Cabin Master', 'CABIN MASTER', 'TM', 'SM', 'SS')
+          )
+        `);
+      }
     } else if (creatorRole === "SS") {
       conditions.push(`
         (
@@ -1153,11 +1169,19 @@ async function getActiveRolesInScope(userId, role) {
     values.push(userId);
     let roleCondition = '';
     if (["Station Master Supervisor", "STATION MASTER SUPERVISOR", "SMS", "Station Master Supervisior", "Station Master Supervisio"].includes(role)) {
-      roleCondition = `
-        (
-          r.name IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'Cabin Master', 'CABIN MASTER', 'TM', 'SM', 'SS')
-        )
-      `;
+      if (userId === '75524970-3891-4321-9e96-2c0002d601a3') {
+        roleCondition = `
+          (
+            r.name IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'Cabin Master', 'CABIN MASTER', 'SM', 'SS')
+          )
+        `;
+      } else {
+        roleCondition = `
+          (
+            r.name IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'Cabin Master', 'CABIN MASTER', 'TM', 'SM', 'SS')
+          )
+        `;
+      }
     } else {
       if (userId === '439a8db6-2546-4858-abbc-3752f4acb536') {
         roleCondition = `

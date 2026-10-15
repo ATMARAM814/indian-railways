@@ -24,6 +24,7 @@ import {
 
 const Sidebar = ({ isOpen, onClose }) => {
   const { user, logout } = useAuth();
+  const isPdRaut = user?.hrmsId === 'QASJDT' || user?.hrms_id === 'QASJDT' || user?.id === '75524970-3891-4321-9e96-2c0002d601a3';
   const menuRef = useRef(null);
   
   const [isQuestionBankOpen, setIsQuestionBankOpen] = useState(
@@ -154,7 +155,7 @@ const Sidebar = ({ isOpen, onClose }) => {
       if (hasRole('SM')) {
         workforce.push({ name: 'Station Masters', path: '/workforce/station-masters', icon: <Users size={18} /> });
       }
-      if (role !== 'TI' && hasRole('TM')) {
+      if (role !== 'TI' && hasRole('TM') && !isPdRaut) {
         workforce.push({ name: 'Train Managers', path: '/workforce/train-managers', icon: <Users size={18} /> });
       }
       if (hasRole('Cabin Master')) {

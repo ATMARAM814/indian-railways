@@ -1224,8 +1224,11 @@ async function getSmSupervisorDashboardService(profileId) {
     db.getStationStaff(stationId, profileId)
   ]);
 
-  // Filter active staff members
-  const activeStaff = staff.filter((s) => !s.status || s.status.toLowerCase() === "active");
+  const isPdRaut = (profileId === '75524970-3891-4321-9e96-2c0002d601a3');
+
+  // Filter active staff members - for SHRI P D RAUT, completely exclude Train Managers
+  const filteredStaff = isPdRaut ? staff.filter(s => s.role !== 'TM') : staff;
+  const activeStaff = filteredStaff.filter((s) => !s.status || s.status.toLowerCase() === "active");
   const stationMasters = activeStaff.filter(
     (s) => s.role === "SM"
   );
@@ -1235,7 +1238,7 @@ async function getSmSupervisorDashboardService(profileId) {
   const cabinMasters = activeStaff.filter(
     (s) => (s.role === "Cabin Master" || s.role === "CABIN MASTER" || s.role === "CM")
   );
-  const trainManagers = activeStaff.filter((s) => s.role === "TM");
+  const trainManagers = isPdRaut ? [] : activeStaff.filter((s) => s.role === "TM");
   const pointsmen = activeStaff.filter((s) => s.role === "PM" || s.role === "Shunting Master" || s.role === "SHUNTING MASTER" || s.role === "SHM");
 
   const categoryACount = pointsmen.filter(p => (p.category || '').toUpperCase() === 'A').length;
@@ -1246,7 +1249,7 @@ async function getSmSupervisorDashboardService(profileId) {
   const summary = {
     totalPM: pointsmen.length,
     totalSM: stationMasters.length,
-    totalTM: trainManagers.length,
+    totalTM: isPdRaut ? 0 : trainManagers.length,
     totalSS: stationMasterIncharges.length,
     totalCM: cabinMasters.length,
     totalSHM: summaryData.total_shm || 0,
@@ -1263,7 +1266,7 @@ async function getSmSupervisorDashboardService(profileId) {
   };
 
   const roleWiseStaffDistribution = fillRoleDistribution(roleWiseData).filter(
-    (item) => ["PM", "SM", "TM", "STATION MASTER SUPERVISOR", "CABIN MASTER", "SHUNTING MASTER", "SS"].includes(item.role)
+    (item) => ["PM", "SM", "TM", "STATION MASTER SUPERVISOR", "CABIN MASTER", "SHUNTING MASTER", "SS"].includes(item.role) && (!isPdRaut || item.role !== "TM")
   );
   const categoryDistribution = (categoryData && categoryData.length > 0)
     ? fillCategoryDistribution(categoryData)

@@ -36,6 +36,11 @@ const AssessmentRoleListPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
+  const isPdRaut = user?.hrmsId === 'QASJDT' || user?.hrms_id === 'QASJDT' || user?.id === '75524970-3891-4321-9e96-2c0002d601a3';
+  if (isPdRaut && (roleCode === 'TM' || roleCode === 'Train Manager')) {
+    return <Navigate to="/assessments" replace />;
+  }
+
   const {
     stats,
     statsLoading,

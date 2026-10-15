@@ -34,6 +34,11 @@ const RoleRoute = ({ children, allowedRoles }) => {
   const userNorm = normalizeRole(user.role);
   const allowedNorms = (allowedRoles || []).map(r => normalizeRole(r));
 
+  const isPdRaut = user?.hrmsId === 'QASJDT' || user?.hrms_id === 'QASJDT' || user?.id === '75524970-3891-4321-9e96-2c0002d601a3';
+  if (isPdRaut && window.location.pathname.startsWith('/workforce/train-managers')) {
+    return <Navigate to="/unauthorized" replace />;
+  }
+
   const isKakirwar = user?.hrmsId === 'BKFOEQ' || user?.hrms_id === 'BKFOEQ' || user?.id === '439a8db6-2546-4858-abbc-3752f4acb536';
   const isAllowed = 
     (allowedRoles || []).includes(user.role) || 

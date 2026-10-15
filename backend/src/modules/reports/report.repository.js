@@ -66,7 +66,11 @@ function buildAssessmentsWhere(filters, scope, values) {
   } else if (["Station Master Supervisor", "STATION MASTER SUPERVISOR", "SMS", "Station Master Supervisior", "Station Master Supervisio"].includes(scope.type)) {
     values.push(scope.stationId);
     conditions.push(`ssp.station_id = $${values.length}`);
-    conditions.push(`a.assessed_role_code IN ('PM', 'SM', 'TM', 'SS', 'Cabin Master', 'CABIN MASTER', 'Shunting Master', 'SHUNTING MASTER', 'SHM')`);
+    if (scope.userId === '75524970-3891-4321-9e96-2c0002d601a3') {
+      conditions.push(`a.assessed_role_code IN ('PM', 'SM', 'SS', 'Cabin Master', 'CABIN MASTER', 'Shunting Master', 'SHUNTING MASTER', 'SHM')`);
+    } else {
+      conditions.push(`a.assessed_role_code IN ('PM', 'SM', 'TM', 'SS', 'Cabin Master', 'CABIN MASTER', 'Shunting Master', 'SHUNTING MASTER', 'SHM')`);
+    }
   } else if (scope.type === "TI") {
     values.push(scope.stationIds);
     conditions.push(`ssp.station_id = ANY($${values.length}::uuid[])`);
@@ -253,7 +257,11 @@ function buildStaffPerformanceWhere(filters, scope, values) {
   } else if (["Station Master Supervisor", "STATION MASTER SUPERVISOR", "SMS", "Station Master Supervisior", "Station Master Supervisio"].includes(scope.type)) {
     values.push(scope.stationId);
     conditions.push(`ssp.station_id = $${values.length}`);
-    conditions.push(`r.name IN ('PM', 'SM', 'TM', 'SS', 'Cabin Master', 'CABIN MASTER', 'Shunting Master', 'SHUNTING MASTER', 'SHM')`);
+    if (scope.userId === '75524970-3891-4321-9e96-2c0002d601a3') {
+      conditions.push(`r.name IN ('PM', 'SM', 'SS', 'Cabin Master', 'CABIN MASTER', 'Shunting Master', 'SHUNTING MASTER', 'SHM')`);
+    } else {
+      conditions.push(`r.name IN ('PM', 'SM', 'TM', 'SS', 'Cabin Master', 'CABIN MASTER', 'Shunting Master', 'SHUNTING MASTER', 'SHM')`);
+    }
   } else if (scope.type === "TI") {
     values.push(scope.stationIds);
     conditions.push(`ssp.station_id = ANY($${values.length}::uuid[])`);

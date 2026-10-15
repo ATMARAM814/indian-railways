@@ -36,6 +36,7 @@ import {
 
 const SMSupervisorDashboard = () => {
   const { user, logout } = useAuth();
+  const isPdRaut = user?.hrmsId === 'QASJDT' || user?.hrms_id === 'QASJDT' || user?.id === '75524970-3891-4321-9e96-2c0002d601a3';
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -249,7 +250,9 @@ const SMSupervisorDashboard = () => {
                 {cabinMasters.length > 0 && (
                   <span>• {cabinMasters.length} Cabin Masters</span>
                 )}
-                <span>• {trainManagers.length} Train Managers</span>
+                {!isPdRaut && trainManagers.length > 0 && (
+                  <span>• {trainManagers.length} Train Managers</span>
+                )}
                 <span>• {pointsmen.length} Pointsmen & Shunting Masters</span>
               </div>
             </div>
@@ -307,7 +310,7 @@ const SMSupervisorDashboard = () => {
         </div>
 
         {/* Role Headcount Grid */}
-        <div className="role-stat-grid" style={{ gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', marginBottom: '24px' }}>
+        <div className="role-stat-grid" style={{ gridTemplateColumns: isPdRaut ? 'repeat(3, minmax(0, 1fr))' : 'repeat(4, minmax(0, 1fr))', marginBottom: '24px' }}>
           <div className="role-stat-card pm">
             <div className="role-stat-info">
               <span className="role-stat-title">Pointsmen</span>
@@ -341,16 +344,18 @@ const SMSupervisorDashboard = () => {
             </div>
           </div>
 
-          <div className="role-stat-card tm">
-            <div className="role-stat-info">
-              <span className="role-stat-title">Train Managers</span>
-              <span className="role-stat-value">{summary.totalTM}</span>
-              <span className="role-stat-desc">Guard & Line Controllers</span>
+          {!isPdRaut && (
+            <div className="role-stat-card tm">
+              <div className="role-stat-info">
+                <span className="role-stat-title">Train Managers</span>
+                <span className="role-stat-value">{summary.totalTM}</span>
+                <span className="role-stat-desc">Guard & Line Controllers</span>
+              </div>
+              <div className="role-stat-icon-container">
+                <UserCog size={18} />
+              </div>
             </div>
-            <div className="role-stat-icon-container">
-              <UserCog size={18} />
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Premium Risk Category Overview */}
@@ -514,68 +519,70 @@ const SMSupervisorDashboard = () => {
           </div>
 
           {/* Train Managers Table */}
-          <div className="staff-table-card">
-            <div className="staff-table-header">
-              <h3 className="staff-table-title">Assigned Train Managers</h3>
-              <span className="staff-table-badge">{trainManagers.length} Active</span>
-            </div>
-            <div className="staff-table-wrapper">
-              {trainManagers.length === 0 ? (
-                <div style={{ padding: '24px', textAlign: 'center', color: '#64748B', fontSize: '14px' }}>
-                  No Train Managers assigned to this station.
-                </div>
-              ) : (
-                <>
-                  <table className="staff-table">
-                    <thead>
-                      <tr>
-                        <th>Name</th>
-                        <th>HRMS ID</th>
-                        <th>Designation</th>
-                        <th>Category</th>
-                        <th>Phone Number</th>
-                        <th>Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {currentTms.map((tm) => (
-                        <tr key={tm.id}>
-                          <td>
-                            <div className="staff-name-col">
-                              <div className="staff-initials-avatar">
-                                {tm.fullName
-                                  ? tm.fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
-                                  : 'TM'}
-                              </div>
-                              <span className="staff-name-text">{tm.fullName || 'N/A'}</span>
-                            </div>
-                          </td>
-                          <td>{tm.hrmsId || tm.hrms_id || 'N/A'}</td>
-                          <td>{cleanDesignationText(tm.designation || 'N/A')}</td>
-                          <td>
-                            <span className={`category-tag cat-${(tm.category || 'none').toLowerCase()}`}>
-                              {tm.category ? `Category ${tm.category}` : 'Uncategorized'}
-                            </span>
-                          </td>
-                          <td>{tm.phone || 'N/A'}</td>
-                          <td>
-                            <a 
-                              href={`/staff/profile/${tm.id}`} 
-                              className="staff-link-btn" 
-                              onClick={(e) => handleViewProfile(tm, e)}
-                            >
-                              View Profile
-                            </a>
-                          </td>
+          {!isPdRaut && (
+            <div className="staff-table-card">
+              <div className="staff-table-header">
+                <h3 className="staff-table-title">Assigned Train Managers</h3>
+                <span className="staff-table-badge">{trainManagers.length} Active</span>
+              </div>
+              <div className="staff-table-wrapper">
+                {trainManagers.length === 0 ? (
+                  <div style={{ padding: '24px', textAlign: 'center', color: '#64748B', fontSize: '14px' }}>
+                    No Train Managers assigned to this station.
+                  </div>
+                ) : (
+                  <>
+                    <table className="staff-table">
+                      <thead>
+                        <tr>
+                          <th>Name</th>
+                          <th>HRMS ID</th>
+                          <th>Designation</th>
+                          <th>Category</th>
+                          <th>Phone Number</th>
+                          <th>Action</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  {renderPaginationControls(tmPage, totalTmPages, trainManagers.length, setTmPage)}
-                </>
-              )}
+                      </thead>
+                      <tbody>
+                        {currentTms.map((tm) => (
+                          <tr key={tm.id}>
+                            <td>
+                              <div className="staff-name-col">
+                                <div className="staff-initials-avatar">
+                                  {tm.fullName
+                                    ? tm.fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
+                                    : 'TM'}
+                                </div>
+                                <span className="staff-name-text">{tm.fullName || 'N/A'}</span>
+                              </div>
+                            </td>
+                            <td>{tm.hrmsId || tm.hrms_id || 'N/A'}</td>
+                            <td>{cleanDesignationText(tm.designation || 'N/A')}</td>
+                            <td>
+                              <span className={`category-tag cat-${(tm.category || 'none').toLowerCase()}`}>
+                                {tm.category ? `Category ${tm.category}` : 'Uncategorized'}
+                              </span>
+                            </td>
+                            <td>{tm.phone || 'N/A'}</td>
+                            <td>
+                              <a 
+                                href={`/staff/profile/${tm.id}`} 
+                                className="staff-link-btn" 
+                                onClick={(e) => handleViewProfile(tm, e)}
+                              >
+                                View Profile
+                              </a>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    {renderPaginationControls(tmPage, totalTmPages, trainManagers.length, setTmPage)}
+                  </>
+                )}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Pointsmen & Shunting Masters Table */}
           <div className="staff-table-card">
