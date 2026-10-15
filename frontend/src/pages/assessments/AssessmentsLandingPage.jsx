@@ -202,8 +202,10 @@ const AssessmentsLandingPage = () => {
                 </div>
 
                 <div className="assessment-grid">
-                  {stats.map((roleStats) => (
-                    <AssessmentRoleCard key={roleStats.roleCode} stats={roleStats} />
+                  {stats
+                    .filter((roleStats) => roleStats.totalStaff > 0 || (roleStats.activeExams || 0) > 0 || (roleStats.pendingEvaluations || 0) > 0)
+                    .map((roleStats) => (
+                      <AssessmentRoleCard key={roleStats.roleCode} stats={roleStats} />
                   ))}
                 </div>
               </>

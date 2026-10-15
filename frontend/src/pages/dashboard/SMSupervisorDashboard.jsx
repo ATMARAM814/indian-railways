@@ -453,8 +453,9 @@ const SMSupervisorDashboard = () => {
         </div>
 
         {/* Staff Lists & Registers */}
-        <div className="staff-tables-container">
-          {/* Station Masters Table */}
+        {!isPdRaut && (
+          <div className="staff-tables-container">
+            {/* Station Masters Table */}
           <div className="staff-table-card">
             <div className="staff-table-header">
               <h3 className="staff-table-title">Assigned Station Masters & Incharges</h3>
@@ -661,6 +662,7 @@ const SMSupervisorDashboard = () => {
             </div>
           </div>
         </div>
+        )}
       </div>
 
       {/* Detailed Staff Profile Card Modal Popup */}

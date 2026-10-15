@@ -984,7 +984,9 @@ async function getAssessorRoleStats(assessorId, assessorRole) {
   const results = [];
   for (const roleCode of targetRoles) {
     const stats = await getRoleStatsForAssessor(assessorId, assessorRole, roleCode);
-    results.push(stats);
+    if (stats && (stats.totalStaff > 0 || (stats.activeExams || 0) > 0 || (stats.pendingEvaluations || 0) > 0)) {
+      results.push(stats);
+    }
   }
   return results;
 }
