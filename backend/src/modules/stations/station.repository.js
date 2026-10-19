@@ -169,6 +169,7 @@ async function getStationStaff(stationId) {
     LEFT JOIN divisions d ON d.id = s.division_id
     WHERE ssp.station_id = $1
       AND ssp.is_current = true
+      AND p.status = 'active'
     ORDER BY p.designation, p.full_name;
   `;
 
@@ -221,7 +222,8 @@ async function getStationStaffSummary(stationId) {
       WHERE p_inner.id = p.id
     ) eff_cat ON true
     WHERE ssp.station_id = $1
-      AND ssp.is_current = true;
+      AND ssp.is_current = true
+      AND p.status = 'active';
   `;
 
   const result = await pool.query(query, [stationId]);
@@ -371,7 +373,7 @@ async function getStationsListDb(userId, role, filters) {
       ) as "hasSupervisor"
     FROM stations s
     LEFT JOIN staff_station_postings ssp ON ssp.station_id = s.id AND ssp.is_current = true
-    LEFT JOIN profiles p ON p.id = ssp.profile_id
+    LEFT JOIN profiles p ON p.id = ssp.profile_id AND p.status = 'active'
     LEFT JOIN LATERAL (
       SELECT category_id FROM employee_categories ec_inner
       WHERE ec_inner.profile_id = p.id
@@ -385,6 +387,7 @@ async function getStationsListDb(userId, role, filters) {
       SELECT ssp_inner.station_id, COUNT(DISTINCT a.id) as count
       FROM assessments a
       JOIN staff_station_postings ssp_inner ON ssp_inner.profile_id = a.assessed_user_id AND ssp_inner.is_current = true
+      JOIN profiles p_assess ON p_assess.id = a.assessed_user_id AND p_assess.status = 'active'
       WHERE a.status IN ('scheduled', 'mcq_access_sent', 'mcq_pending', 'mcq_submitted', 'evaluation_pending', 'evaluation_submitted', 'created') 
          OR (a.status = 'completed' AND a.approval_status = 'pending_approval')
       GROUP BY ssp_inner.station_id
@@ -438,6 +441,7 @@ async function getStationOverviewStatsDb(stationId) {
         SELECT COUNT(DISTINCT a.id)::int 
         FROM assessments a
         JOIN staff_station_postings ssp_inner ON ssp_inner.profile_id = a.assessed_user_id AND ssp_inner.is_current = true
+        JOIN profiles p_sub ON p_sub.id = a.assessed_user_id AND p_sub.status = 'active'
         WHERE ssp_inner.station_id = $1
           AND (
             a.status IN ('scheduled', 'mcq_access_sent', 'mcq_pending', 'mcq_submitted', 'evaluation_pending', 'evaluation_submitted', 'created') 
@@ -449,6 +453,7 @@ async function getStationOverviewStatsDb(stationId) {
         SELECT COUNT(DISTINCT a.id)::int 
         FROM assessments a
         JOIN staff_station_postings ssp_inner ON ssp_inner.profile_id = a.assessed_user_id AND ssp_inner.is_current = true
+        JOIN profiles p_sub ON p_sub.id = a.assessed_user_id AND p_sub.status = 'active'
         WHERE ssp_inner.station_id = $1
           AND a.status = 'completed' AND a.approval_status = 'approved'
       ) as "completedAssessments",
@@ -494,7 +499,7 @@ async function getStationOverviewStatsDb(stationId) {
       ) a_inner ON true
       WHERE p_inner.id = p.id
     ) eff_cat ON true
-    WHERE ssp.station_id = $1 AND ssp.is_current = true;
+    WHERE ssp.station_id = $1 AND ssp.is_current = true AND p.status = 'active';
   `;
   const result = await pool.query(query, [stationId]);
   const row = result.rows[0];
@@ -552,7 +557,7 @@ async function getStationCategoryDistributionDb(stationId) {
       ) a_inner ON true
       WHERE p_inner.id = p.id
     ) eff_cat ON true
-    WHERE ssp.station_id = $1 AND ssp.is_current = true
+    WHERE ssp.station_id = $1 AND ssp.is_current = true AND p.status = 'active'
     GROUP BY eff_cat.category_code;
   `;
   const result = await pool.query(query, [stationId]);
@@ -613,7 +618,7 @@ async function getStationRiskDistributionDb(stationId) {
       ORDER BY created_at DESC
       LIMIT 1
     ) lca ON true
-    WHERE ssp.station_id = $1 AND ssp.is_current = true;
+    WHERE ssp.station_id = $1 AND ssp.is_current = true AND p.status = 'active';
   `;
   const result = await pool.query(query, [stationId]);
   const segments = { "Low Risk": 0, "Medium Risk": 0, "High Risk": 0, "Critical Risk": 0 };
@@ -646,6 +651,7 @@ async function getStationPerformanceTrendDb(stationId) {
       COUNT(a.id) as total_count
     FROM assessments a
     JOIN staff_station_postings ssp ON ssp.profile_id = a.assessed_user_id AND ssp.is_current = true
+    JOIN profiles p_sub ON p_sub.id = a.assessed_user_id AND p_sub.status = 'active'
     WHERE ssp.station_id = $1 
       AND a.created_at >= DATE_TRUNC('month', NOW() - INTERVAL '5 months')
     GROUP BY month, month_date
@@ -687,6 +693,7 @@ async function getStationOperationalReadinessDb(stationId) {
     JOIN assessments a ON a.assessed_user_id = p.id
     WHERE ssp.station_id = $1 
       AND ssp.is_current = true
+      AND p.status = 'active'
       AND a.pme_status IS NOT NULL
       AND a.pme_status != ''
       AND (a.due_date < NOW() OR a.pme_status = 'DUE');
@@ -698,6 +705,7 @@ async function getStationOperationalReadinessDb(stationId) {
     JOIN assessments a ON a.assessed_user_id = p.id
     WHERE ssp.station_id = $1 
       AND ssp.is_current = true
+      AND p.status = 'active'
       AND a.ref_status IS NOT NULL
       AND a.ref_status != ''
       AND (a.due_date < NOW() OR a.ref_status = 'DUE');
@@ -709,6 +717,7 @@ async function getStationOperationalReadinessDb(stationId) {
     JOIN assessments a ON a.assessed_user_id = p.id
     WHERE ssp.station_id = $1 
       AND ssp.is_current = true
+      AND p.status = 'active'
       AND a.counselling_required = true
       AND (a.counselling_status IS NULL OR a.counselling_status != 'completed');
   `;
@@ -719,6 +728,7 @@ async function getStationOperationalReadinessDb(stationId) {
     JOIN assessments a ON a.assessed_user_id = p.id
     WHERE ssp.station_id = $1 
       AND ssp.is_current = true
+      AND p.status = 'active'
       AND a.training_required = true
       AND (a.training_status IS NULL OR a.training_status != 'completed');
   `;
@@ -813,6 +823,7 @@ async function getStationWorkforceDb(stationId) {
     ) lca ON true
     WHERE ssp.station_id = $1 
       AND ssp.is_current = true
+      AND p.status = 'active'
     ORDER BY p.full_name ASC;
   `;
   const result = await pool.query(query, [stationId]);
@@ -876,6 +887,7 @@ async function getStationHighRiskWatchlistDb(stationId) {
     ) lca ON true
     WHERE ssp.station_id = $1 
       AND ssp.is_current = true
+      AND p.status = 'active'
       AND (eff_cat.category_code = 'D' OR lca.percentage <= 25 OR lca.alcoholic_status = 'Alcoholic')
     ORDER BY lca.percentage ASC NULLS LAST;
   `;
@@ -1004,6 +1016,7 @@ async function getStationCategoryCWatchlistDb(stationId) {
     ) lca ON true
     WHERE ssp.station_id = $1 
       AND ssp.is_current = true
+      AND p.status = 'active'
       AND (
         sc.category_code = 'C' 
         OR 
@@ -1048,6 +1061,7 @@ async function getDivisionCategoryCandidatesDb(divisionId, categoryCode) {
     ) lca ON true
     WHERE s.division_id = $1 
       AND ssp.is_current = true
+      AND p.status = 'active'
       AND (
         ($2 = 'C' AND (
           sc.category_code = 'C' 
@@ -1101,6 +1115,7 @@ async function getTiCategoryCandidatesDb(stationIds, categoryCode) {
     ) lca ON true
     WHERE ssp.station_id = ANY($1) 
       AND ssp.is_current = true
+      AND p.status = 'active'
       AND (
         ($2 = 'C' AND (
           sc.category_code = 'C' 

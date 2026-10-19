@@ -286,7 +286,8 @@ async function getSmSummary(stationId) {
       (
         SELECT COUNT(*)::int
         FROM assessments a
-        WHERE a.status = 'completed'
+        JOIN profiles p_sub ON p_sub.id = a.assessed_user_id
+        WHERE a.status = 'completed' AND p_sub.status = 'active'
           AND a.assessed_user_id IN (
             SELECT profile_id FROM staff_station_postings WHERE station_id = $1 AND is_current = true
           )
@@ -294,7 +295,8 @@ async function getSmSummary(stationId) {
       (
         SELECT COUNT(*)::int
         FROM assessments a
-        WHERE a.status IN ('created', 'mcq_submitted')
+        JOIN profiles p_sub ON p_sub.id = a.assessed_user_id
+        WHERE a.status IN ('created', 'mcq_submitted') AND p_sub.status = 'active'
           AND a.assessed_user_id IN (
             SELECT profile_id FROM staff_station_postings WHERE station_id = $1 AND is_current = true
           )
@@ -334,7 +336,7 @@ async function getSmSummary(stationId) {
       ) a_inner ON true
       WHERE p_inner.id = p.id
     ) eff_cat ON true
-    WHERE ssp.station_id = $1 AND ssp.is_current = true;
+    WHERE ssp.station_id = $1 AND ssp.is_current = true AND p.status = 'active';
   `;
   const result = await pool.query(query, [stationId]);
   return result.rows[0];
@@ -346,7 +348,7 @@ async function getSmRoleWiseStaff(stationId) {
     FROM staff_station_postings ssp
     JOIN profiles p ON p.id = ssp.profile_id
     JOIN roles r ON r.id = p.role_id
-    WHERE ssp.station_id = $1 AND ssp.is_current = true
+    WHERE ssp.station_id = $1 AND ssp.is_current = true AND p.status = 'active'
     GROUP BY r.name;
   `;
   const result = await pool.query(query, [stationId]);
@@ -390,7 +392,7 @@ async function getSmCategoryDistribution(stationId) {
       ) a_inner ON true
       WHERE p_inner.id = p.id
     ) eff_cat ON true
-    WHERE ssp.station_id = $1 AND ssp.is_current = true AND r.name = 'PM' AND eff_cat.category_code IS NOT NULL
+    WHERE ssp.station_id = $1 AND ssp.is_current = true AND r.name = 'PM' AND eff_cat.category_code IS NOT NULL AND p.status = 'active'
     GROUP BY eff_cat.category_code;
   `;
   const result = await pool.query(query, [stationId]);
@@ -441,7 +443,7 @@ async function getSmStationCategoryDistribution(stationId) {
       ) a_inner ON true
       WHERE p_inner.id = p.id
     ) eff_cat ON true
-    WHERE ssp.station_id = $1 AND ssp.is_current = true
+    WHERE ssp.station_id = $1 AND ssp.is_current = true AND p.status = 'active'
     GROUP BY s.station_name, s.station_code;
   `;
   const result = await pool.query(query, [stationId]);
@@ -483,14 +485,14 @@ async function getTiSummary(stationIds, profileId) {
         FROM staff_station_postings ssp
         JOIN profiles p ON p.id = ssp.profile_id
         JOIN roles r ON r.id = p.role_id
-        WHERE ssp.station_id = ANY($1::uuid[]) AND ssp.is_current = true AND r.name = 'PM'
+        WHERE ssp.station_id = ANY($1::uuid[]) AND ssp.is_current = true AND r.name = 'PM' AND p.status = 'active'
       ) as total_pm,
       (
         SELECT COUNT(DISTINCT p.id)::int
         FROM staff_station_postings ssp
         JOIN profiles p ON p.id = ssp.profile_id
         JOIN roles r ON r.id = p.role_id
-        WHERE ssp.station_id = ANY($1::uuid[]) AND ssp.is_current = true AND r.name = 'SM'
+        WHERE ssp.station_id = ANY($1::uuid[]) AND ssp.is_current = true AND r.name = 'SM' AND p.status = 'active'
       ) as total_sm,
       0::int as total_tm,
       (
@@ -498,7 +500,7 @@ async function getTiSummary(stationIds, profileId) {
         FROM staff_station_postings ssp
         JOIN profiles p ON p.id = ssp.profile_id
         JOIN roles r ON r.id = p.role_id
-        WHERE ssp.station_id = ANY($1::uuid[]) AND ssp.is_current = true AND r.name = 'SS'
+        WHERE ssp.station_id = ANY($1::uuid[]) AND ssp.is_current = true AND r.name = 'SS' AND p.status = 'active'
       ) as total_ss,
       (
         SELECT COUNT(*)::int
@@ -507,6 +509,7 @@ async function getTiSummary(stationIds, profileId) {
         LEFT JOIN staff_station_postings ssp ON ssp.profile_id = assessed.id AND ssp.is_current = true
         WHERE a.status = 'completed'
           AND a.approval_status = 'pending_approval'
+          AND assessed.status = 'active'
           AND (
             (assessed.reporting_officer_id = $2)
             OR
@@ -520,6 +523,7 @@ async function getTiSummary(stationIds, profileId) {
                 JOIN roles r_sms ON r_sms.id = p_sms.role_id
                 WHERE ssp_sms.station_id = ssp.station_id 
                   AND ssp_sms.is_current = true 
+                  AND p_sms.status = 'active'
                   AND r_sms.name IN ('Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Station Master Supervisior', 'Station Master Supervisio')
               )
             ))
@@ -531,6 +535,7 @@ async function getTiSummary(stationIds, profileId) {
         JOIN profiles assessed ON assessed.id = a.assessed_user_id
         LEFT JOIN staff_station_postings ssp ON ssp.profile_id = assessed.id AND ssp.is_current = true
         WHERE a.approval_status = 'approved'
+          AND assessed.status = 'active'
           AND (
             (assessed.reporting_officer_id = $2)
             OR
@@ -546,6 +551,7 @@ async function getTiSummary(stationIds, profileId) {
                   JOIN roles r_sms ON r_sms.id = p_sms.role_id
                   WHERE ssp_sms.station_id = ssp.station_id 
                     AND ssp_sms.is_current = true 
+                    AND p_sms.status = 'active'
                     AND r_sms.name IN ('Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Station Master Supervisior', 'Station Master Supervisio')
                 )
               )
@@ -565,7 +571,7 @@ async function getTiSummary(stationIds, profileId) {
           LIMIT 1
         ) ec ON true
         LEFT JOIN staff_categories sc ON sc.id = ec.category_id
-        WHERE ssp.station_id = ANY($1::uuid[]) AND ssp.is_current = true AND sc.category_code = 'D'
+        WHERE ssp.station_id = ANY($1::uuid[]) AND ssp.is_current = true AND sc.category_code = 'D' AND p.status = 'active'
       ) as high_risk_staff;
   `;
   const result = await pool.query(query, [stationIds, profileId]);
@@ -581,7 +587,8 @@ async function getTiStationProgress(stationIds) {
       COUNT(DISTINCT a.id) FILTER (WHERE a.status IN ('created', 'mcq_submitted'))::int as pending
     FROM stations s
     LEFT JOIN staff_station_postings ssp ON ssp.station_id = s.id AND ssp.is_current = true
-    LEFT JOIN assessments a ON a.assessed_user_id = ssp.profile_id
+    LEFT JOIN profiles p ON p.id = ssp.profile_id AND p.status = 'active'
+    LEFT JOIN assessments a ON a.assessed_user_id = p.id
     WHERE s.id = ANY($1::uuid[])
     GROUP BY s.id, s.station_name, s.station_code
     ORDER BY s.station_code;
@@ -598,7 +605,8 @@ async function getTiStationAvgScore(stationIds) {
       AVG(a.percentage)::numeric(10,2) as "averageScore"
     FROM stations s
     LEFT JOIN staff_station_postings ssp ON ssp.station_id = s.id AND ssp.is_current = true
-    LEFT JOIN assessments a ON a.assessed_user_id = ssp.profile_id AND a.status = 'completed'
+    LEFT JOIN profiles p ON p.id = ssp.profile_id AND p.status = 'active'
+    LEFT JOIN assessments a ON a.assessed_user_id = p.id AND a.status = 'completed'
     WHERE s.id = ANY($1::uuid[])
     GROUP BY s.id, s.station_name, s.station_code
     ORDER BY s.station_code;
@@ -613,7 +621,7 @@ async function getTiRoleDistribution(stationIds) {
     FROM staff_station_postings ssp
     JOIN profiles p ON p.id = ssp.profile_id
     JOIN roles r ON r.id = p.role_id
-    WHERE ssp.station_id = ANY($1::uuid[]) AND ssp.is_current = true AND r.name != 'TM'
+    WHERE ssp.station_id = ANY($1::uuid[]) AND ssp.is_current = true AND r.name != 'TM' AND p.status = 'active'
     GROUP BY r.name;
   `;
   const result = await pool.query(query, [stationIds]);
@@ -633,7 +641,7 @@ async function getTiCategoryDistribution(stationIds) {
       LIMIT 1
     ) ec ON true
     LEFT JOIN staff_categories sc ON sc.id = ec.category_id
-    WHERE ssp.station_id = ANY($1::uuid[]) AND ssp.is_current = true AND sc.category_code IS NOT NULL AND r.name != 'TM'
+    WHERE ssp.station_id = ANY($1::uuid[]) AND ssp.is_current = true AND sc.category_code IS NOT NULL AND r.name != 'TM' AND p.status = 'active'
     GROUP BY sc.category_code;
   `;
   const result = await pool.query(query, [stationIds]);
@@ -658,7 +666,7 @@ async function getTiAssessments(stationIds) {
       FROM staff_station_postings ssp
       JOIN profiles p ON p.id = ssp.profile_id
       JOIN roles r ON r.id = p.role_id
-      WHERE ssp.station_id = ANY($1::uuid[]) AND ssp.is_current = true AND r.name != 'TM'
+      WHERE ssp.station_id = ANY($1::uuid[]) AND ssp.is_current = true AND r.name != 'TM' AND p.status = 'active'
     );
   `;
   const result = await pool.query(query, [stationIds]);
@@ -676,7 +684,7 @@ async function getTiStationCategoryDistribution(stationIds) {
       COUNT(DISTINCT p.id) FILTER (WHERE sc.category_code = 'D')::int as "categoryD"
     FROM stations s
     LEFT JOIN staff_station_postings ssp ON ssp.station_id = s.id AND ssp.is_current = true
-    LEFT JOIN profiles p ON p.id = ssp.profile_id
+    LEFT JOIN profiles p ON p.id = ssp.profile_id AND p.status = 'active'
     LEFT JOIN LATERAL (
       SELECT category_id FROM employee_categories ec_inner
       WHERE ec_inner.profile_id = p.id
@@ -705,8 +713,10 @@ async function getAomSummary(divisionId) {
       (
         SELECT COUNT(*)::int
         FROM assessments a
+        JOIN profiles p_sub ON p_sub.id = a.assessed_user_id
         WHERE a.status = 'evaluated'
           AND a.approval_status = 'pending_approval'
+          AND p_sub.status = 'active'
           AND a.assessed_role_code IN ('SM', 'TM', 'TI', 'SS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Cabin Master', 'CABIN MASTER')
           AND a.assessed_user_id IN (
             SELECT ssp.profile_id
@@ -718,7 +728,9 @@ async function getAomSummary(divisionId) {
       (
         SELECT COALESCE(AVG(a.percentage)::numeric(10,2), 0)
         FROM assessments a
+        JOIN profiles p_sub ON p_sub.id = a.assessed_user_id
         WHERE a.status = 'completed'
+          AND p_sub.status = 'active'
           AND COALESCE(a.evaluated_at, a.created_at) >= CASE 
             WHEN EXTRACT(MONTH FROM CURRENT_DATE) <= 6 
             THEN make_date(EXTRACT(YEAR FROM CURRENT_DATE)::int, 1, 1)::timestamp
@@ -748,7 +760,7 @@ async function getAomSummary(divisionId) {
           LIMIT 1
         ) ec ON true
         LEFT JOIN staff_categories sc ON sc.id = ec.category_id
-        WHERE s.division_id = $1 AND ssp.is_current = true AND sc.category_code = 'D'
+        WHERE s.division_id = $1 AND ssp.is_current = true AND sc.category_code = 'D' AND p.status = 'active'
       ) as high_risk_staff;
   `;
   const result = await pool.query(query, [divisionId]);
@@ -764,7 +776,8 @@ async function getAomStationProgress(divisionId) {
       COUNT(DISTINCT a.id) FILTER (WHERE a.status IN ('created', 'mcq_submitted'))::int as pending
     FROM stations s
     LEFT JOIN staff_station_postings ssp ON ssp.station_id = s.id AND ssp.is_current = true
-    LEFT JOIN assessments a ON a.assessed_user_id = ssp.profile_id
+    LEFT JOIN profiles p ON p.id = ssp.profile_id AND p.status = 'active'
+    LEFT JOIN assessments a ON a.assessed_user_id = p.id
     WHERE s.division_id = $1
     GROUP BY s.id, s.station_name, s.station_code
     ORDER BY s.station_code;
@@ -781,7 +794,8 @@ async function getAomStationAvgScore(divisionId) {
       AVG(a.percentage)::numeric(10,2) as "averageScore"
     FROM stations s
     LEFT JOIN staff_station_postings ssp ON ssp.station_id = s.id AND ssp.is_current = true
-    LEFT JOIN assessments a ON a.assessed_user_id = ssp.profile_id AND a.status = 'completed'
+    LEFT JOIN profiles p ON p.id = ssp.profile_id AND p.status = 'active'
+    LEFT JOIN assessments a ON a.assessed_user_id = p.id AND a.status = 'completed'
     WHERE s.division_id = $1
     GROUP BY s.id, s.station_name, s.station_code
     ORDER BY s.station_code;
@@ -817,7 +831,7 @@ async function getAomCategoryDistribution(divisionId) {
       LIMIT 1
     ) ec ON true
     LEFT JOIN staff_categories sc ON sc.id = ec.category_id
-    WHERE s.division_id = $1 AND ssp.is_current = true AND sc.category_code IS NOT NULL
+    WHERE s.division_id = $1 AND ssp.is_current = true AND sc.category_code IS NOT NULL AND p.status = 'active'
     GROUP BY sc.category_code;
   `;
   const result = await pool.query(query, [divisionId]);
@@ -833,10 +847,12 @@ async function getAomTiPerformance(divisionId) {
     JOIN profiles p ON p.id = sa.profile_id
     JOIN stations s ON s.id = sa.station_id
     LEFT JOIN staff_station_postings ssp ON ssp.station_id = s.id AND ssp.is_current = true
-    LEFT JOIN assessments a ON a.assessed_user_id = ssp.profile_id AND a.status = 'completed'
+    LEFT JOIN profiles p_staff ON p_staff.id = ssp.profile_id AND p_staff.status = 'active'
+    LEFT JOIN assessments a ON a.assessed_user_id = p_staff.id AND a.status = 'completed'
     WHERE s.division_id = $1
       AND sa.assignment_type = 'TI_AREA'
       AND sa.assigned_to IS NULL
+      AND p.status = 'active'
     GROUP BY sa.profile_id, p.full_name;
   `;
   const result = await pool.query(query, [divisionId]);
@@ -854,7 +870,7 @@ async function getAomStationCategoryDistribution(divisionId) {
       COUNT(DISTINCT p.id) FILTER (WHERE sc.category_code = 'D')::int as "categoryD"
     FROM stations s
     LEFT JOIN staff_station_postings ssp ON ssp.station_id = s.id AND ssp.is_current = true
-    LEFT JOIN profiles p ON p.id = ssp.profile_id
+    LEFT JOIN profiles p ON p.id = ssp.profile_id AND p.status = 'active'
     LEFT JOIN LATERAL (
       SELECT category_id FROM employee_categories ec_inner
       WHERE ec_inner.profile_id = p.id
@@ -904,13 +920,15 @@ async function getSuperAdminSummary() {
       (SELECT COUNT(*)::int FROM stations) as total_stations,
       (
         SELECT COUNT(*)::int
-        FROM assessments
-        WHERE status = 'completed'
+        FROM assessments a
+        JOIN profiles p ON p.id = a.assessed_user_id
+        WHERE a.status = 'completed' AND p.status = 'active'
       ) as total_assessments,
       (
         SELECT COUNT(*)::int
-        FROM assessments
-        WHERE status = 'evaluated' AND approval_status = 'pending_approval'
+        FROM assessments a
+        JOIN profiles p ON p.id = a.assessed_user_id
+        WHERE a.status = 'evaluated' AND a.approval_status = 'pending_approval' AND p.status = 'active'
       ) as pending_approvals,
       (
         SELECT COUNT(DISTINCT p.id)::int
@@ -923,7 +941,7 @@ async function getSuperAdminSummary() {
           LIMIT 1
         ) ec ON true
         LEFT JOIN staff_categories sc ON sc.id = ec.category_id
-        WHERE ssp.is_current = true AND sc.category_code = 'D'
+        WHERE ssp.is_current = true AND sc.category_code = 'D' AND p.status = 'active'
       ) as high_risk_staff;
   `;
   const result = await pool.query(query);
@@ -939,7 +957,8 @@ async function getSuperAdminStationProgress() {
       COUNT(DISTINCT a.id) FILTER (WHERE a.status IN ('created', 'mcq_submitted'))::int as pending
     FROM stations s
     LEFT JOIN staff_station_postings ssp ON ssp.station_id = s.id AND ssp.is_current = true
-    LEFT JOIN assessments a ON a.assessed_user_id = ssp.profile_id
+    LEFT JOIN profiles p ON p.id = ssp.profile_id AND p.status = 'active'
+    LEFT JOIN assessments a ON a.assessed_user_id = p.id
     GROUP BY s.id, s.station_name, s.station_code
     ORDER BY s.station_code;
   `;
@@ -955,7 +974,8 @@ async function getSuperAdminStationAvgScore() {
       COALESCE(AVG(a.percentage)::numeric(10,2), 0) as "averageScore"
     FROM stations s
     LEFT JOIN staff_station_postings ssp ON ssp.station_id = s.id AND ssp.is_current = true
-    LEFT JOIN assessments a ON a.assessed_user_id = ssp.profile_id AND a.status = 'completed'
+    LEFT JOIN profiles p ON p.id = ssp.profile_id AND p.status = 'active'
+    LEFT JOIN assessments a ON a.assessed_user_id = p.id AND a.status = 'completed'
       AND COALESCE(a.evaluated_at, a.created_at) >= CASE 
         WHEN EXTRACT(MONTH FROM CURRENT_DATE) <= 6 
         THEN make_date(EXTRACT(YEAR FROM CURRENT_DATE)::int, 1, 1)::timestamp
@@ -997,7 +1017,7 @@ async function getSuperAdminCategoryDistribution() {
       LIMIT 1
     ) ec ON true
     LEFT JOIN staff_categories sc ON sc.id = ec.category_id
-    WHERE ssp.is_current = true AND sc.category_code IS NOT NULL
+    WHERE ssp.is_current = true AND sc.category_code IS NOT NULL AND p.status = 'active'
     GROUP BY sc.category_code;
   `;
   const result = await pool.query(query);
@@ -1013,9 +1033,11 @@ async function getSuperAdminTiPerformance() {
     JOIN profiles p ON p.id = sa.profile_id
     JOIN stations s ON s.id = sa.station_id
     LEFT JOIN staff_station_postings ssp ON ssp.station_id = s.id AND ssp.is_current = true
-    LEFT JOIN assessments a ON a.assessed_user_id = ssp.profile_id AND a.status = 'completed'
+    LEFT JOIN profiles p_staff ON p_staff.id = ssp.profile_id AND p_staff.status = 'active'
+    LEFT JOIN assessments a ON a.assessed_user_id = p_staff.id AND a.status = 'completed'
     WHERE sa.assignment_type = 'TI_AREA'
       AND sa.assigned_to IS NULL
+      AND p.status = 'active'
     GROUP BY sa.profile_id, p.full_name;
   `;
   const result = await pool.query(query);
@@ -1033,7 +1055,7 @@ async function getSuperAdminStationCategoryDistribution() {
       COUNT(DISTINCT p.id) FILTER (WHERE sc.category_code = 'D')::int as "categoryD"
     FROM stations s
     LEFT JOIN staff_station_postings ssp ON ssp.station_id = s.id AND ssp.is_current = true
-    LEFT JOIN profiles p ON p.id = ssp.profile_id
+    LEFT JOIN profiles p ON p.id = ssp.profile_id AND p.status = 'active'
     LEFT JOIN LATERAL (
       SELECT category_id FROM employee_categories ec_inner
       WHERE ec_inner.profile_id = p.id
@@ -1169,6 +1191,7 @@ async function getStationStaff(stationId, profileId = null) {
     JOIN stations s ON s.id = ssp.station_id
     LEFT JOIN divisions d ON d.id = s.division_id
     WHERE ssp.is_current = true
+      AND p.status = 'active'
       AND (ssp.station_id = $1::uuid OR ($2::uuid IS NOT NULL AND p.reporting_officer_id = $2::uuid))
       AND ($2::uuid != '75524970-3891-4321-9e96-2c0002d601a3'::uuid OR r.name != 'TM')
     ORDER BY p.full_name;
@@ -1386,7 +1409,7 @@ async function getSuperAdminHighRiskStaff(filters) {
       LIMIT 1
     ) ec ON true
     LEFT JOIN staff_categories sc ON sc.id = ec.category_id
-    WHERE ssp.is_current = true AND sc.category_code = 'D'
+    WHERE ssp.is_current = true AND sc.category_code = 'D' AND p.status = 'active'
   `;
 
   const params = [];
@@ -1520,7 +1543,7 @@ async function getSuperAdminHighRiskStaff(filters) {
       )::int as count
     FROM stations s
     LEFT JOIN staff_station_postings ssp ON ssp.station_id = s.id AND ssp.is_current = true
-    LEFT JOIN profiles p ON p.id = ssp.profile_id AND p.role_id IS NOT NULL
+    LEFT JOIN profiles p ON p.id = ssp.profile_id AND p.role_id IS NOT NULL AND p.status = 'active'
     LEFT JOIN roles r ON r.id = p.role_id
     LEFT JOIN LATERAL (
       SELECT category_id, created_at FROM employee_categories ec_inner
@@ -1615,12 +1638,14 @@ async function getSuperAdminTiAssessmentStats() {
         SELECT COUNT(DISTINCT ssp.profile_id)::int
         FROM station_assignments sa_inner
         JOIN staff_station_postings ssp ON ssp.station_id = sa_inner.station_id AND ssp.is_current = true
+        JOIN profiles p_staff ON p_staff.id = ssp.profile_id AND p_staff.status = 'active'
         WHERE sa_inner.profile_id = p.id AND sa_inner.assignment_type = 'TI_AREA' AND sa_inner.assigned_to IS NULL
       ) as "totalEmployees",
       (
         SELECT COUNT(DISTINCT a.id)::int
         FROM station_assignments sa_inner
         JOIN staff_station_postings ssp ON ssp.station_id = sa_inner.station_id AND ssp.is_current = true
+        JOIN profiles p_staff ON p_staff.id = ssp.profile_id AND p_staff.status = 'active'
         JOIN assessments a ON a.assessed_user_id = ssp.profile_id
         WHERE sa_inner.profile_id = p.id AND sa_inner.assignment_type = 'TI_AREA' AND sa_inner.assigned_to IS NULL
           AND ((a.status = 'completed' AND (a.approval_status = 'approved' OR a.approval_status = 'rejected')))
@@ -1629,6 +1654,7 @@ async function getSuperAdminTiAssessmentStats() {
         SELECT COUNT(DISTINCT a.id)::int
         FROM station_assignments sa_inner
         JOIN staff_station_postings ssp ON ssp.station_id = sa_inner.station_id AND ssp.is_current = true
+        JOIN profiles p_staff ON p_staff.id = ssp.profile_id AND p_staff.status = 'active'
         JOIN assessments a ON a.assessed_user_id = ssp.profile_id
         WHERE sa_inner.profile_id = p.id AND sa_inner.assignment_type = 'TI_AREA' AND sa_inner.assigned_to IS NULL
           AND (a.status IN ('created', 'mcq_pending', 'mcq_submitted', 'evaluation_pending', 'evaluation_submitted', 'scheduled', 'mcq_access_sent'))
@@ -1637,6 +1663,7 @@ async function getSuperAdminTiAssessmentStats() {
         SELECT COUNT(DISTINCT a.id)::int
         FROM station_assignments sa_inner
         JOIN staff_station_postings ssp ON ssp.station_id = sa_inner.station_id AND ssp.is_current = true
+        JOIN profiles p_staff ON p_staff.id = ssp.profile_id AND p_staff.status = 'active'
         JOIN assessments a ON a.assessed_user_id = ssp.profile_id
         WHERE sa_inner.profile_id = p.id AND sa_inner.assignment_type = 'TI_AREA' AND sa_inner.assigned_to IS NULL
           AND ((a.status = 'completed' OR a.status = 'evaluated') AND (a.approval_status = 'pending_approval' OR a.approval_status IS NULL))
@@ -1644,6 +1671,7 @@ async function getSuperAdminTiAssessmentStats() {
     FROM station_assignments sa
     JOIN profiles p ON p.id = sa.profile_id
     WHERE sa.assignment_type = 'TI_AREA' AND sa.assigned_to IS NULL
+      AND p.status = 'active'
     GROUP BY p.id, p.full_name, p.hrms_id
     ORDER BY p.full_name;
   `;
@@ -1670,6 +1698,7 @@ async function getSmSupervisorSummary(stationId, profileId) {
         JOIN profiles p_sub ON p_sub.id = a.assessed_user_id
         JOIN roles r_sub ON r_sub.id = p_sub.role_id
         WHERE a.status = 'completed'
+          AND p_sub.status = 'active'
           AND ($2::uuid != '75524970-3891-4321-9e96-2c0002d601a3'::uuid OR r_sub.name != 'TM')
           AND a.assessed_user_id IN (
             SELECT profile_id FROM staff_station_postings WHERE station_id = $1::uuid AND is_current = true
@@ -1681,6 +1710,7 @@ async function getSmSupervisorSummary(stationId, profileId) {
         JOIN profiles p_sub ON p_sub.id = a.assessed_user_id
         JOIN roles r_sub ON r_sub.id = p_sub.role_id
         WHERE a.status IN ('created', 'mcq_submitted')
+          AND p_sub.status = 'active'
           AND ($2::uuid != '75524970-3891-4321-9e96-2c0002d601a3'::uuid OR r_sub.name != 'TM')
           AND a.assessed_user_id IN (
             SELECT profile_id FROM staff_station_postings WHERE station_id = $1::uuid AND is_current = true
@@ -1693,6 +1723,7 @@ async function getSmSupervisorSummary(stationId, profileId) {
         LEFT JOIN staff_station_postings ssp ON ssp.profile_id = assessed.id AND ssp.is_current = true
         WHERE a.status = 'completed'
           AND a.approval_status = 'pending_approval'
+          AND assessed.status = 'active'
           AND (
             (assessed.reporting_officer_id = $2::uuid)
             OR
@@ -1718,7 +1749,7 @@ async function getSmSupervisorSummary(stationId, profileId) {
       LIMIT 1
     ) ec ON true
     LEFT JOIN staff_categories sc ON sc.id = ec.category_id
-    WHERE ssp.station_id = $1::uuid AND ssp.is_current = true;
+    WHERE ssp.station_id = $1::uuid AND ssp.is_current = true AND p.status = 'active';
   `;
   const result = await pool.query(query, [stationId, profileId]);
   return result.rows[0];
@@ -1823,7 +1854,7 @@ async function getDashboardCategoryCandidatesDb({
       ORDER BY created_at DESC
       LIMIT 1
     ) lca ON true
-    WHERE ssp.is_current = true
+    WHERE ssp.is_current = true AND p.status = 'active'
   `;
 
   if (conditions.length > 0) {
@@ -1977,7 +2008,8 @@ function buildScopeQuery(baseQuery, scope) {
         SELECT ssp.profile_id
         FROM staff_station_postings ssp
         JOIN stations s ON s.id = ssp.station_id
-        WHERE s.division_id = $1 AND ssp.is_current = true
+        JOIN profiles p_scope ON p_scope.id = ssp.profile_id
+        WHERE s.division_id = $1 AND ssp.is_current = true AND p_scope.status = 'active'
       )
     `;
     params.push(scope.value);
@@ -1986,7 +2018,8 @@ function buildScopeQuery(baseQuery, scope) {
       AND a.assessed_user_id IN (
         SELECT ssp.profile_id
         FROM staff_station_postings ssp
-        WHERE ssp.station_id = ANY($1) AND ssp.is_current = true
+        JOIN profiles p_scope ON p_scope.id = ssp.profile_id
+        WHERE ssp.station_id = ANY($1) AND ssp.is_current = true AND p_scope.status = 'active'
       )
     `;
     params.push(scope.value);
@@ -1995,10 +2028,19 @@ function buildScopeQuery(baseQuery, scope) {
       AND a.assessed_user_id IN (
         SELECT ssp.profile_id
         FROM staff_station_postings ssp
-        WHERE ssp.station_id = $1 AND ssp.is_current = true
+        JOIN profiles p_scope ON p_scope.id = ssp.profile_id
+        WHERE ssp.station_id = $1 AND ssp.is_current = true AND p_scope.status = 'active'
       )
     `;
     params.push(scope.value);
+  } else if (scope && scope.type === 'all') {
+    whereClause = `
+      AND a.assessed_user_id IN (
+        SELECT p_scope.id
+        FROM profiles p_scope
+        WHERE p_scope.status = 'active'
+      )
+    `;
   }
 
   const sql = baseQuery.split("__SCOPE_FILTER__").join(whereClause);
@@ -2293,6 +2335,7 @@ async function getOverdueStaffDb({ userId, role }) {
       LIMIT 1
     ) lca ON true
     WHERE ssp.is_current = true
+      AND p.status = 'active'
       AND eff_cat.category_code IN ('C', 'D')
       AND NOT EXISTS (
         SELECT 1 FROM assessments a_active
