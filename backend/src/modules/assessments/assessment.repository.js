@@ -3,10 +3,22 @@ const pool = require("../../config/database");
 function normalizeRoleCode(roleCode) {
   if (!roleCode) return roleCode;
   const upper = roleCode.trim().toUpperCase();
+  const aliases = {
+    POINTSMAN: "PM",
+    "TRAIN MANAGER": "TM",
+    "STATION MASTER": "SM",
+    "SM INCHARGE": "SS",
+    "STATION MASTER INCHARGE": "SS",
+    "STATION MASTER SUPERVISOR": "SMS",
+    "CABIN MASTER": "CABIN MASTER",
+    "TRAFFIC INSPECTOR": "TI",
+    "ASSISTANT OPERATIONS MANAGER": "AOM",
+  };
+
   if (upper === "SHUNTING MASTER" || upper === "SHM") {
     return "PM";
   }
-  return roleCode;
+  return aliases[upper] || upper;
 }
 
 async function runAutoMigration() {

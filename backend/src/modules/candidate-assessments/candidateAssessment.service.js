@@ -35,6 +35,7 @@ async function getAssessmentResultService(assessmentId, userId) {
 
 async function getMcqQuestionsForExamService(assessmentId, userId) {
   await verifyAssessmentOwnership(assessmentId, userId, ["created", "mcq_access_sent", "mcq_pending"]);
+  await repo.ensureAssessmentQuestions(assessmentId);
   return await repo.getMcqQuestionsForExam(assessmentId);
 }
 

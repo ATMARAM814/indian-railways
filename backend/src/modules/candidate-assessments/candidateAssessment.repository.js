@@ -120,6 +120,61 @@ async function getMcqQuestionsForExam(assessmentId) {
   return result.rows;
 }
 
+async function ensureAssessmentQuestions(assessmentId) {
+  const existing = await pool.query(
+    `SELECT COUNT(*)::int AS total
+     FROM assessment_mcq_questions amq
+     JOIN question_bank qb ON qb.id = amq.question_id
+     WHERE amq.assessment_id = $1`,
+    [assessmentId]
+  );
+
+  if (existing.rows[0].total > 0) {
+    return existing.rows[0].total;
+  }
+
+  const assessment = await pool.query(
+    "SELECT assessed_role_code FROM assessments WHERE id = $1",
+    [assessmentId]
+  );
+  const roleCode = assessment.rows[0]?.assessed_role_code;
+  const aliases = {
+    POINTSMAN: "PM",
+    "TRAIN MANAGER": "TM",
+    "STATION MASTER": "SM",
+    "SM INCHARGE": "SS",
+    "STATION MASTER INCHARGE": "SS",
+    "STATION MASTER SUPERVISOR": "SMS",
+    "TRAFFIC INSPECTOR": "TI",
+    "ASSISTANT OPERATIONS MANAGER": "AOM",
+    SHM: "PM",
+    "SHUNTING MASTER": "PM",
+  };
+  const normalizedRoleCode = aliases[roleCode?.trim().toUpperCase()] ||
+    roleCode?.trim().toUpperCase();
+
+  if (!normalizedRoleCode) {
+    throw new Error("Assessment role is not configured");
+  }
+
+  const result = await pool.query(
+    `INSERT INTO assessment_mcq_questions (assessment_id, question_id)
+     SELECT $1, qb.id
+     FROM question_bank qb
+     WHERE qb.role_code = $2
+       AND qb.status = 'active'
+     ORDER BY random()
+     LIMIT 25`,
+    [assessmentId, normalizedRoleCode]
+  );
+
+  if (result.rowCount === 0) {
+    throw new Error(`No active questions are available for ${roleCode}`);
+  }
+
+  return result.rowCount;
+}
+
 async function getCorrectAnswer(questionId) {
   const query = `SELECT correct_answer FROM question_bank WHERE id = $1;`;
   const result = await pool.query(query, [questionId]);
@@ -195,6 +250,7 @@ module.exports = {
   getActiveAssessment,
   getAssessmentDetailsForCandidate,
   getMcqQuestionsForExam,
+  ensureAssessmentQuestions,
   getCorrectAnswer,
   saveCandidateAnswer,
   toggleMarkForReview,
