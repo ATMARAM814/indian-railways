@@ -41,16 +41,24 @@ async function validateApprovalHierarchy(
   );
   const reportingOfficerId = checkReportingRes.rows[0]?.reporting_officer_id;
 
+  const assessedRole =
+    assessment.assessed_role_code;
+
+  // Train Managers must ALWAYS be approved by AOM (or SUPER_ADMIN), not by their reporting officer
+  if (assessedRole === "TM") {
+    if (approverRole !== "AOM" && approverRole !== "SUPER_ADMIN") {
+      throw new Error("Only an Assistant Operations Manager (AOM) is authorized to approve Train Manager assessments.");
+    }
+    return assessment;
+  }
+
   // If a reporting officer is assigned, ONLY allow that specific officer to approve
   if (reportingOfficerId) {
-    if (reportingOfficerId !== approverId) {
+    if (reportingOfficerId !== approverId && approverRole !== "SUPER_ADMIN") {
       throw new Error("Only the assigned reporting officer is authorized to approve this crew member's assessments.");
     }
     return assessment; // Bypass all other hierarchy rules
   }
-
-  const assessedRole =
-    assessment.assessed_role_code;
 
   if (
     (approverRole === "TI" || ["SMS", "STATION MASTER SUPERVISOR", "Station Master Supervisor"].includes(approverRole)) &&

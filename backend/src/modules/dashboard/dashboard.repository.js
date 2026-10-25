@@ -511,7 +511,7 @@ async function getTiSummary(stationIds, profileId) {
           AND a.approval_status = 'pending_approval'
           AND assessed.status = 'active'
           AND (
-            (assessed.reporting_officer_id = $2)
+            (a.assessed_role_code != 'TM' AND assessed.reporting_officer_id = $2)
             OR
             (assessed.reporting_officer_id IS NULL AND (
               a.assessed_role_code IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM')
@@ -537,7 +537,7 @@ async function getTiSummary(stationIds, profileId) {
         WHERE a.approval_status = 'approved'
           AND assessed.status = 'active'
           AND (
-            (assessed.reporting_officer_id = $2)
+            (a.assessed_role_code != 'TM' AND assessed.reporting_officer_id = $2)
             OR
             (
               a.assessed_role_code IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM')
@@ -714,15 +714,18 @@ async function getAomSummary(divisionId) {
         SELECT COUNT(*)::int
         FROM assessments a
         JOIN profiles p_sub ON p_sub.id = a.assessed_user_id
-        WHERE a.status = 'evaluated'
+        WHERE (a.status = 'completed' OR a.status = 'evaluated')
           AND a.approval_status = 'pending_approval'
           AND p_sub.status = 'active'
           AND a.assessed_role_code IN ('SM', 'TM', 'TI', 'SS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Cabin Master', 'CABIN MASTER')
-          AND a.assessed_user_id IN (
-            SELECT ssp.profile_id
-            FROM staff_station_postings ssp
-            JOIN stations s ON s.id = ssp.station_id
-            WHERE s.division_id = $1 AND ssp.is_current = true
+          AND (
+            a.assessed_role_code = 'TM'
+            OR a.assessed_user_id IN (
+              SELECT ssp.profile_id
+              FROM staff_station_postings ssp
+              JOIN stations s ON s.id = ssp.station_id
+              WHERE s.division_id = $1 AND ssp.is_current = true
+            )
           )
       ) as pending_approvals,
       (
@@ -928,7 +931,7 @@ async function getSuperAdminSummary() {
         SELECT COUNT(*)::int
         FROM assessments a
         JOIN profiles p ON p.id = a.assessed_user_id
-        WHERE a.status = 'evaluated' AND a.approval_status = 'pending_approval' AND p.status = 'active'
+        WHERE (a.status = 'completed' OR a.status = 'evaluated') AND a.approval_status = 'pending_approval' AND p.status = 'active'
       ) as pending_approvals,
       (
         SELECT COUNT(DISTINCT p.id)::int
@@ -1725,7 +1728,7 @@ async function getSmSupervisorSummary(stationId, profileId) {
           AND a.approval_status = 'pending_approval'
           AND assessed.status = 'active'
           AND (
-            (assessed.reporting_officer_id = $2::uuid)
+            (a.assessed_role_code != 'TM' AND assessed.reporting_officer_id = $2::uuid)
             OR
             (assessed.reporting_officer_id IS NULL AND (
               a.assessed_role_code IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM')

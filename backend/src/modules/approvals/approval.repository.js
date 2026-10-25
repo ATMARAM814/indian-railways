@@ -44,7 +44,11 @@ async function getPendingApprovalsForUser(userId, role) {
       AND (
         ($1 = 'SUPER_ADMIN')
         OR
-        (assessed.reporting_officer_id = $2)
+        -- Train Managers ALWAYS route to AOM for approval
+        ($1 = 'AOM' AND a.assessed_role_code = 'TM')
+        OR
+        -- Other staff with an assigned reporting officer route to their reporting officer
+        (a.assessed_role_code != 'TM' AND assessed.reporting_officer_id = $2)
         OR
         (assessed.reporting_officer_id IS NULL AND (
           ($1 = 'TI' 
@@ -72,7 +76,7 @@ async function getPendingApprovalsForUser(userId, role) {
            AND ssp.station_id = (SELECT station_id FROM staff_station_postings WHERE profile_id = $2 AND is_current = true LIMIT 1)
           )
           OR
-          ($1 = 'AOM' AND a.assessed_role_code IN ('SM', 'TM', 'TI', 'SS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Cabin Master', 'CABIN MASTER'))
+          ($1 = 'AOM' AND a.assessed_role_code IN ('SM', 'TI', 'SS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Cabin Master', 'CABIN MASTER'))
         ))
       )
     ORDER BY a.evaluated_at DESC;
