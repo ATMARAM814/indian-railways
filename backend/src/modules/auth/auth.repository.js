@@ -12,6 +12,7 @@ async function findUserByHrmsId(hrmsId) {
     FROM profiles p
     JOIN roles r ON r.id = p.role_id
     WHERE UPPER(p.hrms_id) = UPPER($1)
+    ORDER BY (CASE WHEN p.status = 'active' THEN 0 ELSE 1 END), p.created_at ASC
   `;
 
   const result = await pool.query(query, [hrmsId]);
@@ -31,6 +32,7 @@ async function findUserByPhone(phone) {
     FROM profiles p
     JOIN roles r ON r.id = p.role_id
     WHERE p.phone = $1
+    ORDER BY (CASE WHEN p.status = 'active' THEN 0 ELSE 1 END), p.created_at ASC
   `;
 
   const result = await pool.query(query, [phone]);
@@ -40,9 +42,11 @@ async function findUserByPhone(phone) {
 
 async function findCredentialByHrmsId(hrmsId) {
   const query = `
-    SELECT *
-    FROM user_credentials
-    WHERE UPPER(hrms_id) = UPPER($1)
+    SELECT uc.*
+    FROM user_credentials uc
+    JOIN profiles p ON p.id = uc.profile_id
+    WHERE UPPER(p.hrms_id) = UPPER($1)
+    ORDER BY (CASE WHEN p.status = 'active' THEN 0 ELSE 1 END), p.created_at ASC
   `;
 
   const result = await pool.query(query, [hrmsId]);
