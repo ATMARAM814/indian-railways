@@ -81,6 +81,22 @@ async function runAutoMigration() {
        OR yes_no_score != COALESCE(alertness_score, 0) + COALESCE(safety_record_score, 0) + COALESCE(leadership_score, 0) + COALESCE(discipline_score, 0) + COALESCE(appearance_score, 0)
        OR evaluation_score != COALESCE(alertness_score, 0) + COALESCE(safety_record_score, 0) + COALESCE(leadership_score, 0) + COALESCE(discipline_score, 0) + COALESCE(appearance_score, 0)
        OR ABS(percentage - ((COALESCE(mcq_score, 0) + COALESCE(alertness_score, 0) + COALESCE(safety_record_score, 0) + COALESCE(leadership_score, 0) + COALESCE(discipline_score, 0) + COALESCE(appearance_score, 0))::numeric / COALESCE(NULLIF(max_marks, 0), 100)) * 100) > 0.01;
+    -- Auto-cancel unattempted duplicate assessment attempts
+    UPDATE assessments a
+    SET status = 'cancelled', cancellation_reason = 'Duplicate unattempted assessment cleaned up'
+    WHERE a.status = 'mcq_access_sent'
+      AND NOT EXISTS (SELECT 1 FROM assessment_mcq_answers ans WHERE ans.assessment_id = a.id)
+      AND NOT EXISTS (SELECT 1 FROM assessment_yes_no_answers ya WHERE ya.assessment_id = a.id)
+      AND EXISTS (
+        SELECT 1 FROM assessments a2
+        WHERE a2.assessed_user_id = a.assessed_user_id
+          AND a2.id != a.id
+          AND a2.status IN ('scheduled', 'mcq_access_sent', 'mcq_pending', 'mcq_submitted', 'evaluation_pending', 'evaluation_submitted', 'created', 'completed')
+          AND (
+            a2.status IN ('mcq_submitted', 'evaluation_pending', 'evaluation_submitted', 'completed')
+            OR (a2.status = 'mcq_access_sent' AND a2.created_at > a.created_at)
+          )
+      );
   `;
 
   try {

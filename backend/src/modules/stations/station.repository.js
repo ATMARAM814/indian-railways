@@ -384,7 +384,7 @@ async function getStationsListDb(userId, role, filters) {
     LEFT JOIN station_assignments sa ON sa.station_id = s.id AND sa.assignment_type = 'TI_AREA' AND sa.assigned_to IS NULL
     LEFT JOIN profiles ti ON ti.id = sa.profile_id
     LEFT JOIN (
-      SELECT ssp_inner.station_id, COUNT(DISTINCT a.id) as count
+      SELECT ssp_inner.station_id, COUNT(DISTINCT a.assessed_user_id) as count
       FROM assessments a
       JOIN staff_station_postings ssp_inner ON ssp_inner.profile_id = a.assessed_user_id AND ssp_inner.is_current = true
       JOIN profiles p_assess ON p_assess.id = a.assessed_user_id AND p_assess.status = 'active'
@@ -438,7 +438,7 @@ async function getStationOverviewStatsDb(stationId) {
       COUNT(DISTINCT p.id) FILTER (WHERE eff_cat.category_code = 'D')::int as "categoryDStaff",
       -- pending assessments
       (
-        SELECT COUNT(DISTINCT a.id)::int 
+        SELECT COUNT(DISTINCT a.assessed_user_id)::int 
         FROM assessments a
         JOIN staff_station_postings ssp_inner ON ssp_inner.profile_id = a.assessed_user_id AND ssp_inner.is_current = true
         JOIN profiles p_sub ON p_sub.id = a.assessed_user_id AND p_sub.status = 'active'
@@ -450,7 +450,7 @@ async function getStationOverviewStatsDb(stationId) {
       ) as "pendingAssessments",
       -- completed assessments
       (
-        SELECT COUNT(DISTINCT a.id)::int 
+        SELECT COUNT(DISTINCT a.assessed_user_id)::int 
         FROM assessments a
         JOIN staff_station_postings ssp_inner ON ssp_inner.profile_id = a.assessed_user_id AND ssp_inner.is_current = true
         JOIN profiles p_sub ON p_sub.id = a.assessed_user_id AND p_sub.status = 'active'

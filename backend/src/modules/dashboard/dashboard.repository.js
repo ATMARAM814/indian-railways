@@ -1645,7 +1645,7 @@ async function getSuperAdminTiAssessmentStats() {
         WHERE sa_inner.profile_id = p.id AND sa_inner.assignment_type = 'TI_AREA' AND sa_inner.assigned_to IS NULL
       ) as "totalEmployees",
       (
-        SELECT COUNT(DISTINCT a.id)::int
+        SELECT COUNT(DISTINCT a.assessed_user_id)::int
         FROM station_assignments sa_inner
         JOIN staff_station_postings ssp ON ssp.station_id = sa_inner.station_id AND ssp.is_current = true
         JOIN profiles p_staff ON p_staff.id = ssp.profile_id AND p_staff.status = 'active'
@@ -1654,7 +1654,7 @@ async function getSuperAdminTiAssessmentStats() {
           AND ((a.status = 'completed' AND (a.approval_status = 'approved' OR a.approval_status = 'rejected')))
       ) as "completedAssessments",
       (
-        SELECT COUNT(DISTINCT a.id)::int
+        SELECT COUNT(DISTINCT a.assessed_user_id)::int
         FROM station_assignments sa_inner
         JOIN staff_station_postings ssp ON ssp.station_id = sa_inner.station_id AND ssp.is_current = true
         JOIN profiles p_staff ON p_staff.id = ssp.profile_id AND p_staff.status = 'active'
@@ -1663,7 +1663,7 @@ async function getSuperAdminTiAssessmentStats() {
           AND (a.status IN ('created', 'mcq_pending', 'mcq_submitted', 'evaluation_pending', 'evaluation_submitted', 'scheduled', 'mcq_access_sent'))
       ) as "pendingAssessments",
       (
-        SELECT COUNT(DISTINCT a.id)::int
+        SELECT COUNT(DISTINCT a.assessed_user_id)::int
         FROM station_assignments sa_inner
         JOIN staff_station_postings ssp ON ssp.station_id = sa_inner.station_id AND ssp.is_current = true
         JOIN profiles p_staff ON p_staff.id = ssp.profile_id AND p_staff.status = 'active'

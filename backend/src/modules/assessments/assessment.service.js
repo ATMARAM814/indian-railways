@@ -840,6 +840,11 @@ async function createBulkAssessmentsService({
 
   const createdAssessments = [];
   for (const emp of staff) {
+    const activeExists = await hasActiveAssessment(emp.id);
+    if (activeExists) {
+      continue;
+    }
+
     const assessment = await createAssessmentRecord({
       assessedUserId: emp.id,
       assessorUserId,
