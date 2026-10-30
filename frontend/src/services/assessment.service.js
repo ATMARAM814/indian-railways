@@ -16,7 +16,7 @@ export const activateMCQExam = async (payload) => {
 };
 
 export const getYesNoQuestions = async (roleCode) => {
-  const res = await apiClient.get(`/assessments/questions/yes-no/${roleCode}`);
+  const res = await apiClient.get(`/assessments/questions/yes-no/${encodeURIComponent(roleCode)}`);
   return res.data;
 };
 

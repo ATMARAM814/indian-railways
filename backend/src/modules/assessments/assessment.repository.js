@@ -172,11 +172,16 @@ async function countActiveQuestions(roleCode) {
   const query = `
     SELECT COUNT(*) AS total
     FROM question_bank
-    WHERE role_code = $1
+    WHERE (
+      role_code = $1
+      OR UPPER(role_code) = UPPER($1)
+      OR role_code = $2
+      OR UPPER(role_code) = UPPER($2)
+    )
       AND status = 'active';
   `;
 
-  const result = await pool.query(query, [normalized]);
+  const result = await pool.query(query, [normalized || '', roleCode || '']);
 
   return Number(result.rows[0].total);
 }
@@ -277,14 +282,20 @@ async function getRandomQuestions(roleCode, limit = 25) {
   const query = `
     SELECT id
     FROM question_bank
-    WHERE role_code = $1
+    WHERE (
+      role_code = $1
+      OR UPPER(role_code) = UPPER($1)
+      OR role_code = $2
+      OR UPPER(role_code) = UPPER($2)
+    )
       AND status = 'active'
     ORDER BY random()
-    LIMIT $2;
+    LIMIT $3;
   `;
 
   const result = await pool.query(query, [
-    normalized,
+    normalized || '',
+    roleCode || '',
     limit,
   ]);
 
@@ -413,11 +424,17 @@ async function getYesNoQuestionsWithSections(roleCode) {
     FROM yes_no_questions ynq
     JOIN evaluation_sections es
       ON es.section_code = ynq.section_code
-    WHERE ynq.role_code = $1
-      AND ynq.is_active = true;
+    WHERE (
+      ynq.role_code = $1
+      OR UPPER(ynq.role_code) = UPPER($1)
+      OR ynq.role_code = $2
+      OR UPPER(ynq.role_code) = UPPER($2)
+    )
+      AND ynq.is_active = true
+    ORDER BY es.display_order, ynq.id;
   `;
 
-  const result = await pool.query(query, [normalized]);
+  const result = await pool.query(query, [normalized || '', roleCode || '']);
   return result.rows;
 }
 
