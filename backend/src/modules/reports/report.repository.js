@@ -82,6 +82,20 @@ function buildAssessmentsWhere(filters, scope, values) {
   }
 
   // --- Filters ---
+  if (filters.tiId) {
+    values.push(filters.tiId);
+    conditions.push(`(
+      ssp.station_id IN (
+        SELECT station_id
+        FROM station_assignments
+        WHERE profile_id = $${values.length}::uuid
+          AND assignment_type = 'TI_AREA'
+          AND assigned_to IS NULL
+      )
+      OR assessed.reporting_officer_id = $${values.length}::uuid
+    )`);
+    conditions.push(`assessed.id != $${values.length}::uuid`);
+  }
   if (filters.role) {
     values.push(filters.role);
     conditions.push(`a.assessed_role_code = $${values.length}`);
@@ -273,6 +287,20 @@ function buildStaffPerformanceWhere(filters, scope, values) {
   }
 
   // --- Filters ---
+  if (filters.tiId) {
+    values.push(filters.tiId);
+    conditions.push(`(
+      ssp.station_id IN (
+        SELECT station_id
+        FROM station_assignments
+        WHERE profile_id = $${values.length}::uuid
+          AND assignment_type = 'TI_AREA'
+          AND assigned_to IS NULL
+      )
+      OR p.reporting_officer_id = $${values.length}::uuid
+    )`);
+    conditions.push(`p.id != $${values.length}::uuid`);
+  }
   if (filters.role) {
     values.push(filters.role);
     conditions.push(`r.name = $${values.length}`);
@@ -280,6 +308,11 @@ function buildStaffPerformanceWhere(filters, scope, values) {
   if (filters.stationId) {
     values.push(filters.stationId);
     conditions.push(`ssp.station_id = $${values.length}`);
+  }
+  const staffStationSearch = filters.stationSearch || filters.station || filters.stationName || filters.stationCode;
+  if (staffStationSearch) {
+    values.push(`%` + staffStationSearch.trim() + `%`);
+    conditions.push(`(s.station_name ILIKE $${values.length} OR s.station_code ILIKE $${values.length})`);
   }
   if (filters.category) {
     values.push(filters.category);
@@ -461,6 +494,16 @@ function buildStationSummaryWhere(filters, scope, values) {
   }
 
   // --- Filters ---
+  if (filters.tiId) {
+    values.push(filters.tiId);
+    conditions.push(`s.id IN (
+      SELECT station_id
+      FROM station_assignments
+      WHERE profile_id = $${values.length}::uuid
+        AND assignment_type = 'TI_AREA'
+        AND assigned_to IS NULL
+    )`);
+  }
   if (filters.stationId) {
     values.push(filters.stationId);
     conditions.push(`s.id = $${values.length}`);
@@ -660,6 +703,20 @@ function buildApprovalWhere(filters, scope, values) {
   }
 
   // --- Filters ---
+  if (filters.tiId) {
+    values.push(filters.tiId);
+    conditions.push(`(
+      ssp.station_id IN (
+        SELECT station_id
+        FROM station_assignments
+        WHERE profile_id = $${values.length}::uuid
+          AND assignment_type = 'TI_AREA'
+          AND assigned_to IS NULL
+      )
+      OR assessed.reporting_officer_id = $${values.length}::uuid
+    )`);
+    conditions.push(`assessed.id != $${values.length}::uuid`);
+  }
   if (filters.role) {
     values.push(filters.role);
     conditions.push(`a.assessed_role_code = $${values.length}`);
@@ -821,6 +878,20 @@ function buildQueryContext(filters, scope) {
   let whereProfileClause = scopeConditions.length > 0 ? `WHERE ${scopeConditions.join(" AND ")}` : "";
   
   const filterConditions = [];
+  if (filters.tiId) {
+    values.push(filters.tiId);
+    filterConditions.push(`(
+      ssp.station_id IN (
+        SELECT station_id
+        FROM station_assignments
+        WHERE profile_id = $${values.length}::uuid
+          AND assignment_type = 'TI_AREA'
+          AND assigned_to IS NULL
+      )
+      OR p.reporting_officer_id = $${values.length}::uuid
+    )`);
+    filterConditions.push(`p.id != $${values.length}::uuid`);
+  }
   if (filters.role) {
     values.push(filters.role);
     filterConditions.push(`r.name = $${values.length}`);

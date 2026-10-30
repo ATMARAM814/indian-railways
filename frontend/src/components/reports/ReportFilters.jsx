@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { getStationsList } from '../../services/workforce.service';
+import { getStationsList, getTrafficInspectorsList } from '../../services/workforce.service';
 import { Search, Calendar, Filter, RotateCcw } from 'lucide-react';
 
 const ReportFilters = ({ filters = {}, onApplyFilters, onResetFilters, userRole }) => {
+  const [tiId, setTiId] = useState(filters.tiId || '');
+  const [trafficInspectors, setTrafficInspectors] = useState([]);
+  const [loadingTis, setLoadingTis] = useState(false);
   const [role, setRole] = useState(filters.role || '');
   const [stationId, setStationId] = useState(filters.stationId || '');
   const [stationSearch, setStationSearch] = useState(filters.stationSearch || '');
@@ -16,6 +19,7 @@ const ReportFilters = ({ filters = {}, onApplyFilters, onResetFilters, userRole 
   const [stations, setStations] = useState([]);
 
   useEffect(() => {
+    setTiId(filters.tiId || '');
     setRole(filters.role || '');
     setStationId(filters.stationId || '');
     setStationSearch(filters.stationSearch || '');
@@ -29,6 +33,19 @@ const ReportFilters = ({ filters = {}, onApplyFilters, onResetFilters, userRole 
   }, [filters]);
 
   useEffect(() => {
+    // Load Traffic Inspectors list for AOM and Super Admin
+    if (['AOM', 'SUPER_ADMIN'].includes(userRole)) {
+      setLoadingTis(true);
+      getTrafficInspectorsList()
+        .then(res => {
+          if (res.success && Array.isArray(res.data)) {
+            setTrafficInspectors(res.data);
+          }
+        })
+        .catch(err => console.error('Failed to load traffic inspectors for filters', err))
+        .finally(() => setLoadingTis(false));
+    }
+
     // Only load stations dropdown for roles that see multiple stations
     if (['AOM', 'SUPER_ADMIN', 'TI'].includes(userRole)) {
       getStationsList()
@@ -42,6 +59,7 @@ const ReportFilters = ({ filters = {}, onApplyFilters, onResetFilters, userRole 
   const handleApply = (e) => {
     e.preventDefault();
     onApplyFilters({
+      tiId,
       role,
       stationId,
       category,
@@ -55,6 +73,7 @@ const ReportFilters = ({ filters = {}, onApplyFilters, onResetFilters, userRole 
   };
 
   const handleReset = () => {
+    setTiId('');
     setRole('');
     setStationId('');
     setStationSearch('');
@@ -72,6 +91,7 @@ const ReportFilters = ({ filters = {}, onApplyFilters, onResetFilters, userRole 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       onApplyFilters({
+        tiId,
         role,
         stationId,
         stationSearch,
@@ -86,7 +106,7 @@ const ReportFilters = ({ filters = {}, onApplyFilters, onResetFilters, userRole 
     }, (search || stationSearch) ? 300 : 0);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [role, stationId, stationSearch, category, assessmentStatus, approvalStatus, assessmentCycle, fromDate, toDate, search, onApplyFilters]);
+  }, [tiId, role, stationId, stationSearch, category, assessmentStatus, approvalStatus, assessmentCycle, fromDate, toDate, search, onApplyFilters]);
 
   return (
     <form onSubmit={(e) => e.preventDefault()} className="filter-card">
@@ -110,6 +130,27 @@ const ReportFilters = ({ filters = {}, onApplyFilters, onResetFilters, userRole 
             />
           </div>
         </div>
+
+        {/* TI Wise Filter */}
+        {['AOM', 'SUPER_ADMIN'].includes(userRole) && (
+          <div className="filter-item">
+            <label className="filter-label">TI Wise</label>
+            <select
+              className="filter-input"
+              value={tiId}
+              onChange={(e) => setTiId(e.target.value)}
+              style={{ cursor: 'pointer' }}
+              disabled={loadingTis}
+            >
+              <option value="">All TIs</option>
+              {trafficInspectors.map((ti) => (
+                <option key={ti.id} value={ti.id}>
+                  {ti.fullName} ({ti.hrmsId})
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
         {/* Role Filter */}
         {['TI', 'AOM', 'SUPER_ADMIN', 'SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SM', 'SS', 'Cabin Master', 'CABIN MASTER'].includes(userRole) && (
