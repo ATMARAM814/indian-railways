@@ -178,7 +178,7 @@ const TiApprovalsPage = () => {
                     </div>
 
                     {/* Card 2: Total Monitored Workforce */}
-                    <div style={{
+                    <div onClick={() => navigate('/reports')} title="Click to view all monitored crew in Reports" style={{ cursor: 'pointer',
                         backgroundColor: '#FFFFFF',
                         border: '1px solid #D7E3EF',
                         borderRadius: '12px',
@@ -211,7 +211,7 @@ const TiApprovalsPage = () => {
                     </div>
 
                     {/* Card 3: Completed */}
-                    <div style={{
+                    <div onClick={() => navigate('/reports?assessmentStatus=completed')} title="Click to view completed evaluations in Reports" style={{ cursor: 'pointer',
                         backgroundColor: '#FFFFFF',
                         border: '1px solid #D7E3EF',
                         borderRadius: '12px',
@@ -244,7 +244,7 @@ const TiApprovalsPage = () => {
                     </div>
 
                     {/* Card 4: Evaluation Pending */}
-                    <div style={{
+                    <div onClick={() => navigate('/reports?assessmentStatus=evaluation_pending')} title="Click to view evaluation pending crew in Reports" style={{ cursor: 'pointer',
                         backgroundColor: '#FFFFFF',
                         border: '1px solid #D7E3EF',
                         borderRadius: '12px',
@@ -277,7 +277,7 @@ const TiApprovalsPage = () => {
                     </div>
 
                     {/* Card 5: Approval Pending */}
-                    <div style={{
+                    <div onClick={() => navigate('/reports?assessmentStatus=pending_approval')} title="Click to view approval pending crew in Reports" style={{ cursor: 'pointer',
                         backgroundColor: '#FFFFFF',
                         border: '1px solid #D7E3EF',
                         borderRadius: '12px',
@@ -469,7 +469,7 @@ const TiApprovalsPage = () => {
                                                         {getInitials(row.tiName)}
                                                     </div>
                                                     <div>
-                                                        <div style={{ fontWeight: 700, color: '#0F172A', fontSize: '14px' }}>
+                                                        <div onClick={() => navigate(`/reports?tiId=${row.tiId}`)} title="View workforce under this TI" style={{ fontWeight: 700, color: '#0F172A', fontSize: '14px', cursor: 'pointer', textDecoration: 'underline', textDecorationColor: 'transparent', transition: 'text-decoration-color 0.15s ease' }} onMouseEnter={(e) => e.currentTarget.style.textDecorationColor = '#2563EB'} onMouseLeave={(e) => e.currentTarget.style.textDecorationColor = 'transparent'}>
                                                             {row.tiName}
                                                         </div>
                                                         <div style={{ fontSize: '11.5px', color: '#64748B', fontWeight: 500, marginTop: '1px' }}>
@@ -498,78 +498,22 @@ const TiApprovalsPage = () => {
 
                                             {/* Total Employees */}
                                             <td style={{ padding: '14px 20px', textAlign: 'center', verticalAlign: 'middle' }}>
-                                                <span style={{
-                                                    display: 'inline-flex',
-                                                    alignItems: 'center',
-                                                    gap: '6px',
-                                                    padding: '4px 10px',
-                                                    borderRadius: '8px',
-                                                    backgroundColor: '#F8FAFC',
-                                                    border: '1px solid #E2E8F0',
-                                                    fontWeight: 700,
-                                                    fontSize: '13px',
-                                                    color: '#0F172A'
-                                                }}>
-                                                    <Users size={14} style={{ color: '#64748B' }} />
-                                                    {row.totalEmployees}
-                                                </span>
+                                                <button type="button" onClick={() => navigate(`/reports?tiId=${row.tiId}`)} title="View crew under this TI" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '8px', backgroundColor: '#F8FAFC', border: '1px solid #CBD5E1', fontWeight: 700, fontSize: '13px', color: '#0F172A', cursor: 'pointer', transition: 'all 0.15s ease' }} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#EFF6FF'; e.currentTarget.style.borderColor = '#2563EB'; e.currentTarget.style.color = '#1D4ED8'; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#F8FAFC'; e.currentTarget.style.borderColor = '#CBD5E1'; e.currentTarget.style.color = '#0F172A'; }}><Users size={14} style={{ color: 'inherit' }} />{row.totalEmployees}</button>
                                             </td>
 
                                             {/* Completed */}
                                             <td style={{ padding: '14px 20px', textAlign: 'center', verticalAlign: 'middle' }}>
-                                                <span style={{
-                                                    display: 'inline-flex',
-                                                    alignItems: 'center',
-                                                    gap: '6px',
-                                                    padding: '4px 12px',
-                                                    borderRadius: '9999px',
-                                                    backgroundColor: '#DCFCE7',
-                                                    color: '#15803D',
-                                                    border: '1px solid #BBF7D0',
-                                                    fontWeight: 700,
-                                                    fontSize: '13px'
-                                                }}>
-                                                    <CheckCircle2 size={13} />
-                                                    {row.completedAssessments}
-                                                </span>
+                                                <button type="button" onClick={() => navigate(`/reports?tiId=${row.tiId}&assessmentStatus=completed`)} title="View completed evaluations" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 12px', borderRadius: '9999px', backgroundColor: '#DCFCE7', color: '#15803D', border: '1px solid #BBF7D0', fontWeight: 700, fontSize: '13px', cursor: 'pointer', transition: 'all 0.15s ease' }} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#BBF7D0'; e.currentTarget.style.boxShadow = '0 2px 6px rgba(22, 163, 74, 0.2)'; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#DCFCE7'; e.currentTarget.style.boxShadow = 'none'; }}><CheckCircle2 size={13} />{row.completedAssessments}</button>
                                             </td>
 
                                             {/* Evaluation Pending */}
                                             <td style={{ padding: '14px 20px', textAlign: 'center', verticalAlign: 'middle' }}>
-                                                <span style={{
-                                                    display: 'inline-flex',
-                                                    alignItems: 'center',
-                                                    gap: '6px',
-                                                    padding: '4px 12px',
-                                                    borderRadius: '9999px',
-                                                    backgroundColor: row.pendingAssessments > 0 ? '#FEF3C7' : '#F8FAFC',
-                                                    color: row.pendingAssessments > 0 ? '#B45309' : '#94A3B8',
-                                                    border: row.pendingAssessments > 0 ? '1px solid #FDE68A' : '1px solid #E2E8F0',
-                                                    fontWeight: 700,
-                                                    fontSize: '13px'
-                                                }}>
-                                                    <Clock size={13} />
-                                                    {row.pendingAssessments}
-                                                </span>
+                                                <button type="button" onClick={() => navigate(`/reports?tiId=${row.tiId}&assessmentStatus=evaluation_pending`)} title="View evaluation pending crew" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 12px', borderRadius: '9999px', backgroundColor: row.pendingAssessments > 0 ? '#FEF3C7' : '#F8FAFC', color: row.pendingAssessments > 0 ? '#B45309' : '#94A3B8', border: row.pendingAssessments > 0 ? '1px solid #FDE68A' : '1px solid #E2E8F0', fontWeight: 700, fontSize: '13px', cursor: row.pendingAssessments > 0 ? 'pointer' : 'default', transition: 'all 0.15s ease' }} onMouseEnter={(e) => { if (row.pendingAssessments > 0) { e.currentTarget.style.backgroundColor = '#FDE68A'; e.currentTarget.style.boxShadow = '0 2px 6px rgba(217, 119, 6, 0.2)'; } }} onMouseLeave={(e) => { if (row.pendingAssessments > 0) { e.currentTarget.style.backgroundColor = '#FEF3C7'; e.currentTarget.style.boxShadow = 'none'; } }}><Clock size={13} />{row.pendingAssessments}</button>
                                             </td>
 
                                             {/* Approval Pending */}
                                             <td style={{ padding: '14px 20px', textAlign: 'center', verticalAlign: 'middle' }}>
-                                                <span style={{
-                                                    display: 'inline-flex',
-                                                    alignItems: 'center',
-                                                    gap: '6px',
-                                                    padding: '4px 12px',
-                                                    borderRadius: '9999px',
-                                                    backgroundColor: row.approvalPending > 0 ? '#FEE2E2' : '#F8FAFC',
-                                                    color: row.approvalPending > 0 ? '#B91C1C' : '#94A3B8',
-                                                    border: row.approvalPending > 0 ? '1px solid #FECACA' : '1px solid #E2E8F0',
-                                                    fontWeight: 700,
-                                                    fontSize: '13px'
-                                                }}>
-                                                    <AlertCircle size={13} />
-                                                    {row.approvalPending}
-                                                </span>
+                                                <button type="button" onClick={() => navigate(`/reports?tiId=${row.tiId}&assessmentStatus=pending_approval`)} title="View approval pending crew" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 12px', borderRadius: '9999px', backgroundColor: row.approvalPending > 0 ? '#FEE2E2' : '#F8FAFC', color: row.approvalPending > 0 ? '#B91C1C' : '#94A3B8', border: row.approvalPending > 0 ? '1px solid #FECACA' : '1px solid #E2E8F0', fontWeight: 700, fontSize: '13px', cursor: row.approvalPending > 0 ? 'pointer' : 'default', transition: 'all 0.15s ease' }} onMouseEnter={(e) => { if (row.approvalPending > 0) { e.currentTarget.style.backgroundColor = '#FECACA'; e.currentTarget.style.boxShadow = '0 2px 6px rgba(220, 38, 38, 0.2)'; } }} onMouseLeave={(e) => { if (row.approvalPending > 0) { e.currentTarget.style.backgroundColor = '#FEE2E2'; e.currentTarget.style.boxShadow = 'none'; } }}><AlertCircle size={13} />{row.approvalPending}</button>
                                             </td>
                                         </tr>
                                     ))}
@@ -585,72 +529,16 @@ const TiApprovalsPage = () => {
                                             —
                                         </td>
                                         <td style={{ padding: '16px 20px', textAlign: 'center' }}>
-                                            <span style={{
-                                                display: 'inline-flex',
-                                                alignItems: 'center',
-                                                gap: '6px',
-                                                padding: '4px 10px',
-                                                borderRadius: '8px',
-                                                backgroundColor: '#FFFFFF',
-                                                border: '1.5px solid #CBD5E1',
-                                                fontWeight: 800,
-                                                fontSize: '13px',
-                                                color: '#0F172A'
-                                            }}>
-                                                <Users size={14} style={{ color: '#475569' }} />
-                                                {totals.totalStaff}
-                                            </span>
+                                            <button type="button" onClick={() => navigate('/reports')} title="View all division monitored crew" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '8px', backgroundColor: '#FFFFFF', border: '1.5px solid #CBD5E1', fontWeight: 800, fontSize: '13px', color: '#0F172A', cursor: 'pointer', transition: 'all 0.15s ease' }} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#EFF6FF'; e.currentTarget.style.borderColor = '#2563EB'; e.currentTarget.style.color = '#1D4ED8'; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#FFFFFF'; e.currentTarget.style.borderColor = '#CBD5E1'; e.currentTarget.style.color = '#0F172A'; }}><Users size={14} style={{ color: 'inherit' }} />{totals.totalStaff}</button>
                                         </td>
                                         <td style={{ padding: '16px 20px', textAlign: 'center' }}>
-                                            <span style={{
-                                                display: 'inline-flex',
-                                                alignItems: 'center',
-                                                gap: '6px',
-                                                padding: '4px 12px',
-                                                borderRadius: '9999px',
-                                                backgroundColor: '#DCFCE7',
-                                                color: '#15803D',
-                                                border: '1.5px solid #86EFAC',
-                                                fontWeight: 800,
-                                                fontSize: '13px'
-                                            }}>
-                                                <CheckCircle2 size={13} />
-                                                {totals.completed}
-                                            </span>
+                                            <button type="button" onClick={() => navigate('/reports?assessmentStatus=completed')} title="View all completed evaluations across division" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 12px', borderRadius: '9999px', backgroundColor: '#DCFCE7', color: '#15803D', border: '1.5px solid #86EFAC', fontWeight: 800, fontSize: '13px', cursor: 'pointer', transition: 'all 0.15s ease' }} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#BBF7D0'; e.currentTarget.style.boxShadow = '0 2px 6px rgba(22, 163, 74, 0.2)'; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#DCFCE7'; e.currentTarget.style.boxShadow = 'none'; }}><CheckCircle2 size={13} />{totals.completed}</button>
                                         </td>
                                         <td style={{ padding: '16px 20px', textAlign: 'center' }}>
-                                            <span style={{
-                                                display: 'inline-flex',
-                                                alignItems: 'center',
-                                                gap: '6px',
-                                                padding: '4px 12px',
-                                                borderRadius: '9999px',
-                                                backgroundColor: totals.evalPending > 0 ? '#FEF3C7' : '#F8FAFC',
-                                                color: totals.evalPending > 0 ? '#B45309' : '#94A3B8',
-                                                border: totals.evalPending > 0 ? '1.5px solid #FCD34D' : '1px solid #E2E8F0',
-                                                fontWeight: 800,
-                                                fontSize: '13px'
-                                            }}>
-                                                <Clock size={13} />
-                                                {totals.evalPending}
-                                            </span>
+                                            <button type="button" onClick={() => navigate('/reports?assessmentStatus=evaluation_pending')} title="View all evaluation pending crew across division" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 12px', borderRadius: '9999px', backgroundColor: totals.evalPending > 0 ? '#FEF3C7' : '#F8FAFC', color: totals.evalPending > 0 ? '#B45309' : '#94A3B8', border: totals.evalPending > 0 ? '1.5px solid #FCD34D' : '1px solid #E2E8F0', fontWeight: 800, fontSize: '13px', cursor: totals.evalPending > 0 ? 'pointer' : 'default', transition: 'all 0.15s ease' }} onMouseEnter={(e) => { if (totals.evalPending > 0) { e.currentTarget.style.backgroundColor = '#FDE68A'; e.currentTarget.style.boxShadow = '0 2px 6px rgba(217, 119, 6, 0.2)'; } }} onMouseLeave={(e) => { if (totals.evalPending > 0) { e.currentTarget.style.backgroundColor = '#FEF3C7'; e.currentTarget.style.boxShadow = 'none'; } }}><Clock size={13} />{totals.evalPending}</button>
                                         </td>
                                         <td style={{ padding: '16px 20px', textAlign: 'center' }}>
-                                            <span style={{
-                                                display: 'inline-flex',
-                                                alignItems: 'center',
-                                                gap: '6px',
-                                                padding: '4px 12px',
-                                                borderRadius: '9999px',
-                                                backgroundColor: totals.approvalPending > 0 ? '#FEE2E2' : '#F8FAFC',
-                                                color: totals.approvalPending > 0 ? '#B91C1C' : '#94A3B8',
-                                                border: totals.approvalPending > 0 ? '1.5px solid #FCA5A5' : '1px solid #E2E8F0',
-                                                fontWeight: 800,
-                                                fontSize: '13px'
-                                            }}>
-                                                <AlertCircle size={13} />
-                                                {totals.approvalPending}
-                                            </span>
+                                            <button type="button" onClick={() => navigate('/reports?assessmentStatus=pending_approval')} title="View all approval pending crew across division" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 12px', borderRadius: '9999px', backgroundColor: totals.approvalPending > 0 ? '#FEE2E2' : '#F8FAFC', color: totals.approvalPending > 0 ? '#B91C1C' : '#94A3B8', border: totals.approvalPending > 0 ? '1.5px solid #FCA5A5' : '1px solid #E2E8F0', fontWeight: 800, fontSize: '13px', cursor: totals.approvalPending > 0 ? 'pointer' : 'default', transition: 'all 0.15s ease' }} onMouseEnter={(e) => { if (totals.approvalPending > 0) { e.currentTarget.style.backgroundColor = '#FECACA'; e.currentTarget.style.boxShadow = '0 2px 6px rgba(220, 38, 38, 0.2)'; } }} onMouseLeave={(e) => { if (totals.approvalPending > 0) { e.currentTarget.style.backgroundColor = '#FEE2E2'; e.currentTarget.style.boxShadow = 'none'; } }}><AlertCircle size={13} />{totals.approvalPending}</button>
                                         </td>
                                     </tr>
                                 </tfoot>

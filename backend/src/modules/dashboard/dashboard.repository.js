@@ -1637,42 +1637,22 @@ async function getSuperAdminTiAssessmentStats() {
         ),
         'N/A'
       ) as "stationCode",
-      (
-        SELECT COUNT(DISTINCT ssp.profile_id)::int
-        FROM station_assignments sa_inner
-        JOIN staff_station_postings ssp ON ssp.station_id = sa_inner.station_id AND ssp.is_current = true
-        JOIN profiles p_staff ON p_staff.id = ssp.profile_id AND p_staff.status = 'active'
-        WHERE sa_inner.profile_id = p.id AND sa_inner.assignment_type = 'TI_AREA' AND sa_inner.assigned_to IS NULL
-      ) as "totalEmployees",
-      (
-        SELECT COUNT(DISTINCT a.assessed_user_id)::int
-        FROM station_assignments sa_inner
-        JOIN staff_station_postings ssp ON ssp.station_id = sa_inner.station_id AND ssp.is_current = true
-        JOIN profiles p_staff ON p_staff.id = ssp.profile_id AND p_staff.status = 'active'
-        JOIN assessments a ON a.assessed_user_id = ssp.profile_id
-        WHERE sa_inner.profile_id = p.id AND sa_inner.assignment_type = 'TI_AREA' AND sa_inner.assigned_to IS NULL
-          AND ((a.status = 'completed' AND (a.approval_status = 'approved' OR a.approval_status = 'rejected')))
-      ) as "completedAssessments",
-      (
-        SELECT COUNT(DISTINCT a.assessed_user_id)::int
-        FROM station_assignments sa_inner
-        JOIN staff_station_postings ssp ON ssp.station_id = sa_inner.station_id AND ssp.is_current = true
-        JOIN profiles p_staff ON p_staff.id = ssp.profile_id AND p_staff.status = 'active'
-        JOIN assessments a ON a.assessed_user_id = ssp.profile_id
-        WHERE sa_inner.profile_id = p.id AND sa_inner.assignment_type = 'TI_AREA' AND sa_inner.assigned_to IS NULL
-          AND (a.status IN ('created', 'mcq_pending', 'mcq_submitted', 'evaluation_pending', 'evaluation_submitted', 'scheduled', 'mcq_access_sent'))
-      ) as "pendingAssessments",
-      (
-        SELECT COUNT(DISTINCT a.assessed_user_id)::int
-        FROM station_assignments sa_inner
-        JOIN staff_station_postings ssp ON ssp.station_id = sa_inner.station_id AND ssp.is_current = true
-        JOIN profiles p_staff ON p_staff.id = ssp.profile_id AND p_staff.status = 'active'
-        JOIN assessments a ON a.assessed_user_id = ssp.profile_id
-        WHERE sa_inner.profile_id = p.id AND sa_inner.assignment_type = 'TI_AREA' AND sa_inner.assigned_to IS NULL
-          AND ((a.status = 'completed' OR a.status = 'evaluated') AND (a.approval_status = 'pending_approval' OR a.approval_status IS NULL))
-      ) as "approvalPending"
+      COUNT(DISTINCT CASE WHEN r_staff.id IS NOT NULL THEN p_staff.id END)::int as "totalEmployees",
+      COUNT(DISTINCT CASE WHEN r_staff.id IS NOT NULL THEN p_staff.id END) FILTER (WHERE latest_a.status = 'completed' AND (latest_a.approval_status = 'approved' OR latest_a.approval_status = 'rejected'))::int as "completedAssessments",
+      COUNT(DISTINCT CASE WHEN r_staff.id IS NOT NULL THEN p_staff.id END) FILTER (WHERE latest_a.status IN ('created', 'mcq_pending', 'mcq_submitted', 'evaluation_pending', 'evaluation_submitted', 'scheduled', 'mcq_access_sent'))::int as "pendingAssessments",
+      COUNT(DISTINCT CASE WHEN r_staff.id IS NOT NULL THEN p_staff.id END) FILTER (WHERE (latest_a.status = 'completed' OR latest_a.status = 'evaluated') AND (latest_a.approval_status = 'pending_approval' OR latest_a.approval_status IS NULL))::int as "approvalPending"
     FROM station_assignments sa
     JOIN profiles p ON p.id = sa.profile_id
+    LEFT JOIN staff_station_postings ssp ON ssp.station_id = sa.station_id AND ssp.is_current = true
+    LEFT JOIN profiles p_staff ON (p_staff.id = ssp.profile_id OR p_staff.reporting_officer_id = p.id) AND p_staff.status = 'active' AND p_staff.id != p.id
+    LEFT JOIN roles r_staff ON r_staff.id = p_staff.role_id AND r_staff.name IN ('PM', 'SM', 'TM', 'SS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Cabin Master', 'CABIN MASTER', 'Shunting Master', 'SHUNTING MASTER', 'SHM')
+    LEFT JOIN LATERAL (
+      SELECT id, status, approval_status, evaluated_at, created_at
+      FROM assessments
+      WHERE assessed_user_id = p_staff.id
+      ORDER BY created_at DESC
+      LIMIT 1
+    ) latest_a ON true
     WHERE sa.assignment_type = 'TI_AREA' AND sa.assigned_to IS NULL
       AND p.status = 'active'
     GROUP BY p.id, p.full_name, p.hrms_id

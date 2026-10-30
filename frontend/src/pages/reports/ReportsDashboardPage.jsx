@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useReports } from '../../hooks/useReports';
 import DashboardLayout from '../../components/layout/DashboardLayout';
@@ -32,7 +33,30 @@ const ReportsDashboardPage = () => {
     fetchWorkforcePerformance
   } = useReports();
 
-  const [filters, setFilters] = useState({});
+  const [searchParams] = useSearchParams();
+
+  const getFiltersFromSearchParams = useCallback(() => {
+    const f = {};
+    if (searchParams.get('tiId')) f.tiId = searchParams.get('tiId');
+    if (searchParams.get('assessmentStatus')) f.assessmentStatus = searchParams.get('assessmentStatus');
+    if (searchParams.get('approvalStatus')) f.approvalStatus = searchParams.get('approvalStatus');
+    if (searchParams.get('role')) f.role = searchParams.get('role');
+    if (searchParams.get('stationId')) f.stationId = searchParams.get('stationId');
+    if (searchParams.get('stationSearch')) f.stationSearch = searchParams.get('stationSearch');
+    if (searchParams.get('category')) f.category = searchParams.get('category');
+    if (searchParams.get('assessmentCycle')) f.assessmentCycle = searchParams.get('assessmentCycle');
+    if (searchParams.get('search')) f.search = searchParams.get('search');
+    return f;
+  }, [searchParams]);
+
+  const [filters, setFilters] = useState(() => getFiltersFromSearchParams());
+
+  useEffect(() => {
+    const fromUrl = getFiltersFromSearchParams();
+    if (Object.keys(fromUrl).length > 0) {
+      setFilters(prev => ({ ...prev, ...fromUrl }));
+    }
+  }, [getFiltersFromSearchParams]);
   const [exportingExcel, setExportingExcel] = useState(false);
   const [exportingPdf, setExportingPdf] = useState(false);
 

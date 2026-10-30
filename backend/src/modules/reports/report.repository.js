@@ -125,8 +125,18 @@ function buildAssessmentsWhere(filters, scope, values) {
     `);
   }
   if (filters.assessmentStatus) {
-    values.push(filters.assessmentStatus);
-    conditions.push(`a.status = $${values.length}`);
+    if (filters.assessmentStatus === 'completed') {
+      conditions.push(`(a.status = 'completed' AND (a.approval_status = 'approved' OR a.approval_status = 'rejected'))`);
+    } else if (filters.assessmentStatus === 'pending_approval') {
+      conditions.push(`((a.status = 'completed' OR a.status = 'evaluated') AND (a.approval_status = 'pending_approval' OR a.approval_status IS NULL))`);
+    } else if (filters.assessmentStatus === 'mcq_submitted') {
+      conditions.push(`a.status = 'mcq_submitted'`);
+    } else if (filters.assessmentStatus === 'evaluation_pending') {
+      conditions.push(`a.status IN ('created', 'mcq_pending', 'mcq_submitted', 'evaluation_pending', 'evaluation_submitted', 'scheduled', 'mcq_access_sent')`);
+    } else {
+      values.push(filters.assessmentStatus);
+      conditions.push(`a.status = $` + `{values.length}`);
+    }
   }
   if (filters.approvalStatus) {
     values.push(filters.approvalStatus);
@@ -249,6 +259,7 @@ async function countAssessmentsReport(filters, scope) {
 
 function buildStaffPerformanceWhere(filters, scope, values) {
   const conditions = [];
+  conditions.push("p.status = 'active'");
 
   // --- Scope Restrictions ---
   if (scope.type === "PM") {
@@ -342,13 +353,16 @@ function buildStaffPerformanceWhere(filters, scope, values) {
   }
   if (filters.assessmentStatus) {
     if (filters.assessmentStatus === 'completed') {
-      conditions.push(`latest_a.percentage IS NOT NULL`);
+      conditions.push(`(latest_a.status = 'completed' AND (latest_a.approval_status = 'approved' OR latest_a.approval_status = 'rejected'))`);
     } else if (filters.assessmentStatus === 'pending_approval') {
-      conditions.push(`latest_a.approval_status = 'pending_approval'`);
+      conditions.push(`((latest_a.status = 'completed' OR latest_a.status = 'evaluated') AND (latest_a.approval_status = 'pending_approval' OR latest_a.approval_status IS NULL))`);
     } else if (filters.assessmentStatus === 'mcq_submitted') {
-      conditions.push(`latest_a.approval_status = 'mcq_submitted'`);
+      conditions.push(`latest_a.status = 'mcq_submitted'`);
     } else if (filters.assessmentStatus === 'evaluation_pending') {
-      conditions.push(`latest_a.approval_status = 'evaluation_pending'`);
+      conditions.push(`latest_a.status IN ('created', 'mcq_pending', 'mcq_submitted', 'evaluation_pending', 'evaluation_submitted', 'scheduled', 'mcq_access_sent')`);
+    } else {
+      values.push(filters.assessmentStatus);
+      conditions.push(`latest_a.status = $${values.length}`);
     }
   }
 
@@ -414,9 +428,9 @@ async function getStaffPerformanceReport(filters, scope) {
     LEFT JOIN staff_categories sc ON sc.id = ec.category_id
     LEFT JOIN assessments a ON a.assessed_user_id = p.id AND a.status = 'completed' ${assessmentDateJoinCond}
     LEFT JOIN LATERAL (
-      SELECT percentage, evaluated_at, approval_status
+      SELECT id, status, percentage, evaluated_at, approval_status, created_at
       FROM assessments
-      WHERE assessed_user_id = p.id AND status = 'completed' ${latestDateCond}
+      WHERE assessed_user_id = p.id ${latestDateCond}
       ORDER BY created_at DESC
       LIMIT 1
     ) latest_a ON true
@@ -462,9 +476,9 @@ async function countStaffPerformanceReport(filters, scope) {
     ) ec ON true
     LEFT JOIN staff_categories sc ON sc.id = ec.category_id
     LEFT JOIN LATERAL (
-      SELECT percentage, evaluated_at, approval_status
+      SELECT id, status, percentage, evaluated_at, approval_status, created_at
       FROM assessments
-      WHERE assessed_user_id = p.id AND status = 'completed' ${latestDateCond}
+      WHERE assessed_user_id = p.id ${latestDateCond}
       ORDER BY created_at DESC
       LIMIT 1
     ) latest_a ON true
@@ -931,13 +945,13 @@ function buildQueryContext(filters, scope) {
   const assessConditions = [];
   if (filters.assessmentStatus) {
     if (filters.assessmentStatus === 'completed') {
-      assessConditions.push(`a.status = 'completed'`);
+      assessConditions.push(`(a.status = 'completed' AND (a.approval_status = 'approved' OR a.approval_status = 'rejected'))`);
     } else if (filters.assessmentStatus === 'pending_approval') {
-      assessConditions.push(`a.approval_status = 'pending_approval'`);
+      assessConditions.push(`((a.status = 'completed' OR a.status = 'evaluated') AND (a.approval_status = 'pending_approval' OR a.approval_status IS NULL))`);
     } else if (filters.assessmentStatus === 'mcq_submitted') {
-      assessConditions.push(`a.approval_status = 'mcq_submitted'`);
+      assessConditions.push(`a.status = 'mcq_submitted'`);
     } else if (filters.assessmentStatus === 'evaluation_pending') {
-      assessConditions.push(`a.approval_status = 'evaluation_pending'`);
+      assessConditions.push(`a.status IN ('created', 'mcq_pending', 'mcq_submitted', 'evaluation_pending', 'evaluation_submitted', 'scheduled', 'mcq_access_sent')`);
     } else {
       values.push(filters.assessmentStatus);
       assessConditions.push(`a.status = $${values.length}`);
