@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://indian-railways-22jp.vercel.app/:path*"
+      "destination": "https://indian-railways-api.vercel.app/:path*"
     },
     {
       "source": "/(.*)",
