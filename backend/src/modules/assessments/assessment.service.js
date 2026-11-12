@@ -558,9 +558,9 @@ async function verifyAssessmentAccess(assessmentId, userId, userRole) {
 
   const assessedRole = assessment.assessed_role_code;
   let isApprover =
-    (userRole === "TI" && ["PM", "Shunting Master", "SHUNTING MASTER", "SHM", "SM", "Station Master", "SS", "Station Master Incharge", "Cabin Master", "CABIN MASTER"].includes(assessedRole)) ||
-    (["SMS", "Station Master Supervisor", "STATION MASTER SUPERVISOR"].includes(userRole) && ["PM", "Shunting Master", "SHUNTING MASTER", "SHM", "SM", "Station Master", "SS", "Cabin Master", "CABIN MASTER", "TM", "Train Manager"].includes(assessedRole)) ||
-    (userRole === "AOM" && ["SM", "Station Master", "TM", "Train Manager", "TI", "Traffic Inspector", "SS", "Station Master Incharge", "Station Master Supervisor", "STATION MASTER SUPERVISOR", "SMS", "Cabin Master", "CABIN MASTER"].includes(assessedRole));
+    (userRole === "TI" && ["PM", "Shunting Master", "SHUNTING MASTER", "SHM", "SM", "Station Master", "SS", "Station Master Incharge", "STATION MASTER INCHARGE", "Cabin Master", "CABIN MASTER"].includes(assessedRole)) ||
+    (["SMS", "Station Master Supervisor", "STATION MASTER SUPERVISOR"].includes(userRole) && ["PM", "Shunting Master", "SHUNTING MASTER", "SHM", "SM", "Station Master", "SS", "Station Master Incharge", "STATION MASTER INCHARGE", "Cabin Master", "CABIN MASTER", "TM", "Train Manager"].includes(assessedRole)) ||
+    (userRole === "AOM" && ["SM", "Station Master", "TM", "Train Manager", "TI", "Traffic Inspector", "Station Master Supervisor", "STATION MASTER SUPERVISOR", "SMS", "Cabin Master", "CABIN MASTER"].includes(assessedRole));
 
   if (reportingOfficerId === userId) {
     isApprover = true;

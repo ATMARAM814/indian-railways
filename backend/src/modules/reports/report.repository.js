@@ -694,7 +694,7 @@ function buildApprovalWhere(filters, scope, values) {
   } else if (scope.type === "TI") {
     values.push(scope.stationIds);
     conditions.push(`ssp.station_id = ANY($${values.length}::uuid[])`);
-    conditions.push(`a.assessed_role_code IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM')`);
+    conditions.push(`a.assessed_role_code IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'SS', 'Station Master Incharge', 'STATION MASTER INCHARGE')`);
     values.push(scope.userId);
     conditions.push(`
       (
@@ -706,6 +706,7 @@ function buildApprovalWhere(filters, scope, values) {
           JOIN roles r_sms ON r_sms.id = p_sms.role_id
           WHERE ssp_sms.station_id = ssp.station_id 
             AND ssp_sms.is_current = true 
+            AND p_sms.status = 'active'
             AND r_sms.name IN ('Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Station Master Supervisior', 'Station Master Supervisio')
         )
       )
@@ -1017,15 +1018,15 @@ async function getReportsSummaryDb(filters, scope) {
           AND (
             $${roleParamIndex} = 'SUPER_ADMIN'
             OR
-            ($${roleParamIndex} = 'AOM' AND sp.role_code IN ('SM', 'Station Master', 'TM', 'Train Manager', 'TI', 'Traffic Inspector', 'SS', 'Station Master Incharge', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Cabin Master', 'CABIN MASTER'))
+            ($${roleParamIndex} = 'AOM' AND sp.role_code IN ('SM', 'Station Master', 'TM', 'Train Manager', 'TI', 'Traffic Inspector', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Cabin Master', 'CABIN MASTER'))
             OR
             ($${roleParamIndex} IN ('Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Station Master Supervisior', 'Station Master Supervisio')
-             AND sp.role_code IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM')
+             AND sp.role_code IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'SS', 'Station Master Incharge', 'STATION MASTER INCHARGE')
              AND sp.station_id = (SELECT station_id FROM staff_station_postings WHERE profile_id = $${userIdParamIndex} AND is_current = true LIMIT 1)
             )
             OR
             ($${roleParamIndex} = 'TI'
-             AND sp.role_code IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM')
+             AND sp.role_code IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'SS', 'Station Master Incharge', 'STATION MASTER INCHARGE')
              AND NOT EXISTS (
                SELECT 1
                FROM staff_station_postings ssp_sms

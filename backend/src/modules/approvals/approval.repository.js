@@ -49,20 +49,19 @@ async function getPendingApprovalsForUser(userId, role) {
           'TM', 'Train Manager',
           'SM', 'Station Master',
           'TI', 'Traffic Inspector',
-          'SS', 'Station Master Incharge',
           'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS',
           'Cabin Master', 'CABIN MASTER'
         ))
         OR
-        -- Active Station Master Supervisor sees PM / Shunting Master at their current station regardless of prior reporting_officer_id
+        -- Active Station Master Supervisor sees PM, Shunting Master, and SM Incharge (SS) posted at their current station regardless of prior reporting_officer_id
         ($1 IN ('Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Station Master Supervisior', 'Station Master Supervisio')
-         AND a.assessed_role_code IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM')
+         AND a.assessed_role_code IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'SS', 'Station Master Incharge', 'STATION MASTER INCHARGE')
          AND ssp.station_id = (SELECT station_id FROM staff_station_postings WHERE profile_id = $2 AND is_current = true LIMIT 1)
         )
         OR
-        -- TI sees PM / Shunting Master in their TI_AREA when no active Station Master Supervisor exists at that station
+        -- TI sees PM, Shunting Master, and SM Incharge (SS) in their TI_AREA when no active Station Master Supervisor exists at that station
         ($1 = 'TI'
-         AND a.assessed_role_code IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM')
+         AND a.assessed_role_code IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'SS', 'Station Master Incharge', 'STATION MASTER INCHARGE')
          AND ssp.station_id IN (
            SELECT sa.station_id
            FROM station_assignments sa

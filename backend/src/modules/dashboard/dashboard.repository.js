@@ -511,7 +511,7 @@ async function getTiSummary(stationIds, profileId) {
           AND a.approval_status = 'pending_approval'
           AND assessed.status = 'active'
           AND (
-            a.assessed_role_code IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM')
+            a.assessed_role_code IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'SS', 'Station Master Incharge', 'STATION MASTER INCHARGE')
             AND ssp.station_id = ANY($1::uuid[])
             AND NOT EXISTS (
               SELECT 1 
@@ -713,7 +713,7 @@ async function getAomSummary(divisionId) {
         WHERE (a.status = 'completed' OR a.status = 'evaluated')
           AND a.approval_status = 'pending_approval'
           AND p_sub.status = 'active'
-          AND a.assessed_role_code IN ('SM', 'TM', 'TI', 'SS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Cabin Master', 'CABIN MASTER')
+          AND a.assessed_role_code IN ('SM', 'TM', 'TI', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Cabin Master', 'CABIN MASTER')
           AND (
             a.assessed_role_code = 'TM'
             OR a.assessed_user_id IN (
@@ -1705,7 +1705,7 @@ async function getSmSupervisorSummary(stationId, profileId) {
           AND assessed.status = 'active'
           AND (
             (
-              a.assessed_role_code IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM')
+              a.assessed_role_code IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'SS', 'Station Master Incharge', 'STATION MASTER INCHARGE')
               AND ssp.station_id = $1::uuid
             )
             OR (a.assessed_role_code NOT IN ('TM', 'Train Manager') AND assessed.reporting_officer_id = $2::uuid)

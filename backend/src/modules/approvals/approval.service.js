@@ -39,7 +39,11 @@ async function validateApprovalHierarchy(
 
   const pool = require("../../config/database");
   const assessedRole = assessment.assessed_role_code;
-  const isPmOrShm = ["PM", "Shunting Master", "SHUNTING MASTER", "SHM"].includes(assessedRole);
+  const isSmsOrTiApprovable = [
+    "PM",
+    "Shunting Master", "SHUNTING MASTER", "SHM",
+    "SS", "Station Master Incharge", "STATION MASTER INCHARGE",
+  ].includes(assessedRole);
   const isSmsRole = [
     "SMS",
     "STATION MASTER SUPERVISOR",
@@ -51,7 +55,6 @@ async function validateApprovalHierarchy(
     "SM", "Station Master",
     "TM", "Train Manager",
     "TI", "Traffic Inspector",
-    "SS", "Station Master Incharge",
     "Station Master Supervisor", "SMS", "STATION MASTER SUPERVISOR",
     "Cabin Master", "CABIN MASTER",
   ];
@@ -64,20 +67,20 @@ async function validateApprovalHierarchy(
     return assessment;
   }
 
-  // AOM approves SM, TM, TI, SS, SMS, Cabin Master regardless of prior transfer reporting_officer_id
+  // AOM approves SM, TM, TI, SMS, Cabin Master regardless of prior transfer reporting_officer_id
   if (approverRole === "AOM") {
     if (!aomApprovableRoles.includes(assessedRole)) {
       throw new Error(
-        "AOM can approve only SM/TM/TI/SS/Station Master Supervisor/Cabin Master assessments"
+        "AOM can approve only SM/TM/TI/Station Master Supervisor/Cabin Master assessments"
       );
     }
     return assessment;
   }
 
-  // Station Master Supervisor approves PM/Shunting Master posted at their current station
+  // Station Master Supervisor approves PM, Shunting Master, and SM Incharge (SS) posted at their current station
   if (isSmsRole) {
-    if (!isPmOrShm) {
-      throw new Error(`${approverRole} can approve only PM/Shunting Master assessments`);
+    if (!isSmsOrTiApprovable) {
+      throw new Error(`${approverRole} can approve only PM/Shunting Master/SM Incharge assessments`);
     }
     const stationMatchRes = await pool.query(
       `SELECT 1
@@ -99,10 +102,10 @@ async function validateApprovalHierarchy(
     return assessment;
   }
 
-  // TI approves PM/Shunting Master within their TI_AREA when no active SMS is assigned to that station
+  // TI approves PM, Shunting Master, and SM Incharge (SS) within their TI_AREA when no active SMS is assigned to that station
   if (approverRole === "TI") {
-    if (!isPmOrShm) {
-      throw new Error(`${approverRole} can approve only PM/Shunting Master assessments`);
+    if (!isSmsOrTiApprovable) {
+      throw new Error(`${approverRole} can approve only PM/Shunting Master/SM Incharge assessments`);
     }
     const hasSms = await hasStationSupervisor(assessment.assessed_user_id);
     if (hasSms) {
@@ -135,7 +138,7 @@ async function validateApprovalHierarchy(
     [assessment.assessed_user_id]
   );
   const reportingOfficerId = checkReportingRes.rows[0]?.reporting_officer_id;
-  if (reportingOfficerId && reportingOfficerId === approverId && !(isPmOrShm && (await hasStationSupervisor(assessment.assessed_user_id)))) {
+  if (reportingOfficerId && reportingOfficerId === approverId && !(isSmsOrTiApprovable && (await hasStationSupervisor(assessment.assessed_user_id)))) {
     return assessment;
   }
 
