@@ -44,40 +44,59 @@ async function getPendingApprovalsForUser(userId, role) {
       AND (
         ($1 = 'SUPER_ADMIN')
         OR
-        -- Train Managers ALWAYS route to AOM for approval
-        ($1 = 'AOM' AND a.assessed_role_code = 'TM')
-        OR
-        -- Other staff with an assigned reporting officer route to their reporting officer
-        (a.assessed_role_code != 'TM' AND assessed.reporting_officer_id = $2)
-        OR
-        (assessed.reporting_officer_id IS NULL AND (
-          ($1 = 'TI' 
-           AND a.assessed_role_code IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM')
-           AND ssp.station_id IN (
-             SELECT sa.station_id 
-             FROM station_assignments sa 
-             WHERE sa.profile_id = $2 
-               AND sa.assignment_type = 'TI_AREA' 
-               AND sa.assigned_to IS NULL
-           )
-           AND NOT EXISTS (
-             SELECT 1 
-             FROM staff_station_postings ssp_sms
-             JOIN profiles p_sms ON p_sms.id = ssp_sms.profile_id
-             JOIN roles r_sms ON r_sms.id = p_sms.role_id
-             WHERE ssp_sms.station_id = ssp.station_id 
-               AND ssp_sms.is_current = true 
-               AND r_sms.name IN ('Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Station Master Supervisior', 'Station Master Supervisio')
-           )
-          )
-          OR
-          ($1 IN ('Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS') 
-           AND a.assessed_role_code IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM') 
-           AND ssp.station_id = (SELECT station_id FROM staff_station_postings WHERE profile_id = $2 AND is_current = true LIMIT 1)
-          )
-          OR
-          ($1 = 'AOM' AND a.assessed_role_code IN ('SM', 'TI', 'SS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Cabin Master', 'CABIN MASTER'))
+        -- Train Managers and supervisory/station roles ALWAYS route to AOM for approval (even after transfers)
+        ($1 = 'AOM' AND a.assessed_role_code IN (
+          'TM', 'Train Manager',
+          'SM', 'Station Master',
+          'TI', 'Traffic Inspector',
+          'SS', 'Station Master Incharge',
+          'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS',
+          'Cabin Master', 'CABIN MASTER'
         ))
+        OR
+        -- Active Station Master Supervisor sees PM / Shunting Master at their current station regardless of prior reporting_officer_id
+        ($1 IN ('Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Station Master Supervisior', 'Station Master Supervisio')
+         AND a.assessed_role_code IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM')
+         AND ssp.station_id = (SELECT station_id FROM staff_station_postings WHERE profile_id = $2 AND is_current = true LIMIT 1)
+        )
+        OR
+        -- TI sees PM / Shunting Master in their TI_AREA when no active Station Master Supervisor exists at that station
+        ($1 = 'TI'
+         AND a.assessed_role_code IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM')
+         AND ssp.station_id IN (
+           SELECT sa.station_id
+           FROM station_assignments sa
+           WHERE sa.profile_id = $2
+             AND sa.assignment_type = 'TI_AREA'
+             AND sa.assigned_to IS NULL
+         )
+         AND NOT EXISTS (
+           SELECT 1
+           FROM staff_station_postings ssp_sms
+           JOIN profiles p_sms ON p_sms.id = ssp_sms.profile_id
+           JOIN roles r_sms ON r_sms.id = p_sms.role_id
+           WHERE ssp_sms.station_id = ssp.station_id
+             AND ssp_sms.is_current = true
+             AND p_sms.status = 'active'
+             AND r_sms.name IN ('Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Station Master Supervisior', 'Station Master Supervisio')
+         )
+        )
+        OR
+        -- Fallback for explicit reporting officer on non-supervisory staff when no active SMS oversees the station
+        (a.assessed_role_code NOT IN ('TM', 'Train Manager')
+         AND assessed.reporting_officer_id = $2
+         AND $1 NOT IN ('TI', 'AOM', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Station Master Supervisior', 'Station Master Supervisio')
+         AND NOT EXISTS (
+           SELECT 1
+           FROM staff_station_postings ssp_sms
+           JOIN profiles p_sms ON p_sms.id = ssp_sms.profile_id
+           JOIN roles r_sms ON r_sms.id = p_sms.role_id
+           WHERE ssp_sms.station_id = ssp.station_id
+             AND ssp_sms.is_current = true
+             AND p_sms.status = 'active'
+             AND r_sms.name IN ('Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Station Master Supervisior', 'Station Master Supervisio')
+         )
+        )
       )
     ORDER BY a.evaluated_at DESC;
   `;

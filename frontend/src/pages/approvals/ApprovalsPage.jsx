@@ -55,6 +55,24 @@ const ApprovalsPage = () => {
     fromDate: '',
     toDate: ''
   });
+  const [debouncedHistoryFilters, setDebouncedHistoryFilters] = useState(filters);
+
+  useEffect(() => {
+    const hasTextChanged =
+      filters.search !== debouncedHistoryFilters.search ||
+      filters.stationSearch !== debouncedHistoryFilters.stationSearch;
+
+    if (!hasTextChanged) {
+      setDebouncedHistoryFilters(filters);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setDebouncedHistoryFilters(filters);
+    }, 350);
+
+    return () => clearTimeout(timer);
+  }, [filters, debouncedHistoryFilters.search, debouncedHistoryFilters.stationSearch]);
 
   useEffect(() => {
     const tab = searchParams.get('tab');
@@ -114,13 +132,13 @@ const ApprovalsPage = () => {
         const apiParams = {
           page,
           limit,
-          search: filters.search || undefined,
-          stationSearch: filters.stationSearch || undefined,
-          stationId: filters.stationId || undefined,
-          role: filters.role || undefined,
-          approvalStatus: filters.approvalStatus || undefined,
-          fromDate: filters.fromDate || undefined,
-          toDate: filters.toDate || undefined
+          search: debouncedHistoryFilters.search || undefined,
+          stationSearch: debouncedHistoryFilters.stationSearch || undefined,
+          stationId: debouncedHistoryFilters.stationId || undefined,
+          role: debouncedHistoryFilters.role || undefined,
+          approvalStatus: debouncedHistoryFilters.approvalStatus || undefined,
+          fromDate: debouncedHistoryFilters.fromDate || undefined,
+          toDate: debouncedHistoryFilters.toDate || undefined
         };
         
         const res = await getApprovalHistory(apiParams);
@@ -139,7 +157,7 @@ const ApprovalsPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [activeTab, page, filters]);
+  }, [activeTab, page, debouncedHistoryFilters, user, isApprover]);
 
   useEffect(() => {
     loadData();
@@ -389,7 +407,7 @@ const ApprovalsPage = () => {
               Safety Sign-offs & Approvals
             </h1>
             <p style={{ fontSize: '14px', color: '#64748B' }}>
-              Review, modify evaluation parameters, and issue category certification sign-offs for railway crew.
+              Review, modify evaluation parameters, and issue category certification sign-offs for railway operating staff.
             </p>
           </div>
           <button

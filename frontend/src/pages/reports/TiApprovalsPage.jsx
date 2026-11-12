@@ -178,7 +178,7 @@ const TiApprovalsPage = () => {
                     </div>
 
                     {/* Card 2: Total Monitored Workforce */}
-                    <div onClick={() => navigate('/reports')} title="Click to view all monitored crew in Reports" style={{ cursor: 'pointer',
+                    <div onClick={() => navigate('/reports')} title="Click to view all monitored staff in Reports" style={{ cursor: 'pointer',
                         backgroundColor: '#FFFFFF',
                         border: '1px solid #D7E3EF',
                         borderRadius: '12px',
@@ -190,7 +190,7 @@ const TiApprovalsPage = () => {
                     }}>
                         <div>
                             <span style={{ fontSize: '12px', fontWeight: 600, color: '#64748B', display: 'block', marginBottom: '4px' }}>
-                                Total Monitored Crew
+                                Total Monitored Staff
                             </span>
                             <span style={{ fontSize: '22px', fontWeight: 800, color: '#0F172A' }}>
                                 {totals.totalStaff}
@@ -244,7 +244,7 @@ const TiApprovalsPage = () => {
                     </div>
 
                     {/* Card 4: Evaluation Pending */}
-                    <div onClick={() => navigate('/reports?assessmentStatus=evaluation_pending')} title="Click to view evaluation pending crew in Reports" style={{ cursor: 'pointer',
+                    <div onClick={() => navigate('/reports?assessmentStatus=evaluation_pending')} title="Click to view evaluation pending staff in Reports" style={{ cursor: 'pointer',
                         backgroundColor: '#FFFFFF',
                         border: '1px solid #D7E3EF',
                         borderRadius: '12px',
@@ -277,7 +277,7 @@ const TiApprovalsPage = () => {
                     </div>
 
                     {/* Card 5: Approval Pending */}
-                    <div onClick={() => navigate('/reports?assessmentStatus=pending_approval')} title="Click to view approval pending crew in Reports" style={{ cursor: 'pointer',
+                    <div onClick={() => navigate('/reports?assessmentStatus=pending_approval')} title="Click to view approval pending staff in Reports" style={{ cursor: 'pointer',
                         backgroundColor: '#FFFFFF',
                         border: '1px solid #D7E3EF',
                         borderRadius: '12px',
@@ -425,7 +425,7 @@ const TiApprovalsPage = () => {
                                             HRMS ID
                                         </th>
                                         <th style={{ padding: '14px 20px', fontSize: '12px', fontWeight: 700, color: '#475569', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                                            Total Monitored Crew
+                                            Total Monitored Staff
                                         </th>
                                         <th style={{ padding: '14px 20px', fontSize: '12px', fontWeight: 700, color: '#475569', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                                             Completed
@@ -498,7 +498,7 @@ const TiApprovalsPage = () => {
 
                                             {/* Total Employees */}
                                             <td style={{ padding: '14px 20px', textAlign: 'center', verticalAlign: 'middle' }}>
-                                                <button type="button" onClick={() => navigate(`/reports?tiId=${row.tiId}`)} title="View crew under this TI" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '8px', backgroundColor: '#F8FAFC', border: '1px solid #CBD5E1', fontWeight: 700, fontSize: '13px', color: '#0F172A', cursor: 'pointer', transition: 'all 0.15s ease' }} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#EFF6FF'; e.currentTarget.style.borderColor = '#2563EB'; e.currentTarget.style.color = '#1D4ED8'; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#F8FAFC'; e.currentTarget.style.borderColor = '#CBD5E1'; e.currentTarget.style.color = '#0F172A'; }}><Users size={14} style={{ color: 'inherit' }} />{row.totalEmployees}</button>
+                                                <button type="button" onClick={() => navigate(`/reports?tiId=${row.tiId}`)} title="View staff under this TI" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '8px', backgroundColor: '#F8FAFC', border: '1px solid #CBD5E1', fontWeight: 700, fontSize: '13px', color: '#0F172A', cursor: 'pointer', transition: 'all 0.15s ease' }} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#EFF6FF'; e.currentTarget.style.borderColor = '#2563EB'; e.currentTarget.style.color = '#1D4ED8'; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#F8FAFC'; e.currentTarget.style.borderColor = '#CBD5E1'; e.currentTarget.style.color = '#0F172A'; }}><Users size={14} style={{ color: 'inherit' }} />{row.totalEmployees}</button>
                                             </td>
 
                                             {/* Completed */}
@@ -508,12 +508,12 @@ const TiApprovalsPage = () => {
 
                                             {/* Evaluation Pending */}
                                             <td style={{ padding: '14px 20px', textAlign: 'center', verticalAlign: 'middle' }}>
-                                                <button type="button" onClick={() => navigate(`/reports?tiId=${row.tiId}&assessmentStatus=evaluation_pending`)} title="View evaluation pending crew" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 12px', borderRadius: '9999px', backgroundColor: row.pendingAssessments > 0 ? '#FEF3C7' : '#F8FAFC', color: row.pendingAssessments > 0 ? '#B45309' : '#94A3B8', border: row.pendingAssessments > 0 ? '1px solid #FDE68A' : '1px solid #E2E8F0', fontWeight: 700, fontSize: '13px', cursor: row.pendingAssessments > 0 ? 'pointer' : 'default', transition: 'all 0.15s ease' }} onMouseEnter={(e) => { if (row.pendingAssessments > 0) { e.currentTarget.style.backgroundColor = '#FDE68A'; e.currentTarget.style.boxShadow = '0 2px 6px rgba(217, 119, 6, 0.2)'; } }} onMouseLeave={(e) => { if (row.pendingAssessments > 0) { e.currentTarget.style.backgroundColor = '#FEF3C7'; e.currentTarget.style.boxShadow = 'none'; } }}><Clock size={13} />{row.pendingAssessments}</button>
+                                                <button type="button" onClick={() => navigate(`/reports?tiId=${row.tiId}&assessmentStatus=evaluation_pending`)} title="View evaluation pending staff" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 12px', borderRadius: '9999px', backgroundColor: row.pendingAssessments > 0 ? '#FEF3C7' : '#F8FAFC', color: row.pendingAssessments > 0 ? '#B45309' : '#94A3B8', border: row.pendingAssessments > 0 ? '1px solid #FDE68A' : '1px solid #E2E8F0', fontWeight: 700, fontSize: '13px', cursor: row.pendingAssessments > 0 ? 'pointer' : 'default', transition: 'all 0.15s ease' }} onMouseEnter={(e) => { if (row.pendingAssessments > 0) { e.currentTarget.style.backgroundColor = '#FDE68A'; e.currentTarget.style.boxShadow = '0 2px 6px rgba(217, 119, 6, 0.2)'; } }} onMouseLeave={(e) => { if (row.pendingAssessments > 0) { e.currentTarget.style.backgroundColor = '#FEF3C7'; e.currentTarget.style.boxShadow = 'none'; } }}><Clock size={13} />{row.pendingAssessments}</button>
                                             </td>
 
                                             {/* Approval Pending */}
                                             <td style={{ padding: '14px 20px', textAlign: 'center', verticalAlign: 'middle' }}>
-                                                <button type="button" onClick={() => navigate(`/reports?tiId=${row.tiId}&assessmentStatus=pending_approval`)} title="View approval pending crew" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 12px', borderRadius: '9999px', backgroundColor: row.approvalPending > 0 ? '#FEE2E2' : '#F8FAFC', color: row.approvalPending > 0 ? '#B91C1C' : '#94A3B8', border: row.approvalPending > 0 ? '1px solid #FECACA' : '1px solid #E2E8F0', fontWeight: 700, fontSize: '13px', cursor: row.approvalPending > 0 ? 'pointer' : 'default', transition: 'all 0.15s ease' }} onMouseEnter={(e) => { if (row.approvalPending > 0) { e.currentTarget.style.backgroundColor = '#FECACA'; e.currentTarget.style.boxShadow = '0 2px 6px rgba(220, 38, 38, 0.2)'; } }} onMouseLeave={(e) => { if (row.approvalPending > 0) { e.currentTarget.style.backgroundColor = '#FEE2E2'; e.currentTarget.style.boxShadow = 'none'; } }}><AlertCircle size={13} />{row.approvalPending}</button>
+                                                <button type="button" onClick={() => navigate(`/reports?tiId=${row.tiId}&assessmentStatus=pending_approval`)} title="View approval pending staff" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 12px', borderRadius: '9999px', backgroundColor: row.approvalPending > 0 ? '#FEE2E2' : '#F8FAFC', color: row.approvalPending > 0 ? '#B91C1C' : '#94A3B8', border: row.approvalPending > 0 ? '1px solid #FECACA' : '1px solid #E2E8F0', fontWeight: 700, fontSize: '13px', cursor: row.approvalPending > 0 ? 'pointer' : 'default', transition: 'all 0.15s ease' }} onMouseEnter={(e) => { if (row.approvalPending > 0) { e.currentTarget.style.backgroundColor = '#FECACA'; e.currentTarget.style.boxShadow = '0 2px 6px rgba(220, 38, 38, 0.2)'; } }} onMouseLeave={(e) => { if (row.approvalPending > 0) { e.currentTarget.style.backgroundColor = '#FEE2E2'; e.currentTarget.style.boxShadow = 'none'; } }}><AlertCircle size={13} />{row.approvalPending}</button>
                                             </td>
                                         </tr>
                                     ))}
@@ -529,16 +529,16 @@ const TiApprovalsPage = () => {
                                             —
                                         </td>
                                         <td style={{ padding: '16px 20px', textAlign: 'center' }}>
-                                            <button type="button" onClick={() => navigate('/reports')} title="View all division monitored crew" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '8px', backgroundColor: '#FFFFFF', border: '1.5px solid #CBD5E1', fontWeight: 800, fontSize: '13px', color: '#0F172A', cursor: 'pointer', transition: 'all 0.15s ease' }} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#EFF6FF'; e.currentTarget.style.borderColor = '#2563EB'; e.currentTarget.style.color = '#1D4ED8'; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#FFFFFF'; e.currentTarget.style.borderColor = '#CBD5E1'; e.currentTarget.style.color = '#0F172A'; }}><Users size={14} style={{ color: 'inherit' }} />{totals.totalStaff}</button>
+                                            <button type="button" onClick={() => navigate('/reports')} title="View all division monitored staff" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '8px', backgroundColor: '#FFFFFF', border: '1.5px solid #CBD5E1', fontWeight: 800, fontSize: '13px', color: '#0F172A', cursor: 'pointer', transition: 'all 0.15s ease' }} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#EFF6FF'; e.currentTarget.style.borderColor = '#2563EB'; e.currentTarget.style.color = '#1D4ED8'; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#FFFFFF'; e.currentTarget.style.borderColor = '#CBD5E1'; e.currentTarget.style.color = '#0F172A'; }}><Users size={14} style={{ color: 'inherit' }} />{totals.totalStaff}</button>
                                         </td>
                                         <td style={{ padding: '16px 20px', textAlign: 'center' }}>
                                             <button type="button" onClick={() => navigate('/reports?assessmentStatus=completed')} title="View all completed evaluations across division" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 12px', borderRadius: '9999px', backgroundColor: '#DCFCE7', color: '#15803D', border: '1.5px solid #86EFAC', fontWeight: 800, fontSize: '13px', cursor: 'pointer', transition: 'all 0.15s ease' }} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#BBF7D0'; e.currentTarget.style.boxShadow = '0 2px 6px rgba(22, 163, 74, 0.2)'; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#DCFCE7'; e.currentTarget.style.boxShadow = 'none'; }}><CheckCircle2 size={13} />{totals.completed}</button>
                                         </td>
                                         <td style={{ padding: '16px 20px', textAlign: 'center' }}>
-                                            <button type="button" onClick={() => navigate('/reports?assessmentStatus=evaluation_pending')} title="View all evaluation pending crew across division" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 12px', borderRadius: '9999px', backgroundColor: totals.evalPending > 0 ? '#FEF3C7' : '#F8FAFC', color: totals.evalPending > 0 ? '#B45309' : '#94A3B8', border: totals.evalPending > 0 ? '1.5px solid #FCD34D' : '1px solid #E2E8F0', fontWeight: 800, fontSize: '13px', cursor: totals.evalPending > 0 ? 'pointer' : 'default', transition: 'all 0.15s ease' }} onMouseEnter={(e) => { if (totals.evalPending > 0) { e.currentTarget.style.backgroundColor = '#FDE68A'; e.currentTarget.style.boxShadow = '0 2px 6px rgba(217, 119, 6, 0.2)'; } }} onMouseLeave={(e) => { if (totals.evalPending > 0) { e.currentTarget.style.backgroundColor = '#FEF3C7'; e.currentTarget.style.boxShadow = 'none'; } }}><Clock size={13} />{totals.evalPending}</button>
+                                            <button type="button" onClick={() => navigate('/reports?assessmentStatus=evaluation_pending')} title="View all evaluation pending staff across division" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 12px', borderRadius: '9999px', backgroundColor: totals.evalPending > 0 ? '#FEF3C7' : '#F8FAFC', color: totals.evalPending > 0 ? '#B45309' : '#94A3B8', border: totals.evalPending > 0 ? '1.5px solid #FCD34D' : '1px solid #E2E8F0', fontWeight: 800, fontSize: '13px', cursor: totals.evalPending > 0 ? 'pointer' : 'default', transition: 'all 0.15s ease' }} onMouseEnter={(e) => { if (totals.evalPending > 0) { e.currentTarget.style.backgroundColor = '#FDE68A'; e.currentTarget.style.boxShadow = '0 2px 6px rgba(217, 119, 6, 0.2)'; } }} onMouseLeave={(e) => { if (totals.evalPending > 0) { e.currentTarget.style.backgroundColor = '#FEF3C7'; e.currentTarget.style.boxShadow = 'none'; } }}><Clock size={13} />{totals.evalPending}</button>
                                         </td>
                                         <td style={{ padding: '16px 20px', textAlign: 'center' }}>
-                                            <button type="button" onClick={() => navigate('/reports?assessmentStatus=pending_approval')} title="View all approval pending crew across division" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 12px', borderRadius: '9999px', backgroundColor: totals.approvalPending > 0 ? '#FEE2E2' : '#F8FAFC', color: totals.approvalPending > 0 ? '#B91C1C' : '#94A3B8', border: totals.approvalPending > 0 ? '1.5px solid #FCA5A5' : '1px solid #E2E8F0', fontWeight: 800, fontSize: '13px', cursor: totals.approvalPending > 0 ? 'pointer' : 'default', transition: 'all 0.15s ease' }} onMouseEnter={(e) => { if (totals.approvalPending > 0) { e.currentTarget.style.backgroundColor = '#FECACA'; e.currentTarget.style.boxShadow = '0 2px 6px rgba(220, 38, 38, 0.2)'; } }} onMouseLeave={(e) => { if (totals.approvalPending > 0) { e.currentTarget.style.backgroundColor = '#FEE2E2'; e.currentTarget.style.boxShadow = 'none'; } }}><AlertCircle size={13} />{totals.approvalPending}</button>
+                                            <button type="button" onClick={() => navigate('/reports?assessmentStatus=pending_approval')} title="View all approval pending staff across division" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 12px', borderRadius: '9999px', backgroundColor: totals.approvalPending > 0 ? '#FEE2E2' : '#F8FAFC', color: totals.approvalPending > 0 ? '#B91C1C' : '#94A3B8', border: totals.approvalPending > 0 ? '1.5px solid #FCA5A5' : '1px solid #E2E8F0', fontWeight: 800, fontSize: '13px', cursor: totals.approvalPending > 0 ? 'pointer' : 'default', transition: 'all 0.15s ease' }} onMouseEnter={(e) => { if (totals.approvalPending > 0) { e.currentTarget.style.backgroundColor = '#FECACA'; e.currentTarget.style.boxShadow = '0 2px 6px rgba(220, 38, 38, 0.2)'; } }} onMouseLeave={(e) => { if (totals.approvalPending > 0) { e.currentTarget.style.backgroundColor = '#FEE2E2'; e.currentTarget.style.boxShadow = 'none'; } }}><AlertCircle size={13} />{totals.approvalPending}</button>
                                         </td>
                                     </tr>
                                 </tfoot>

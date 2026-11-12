@@ -1,7 +1,7 @@
 import apiClient from '../api/apiClient';
 
-export const getWorkforceList = async (filters = {}) => {
-  const res = await apiClient.get('/users', { params: filters });
+export const getWorkforceList = async (filters = {}, signal) => {
+  const res = await apiClient.get('/users', { params: filters, signal });
   return res.data;
 };
 

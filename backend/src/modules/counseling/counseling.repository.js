@@ -130,7 +130,9 @@ async function runAutoMigration() {
   }
 }
 
-runAutoMigration();
+if (process.env.RUN_AUTO_MIGRATION === "true") {
+  runAutoMigration();
+}
 
 // ==========================================
 // DB REPOSITORY FUNCTIONS

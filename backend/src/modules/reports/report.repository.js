@@ -1017,29 +1017,31 @@ async function getReportsSummaryDb(filters, scope) {
           AND (
             $${roleParamIndex} = 'SUPER_ADMIN'
             OR
-            (sp.reporting_officer_id = $${userIdParamIndex})
+            ($${roleParamIndex} = 'AOM' AND sp.role_code IN ('SM', 'Station Master', 'TM', 'Train Manager', 'TI', 'Traffic Inspector', 'SS', 'Station Master Incharge', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Cabin Master', 'CABIN MASTER'))
             OR
-            (sp.reporting_officer_id IS NULL AND (
-              ($${roleParamIndex} = 'TI' 
-               AND sp.role_code IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM')
-               AND NOT EXISTS (
-                 SELECT 1 
-                 FROM staff_station_postings ssp_sms
-                 JOIN profiles p_sms ON p_sms.id = ssp_sms.profile_id
-                 JOIN roles r_sms ON r_sms.id = p_sms.role_id
-                 WHERE ssp_sms.station_id = sp.station_id 
-                   AND ssp_sms.is_current = true 
-                   AND r_sms.name IN ('Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Station Master Supervisior', 'Station Master Supervisio')
-               )
-              )
-              OR
-              ($${roleParamIndex} IN ('Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS') 
-               AND sp.role_code IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM') 
-               AND sp.station_id = (SELECT station_id FROM staff_station_postings WHERE profile_id = $${userIdParamIndex} AND is_current = true LIMIT 1)
-              )
-              OR
-              ($${roleParamIndex} = 'AOM' AND sp.role_code IN ('SM', 'TM', 'TI', 'SS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Cabin Master', 'CABIN MASTER'))
-            ))
+            ($${roleParamIndex} IN ('Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Station Master Supervisior', 'Station Master Supervisio')
+             AND sp.role_code IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM')
+             AND sp.station_id = (SELECT station_id FROM staff_station_postings WHERE profile_id = $${userIdParamIndex} AND is_current = true LIMIT 1)
+            )
+            OR
+            ($${roleParamIndex} = 'TI'
+             AND sp.role_code IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM')
+             AND NOT EXISTS (
+               SELECT 1
+               FROM staff_station_postings ssp_sms
+               JOIN profiles p_sms ON p_sms.id = ssp_sms.profile_id
+               JOIN roles r_sms ON r_sms.id = p_sms.role_id
+               WHERE ssp_sms.station_id = sp.station_id
+                 AND ssp_sms.is_current = true
+                 AND p_sms.status = 'active'
+                 AND r_sms.name IN ('Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Station Master Supervisior', 'Station Master Supervisio')
+             )
+            )
+            OR
+            (sp.role_code NOT IN ('TM', 'Train Manager')
+             AND sp.reporting_officer_id = $${userIdParamIndex}
+             AND $${roleParamIndex} NOT IN ('TI', 'AOM', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Station Master Supervisior', 'Station Master Supervisio')
+            )
           )
       )::int as "pendingApprovals",
       COALESCE(AVG(sa.percentage) FILTER (WHERE sa.status = 'completed')::numeric(10,2), 0) as "averageScore",

@@ -46,8 +46,10 @@ async function runAutoMigration() {
   }
 }
 
-// Run migration check upon module loading
-runAutoMigration();
+// Run migration check only when explicitly requested via env flag
+if (process.env.RUN_AUTO_MIGRATION === "true") {
+  runAutoMigration();
+}
 
 // ==========================================
 // REPOSITORY OPERATIONS

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   getWorkforceList,
   createWorkforceUser,
@@ -53,6 +53,9 @@ export const useWorkforce = (roleCode) => {
   const [divisions, setDivisions] = useState([]);
   const [dropdownsLoading, setDropdownsLoading] = useState(false);
 
+  const abortControllerRef = useRef(null);
+  const latestRequestIdRef = useRef(0);
+
   // Load stations & divisions on mount (utilizing caching)
   useEffect(() => {
     const loadDropdownData = async () => {
@@ -75,15 +78,27 @@ export const useWorkforce = (roleCode) => {
   }, []);
 
   const fetchUsers = useCallback(async (filters = {}, page = 1) => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+    const requestId = ++latestRequestIdRef.current;
+
     setLoading(true);
     setError(null);
     try {
-      const res = await getWorkforceList({
-        ...filters,
-        role: roleCode,
-        page,
-        limit: 10,
-      });
+      const res = await getWorkforceList(
+        {
+          ...filters,
+          role: roleCode,
+          page,
+          limit: 10,
+        },
+        controller.signal
+      );
+
+      if (requestId !== latestRequestIdRef.current) return;
 
       if (res.success) {
         setUsers(res.data.users);
@@ -92,9 +107,15 @@ export const useWorkforce = (roleCode) => {
         setError(res.message || 'Failed to fetch workforce data');
       }
     } catch (err) {
+      if (err.name === 'CanceledError' || err.name === 'AbortError' || err.code === 'ERR_CANCELED') {
+        return;
+      }
+      if (requestId !== latestRequestIdRef.current) return;
       setError(err.response?.data?.message || err.message || 'An error occurred while fetching users');
     } finally {
-      setLoading(false);
+      if (requestId === latestRequestIdRef.current) {
+        setLoading(false);
+      }
     }
   }, [roleCode]);
 

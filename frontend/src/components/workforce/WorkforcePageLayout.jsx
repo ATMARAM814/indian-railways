@@ -47,6 +47,7 @@ const WorkforcePageLayout = ({
     category: '',
     riskLevel: ''
   });
+  const [debouncedFilters, setDebouncedFilters] = useState(filters);
 
   const [activePage, setActivePage] = useState(1);
   const [createOpen, setCreateOpen] = useState(false);
@@ -57,10 +58,28 @@ const WorkforcePageLayout = ({
   const [selectedUser, setSelectedUser] = useState(null);
   const [excelDownloading, setExcelDownloading] = useState(false);
 
-  // Fetch users whenever filters or page changes
+  // Debounce text search fields (search / stationSearch) to prevent race conditions and request storms
   useEffect(() => {
-    fetchUsers(filters, activePage);
-  }, [filters, activePage, fetchUsers]);
+    const hasTextChanged =
+      filters.search !== debouncedFilters.search ||
+      filters.stationSearch !== debouncedFilters.stationSearch;
+
+    if (!hasTextChanged) {
+      setDebouncedFilters(filters);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setDebouncedFilters(filters);
+    }, 350);
+
+    return () => clearTimeout(timer);
+  }, [filters, debouncedFilters.search, debouncedFilters.stationSearch]);
+
+  // Fetch users whenever debounced filters or page changes
+  useEffect(() => {
+    fetchUsers(debouncedFilters, activePage);
+  }, [debouncedFilters, activePage, fetchUsers]);
 
   const handleFilterChange = (newFilters) => {
     setFilters(newFilters);

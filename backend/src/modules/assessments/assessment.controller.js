@@ -16,10 +16,8 @@ const {
   getAssessmentAnswersService,
   deactivateAssessment,
   getEmployeeAssessmentHistoryService,
-  createBulkAssessmentsService,
   cancelAssessment,
   getPmeRefStatusService,
-  getBulkEligibleStaffService,
 } = require("./assessment.service");
 
 async function createAssessmentController(req, res) {
@@ -425,57 +423,6 @@ async function deactivateAssessmentController(req, res) {
   }
 }
 
-async function getBulkEligibleStaffController(req, res) {
-  try {
-    const { roleCode } = req.params;
-    const result = await getBulkEligibleStaffService(req.user.userId, req.user.role, roleCode);
-    return res.status(200).json({
-      success: true,
-      data: result,
-    });
-  } catch (error) {
-    return res.status(400).json({
-      success: false,
-      message: error.message,
-    });
-  }
-}
-
-async function createBulkAssessmentsController(req, res) {
-  try {
-    const {
-      roleCode,
-      assessmentCycle,
-      assessmentType,
-      scheduledDate,
-      dueDate,
-      instructionsRemarks,
-    } = req.body;
-
-    const result = await createBulkAssessmentsService({
-      assessorUserId: req.user.userId,
-      assessorRoleCode: req.user.role,
-      assessedRoleCode: roleCode,
-      assessmentCycle,
-      assessmentType,
-      scheduledDate,
-      dueDate,
-      instructionsRemarks,
-    });
-
-    return res.status(200).json({
-      success: true,
-      message: `Successfully scheduled assessments for ${result.count} employees.`,
-      data: result,
-    });
-  } catch (error) {
-    return res.status(400).json({
-      success: false,
-      message: error.message,
-    });
-  }
-}
-
 async function getPmeRefStatusController(req, res) {
   try {
     const userId = req.user.userId;
@@ -511,7 +458,5 @@ module.exports = {
   deactivateAssessmentController,
   cancelAssessmentController,
   getEmployeeAssessmentHistoryController,
-  getBulkEligibleStaffController,
-  createBulkAssessmentsController,
   getPmeRefStatusController,
 };

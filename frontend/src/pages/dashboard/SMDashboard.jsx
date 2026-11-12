@@ -319,7 +319,7 @@ const SMDashboard = () => {
             value={isKakirwar ? trainManagers.length : summary.totalEmployees}
             icon={<Users size={20} />}
             type="normal"
-            trend={isKakirwar ? "Total managed train managers" : "Total active station crew"}
+            trend={isKakirwar ? "Total managed train managers" : "Total active station staff"}
             onClick={() => {
               if (isKakirwar) {
                 navigate('/workforce/train-managers');

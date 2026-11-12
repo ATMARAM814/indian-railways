@@ -5,8 +5,8 @@ export const getAssessmentRoleSummary = async () => {
   return res.data;
 };
 
-export const getAssessmentList = async (roleCode, filters = {}) => {
-  const res = await apiClient.get(`/assessments/eligible/${roleCode}`, { params: filters });
+export const getAssessmentList = async (roleCode, filters = {}, signal) => {
+  const res = await apiClient.get(`/assessments/eligible/${roleCode}`, { params: filters, signal });
   return res.data;
 };
 
@@ -57,16 +57,6 @@ export const cancelAssessment = async (assessmentId, reason) => {
 
 export const getEmployeeHistory = async (employeeId) => {
   const res = await apiClient.get(`/assessments/employee/${employeeId}/history`);
-  return res.data;
-};
-
-export const getBulkEligibleStaff = async (roleCode) => {
-  const res = await apiClient.get(`/assessments/bulk/eligible/${roleCode}`);
-  return res.data;
-};
-
-export const createBulkAssessments = async (payload) => {
-  const res = await apiClient.post('/assessments/bulk', payload);
   return res.data;
 };
 

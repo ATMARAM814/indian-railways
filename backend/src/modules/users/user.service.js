@@ -336,9 +336,11 @@ async function listUsersService(
     limit,
   };
 
-  const users = await getUsers(queryFilters);
-  const total = await countUsers(queryFilters);
-  const totalAll = await countUsers({ ...queryFilters, status: 'all' });
+  const [users, total, totalAll] = await Promise.all([
+    getUsers(queryFilters),
+    countUsers(queryFilters),
+    countUsers({ ...queryFilters, status: 'all' }),
+  ]);
 
   return {
     users,
@@ -535,6 +537,11 @@ async function deactivateUserService(
   }
 
   const deactivated = await deactivateUser(targetUserId);
+  const pool = require("../../config/database");
+  await pool.query(
+    `UPDATE profiles SET reporting_officer_id = NULL, updated_at = now() WHERE reporting_officer_id = $1`,
+    [targetUserId]
+  );
   await logAction(
     creatorUserId,
     "USER_DEACTIVATED",
@@ -820,9 +827,45 @@ async function transferUserService(
       reason: transferData.reason || (isDemotion ? "Demotion" : isPromotion ? "Promotion" : "Transfer"),
     });
 
-    // Update reporting TI
+    // If this staff member was a reporting officer at their old station, release subordinates left at other stations
+    if (currentPosting?.station_id && targetStationId && currentPosting.station_id !== targetStationId) {
+      await pool.query(
+        `UPDATE profiles p
+         SET reporting_officer_id = NULL, updated_at = now()
+         FROM staff_station_postings ssp
+         WHERE ssp.profile_id = p.id
+           AND ssp.is_current = true
+           AND p.reporting_officer_id = $1
+           AND ssp.station_id != $2`,
+        [targetUserId, targetStationId]
+      );
+    }
+
+    // Only keep TI as reporting_officer_id for PM/Shunting Master when destination station has no active SMS
     const reportingTiId = transferData.reportingTiId;
-    if (reportingTiId) {
+    if (['PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM'].includes(newRole)) {
+      const destSmsCheck = await pool.query(
+        `SELECT 1 FROM staff_station_postings ssp
+         JOIN profiles p ON p.id = ssp.profile_id
+         JOIN roles r ON r.id = p.role_id
+         WHERE ssp.station_id = $1
+           AND ssp.is_current = true
+           AND p.status = 'active'
+           AND r.name IN ('Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Station Master Supervisior', 'Station Master Supervisio')
+         LIMIT 1`,
+        [targetStationId]
+      );
+      const nextReportingId = destSmsCheck.rows.length > 0 ? null : (reportingTiId || null);
+      await pool.query(
+        `UPDATE profiles SET reporting_officer_id = $1, updated_at = now() WHERE id = $2`,
+        [nextReportingId, targetUserId]
+      );
+    } else if (['SM', 'Station Master', 'SS', 'Station Master Incharge', 'SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'Cabin Master', 'CABIN MASTER'].includes(newRole)) {
+      await pool.query(
+        `UPDATE profiles SET reporting_officer_id = NULL, updated_at = now() WHERE id = $1`,
+        [targetUserId]
+      );
+    } else if (reportingTiId) {
       await pool.query(
         `UPDATE profiles SET reporting_officer_id = $1, updated_at = now() WHERE id = $2`,
         [reportingTiId, targetUserId]

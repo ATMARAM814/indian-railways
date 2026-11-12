@@ -24,8 +24,6 @@ const {
   getAssessmentAnswersController,
   cancelAssessmentController,
   getEmployeeAssessmentHistoryController,
-  getBulkEligibleStaffController,
-  createBulkAssessmentsController,
 } = require("./assessment.controller");
 
 router.post(
@@ -152,20 +150,6 @@ router.get(
   authenticate,
   enforcePasswordChange,
   getEmployeeAssessmentHistoryController
-);
-
-router.get(
-  "/bulk/eligible/:roleCode",
-  authenticate,
-  enforcePasswordChange,
-  getBulkEligibleStaffController
-);
-
-router.post(
-  "/bulk",
-  authenticate,
-  enforcePasswordChange,
-  createBulkAssessmentsController
 );
 
 module.exports = router;

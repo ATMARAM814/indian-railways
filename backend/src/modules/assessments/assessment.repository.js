@@ -180,7 +180,9 @@ async function selfHealUserCategories() {
   }
 }
 
-runAutoMigration();
+if (process.env.RUN_AUTO_MIGRATION === "true") {
+  runAutoMigration();
+}
 
 
 async function countActiveQuestions(roleCode) {
@@ -675,9 +677,99 @@ async function getPendingEvaluationsForAssessor(userId) {
     FROM assessments a
     JOIN profiles assessed
       ON assessed.id = a.assessed_user_id
-    WHERE a.assessor_user_id = $1
-      AND a.status = 'mcq_submitted'
-      ${userId === '75524970-3891-4321-9e96-2c0002d601a3' ? "AND a.assessed_role_code != 'TM'" : ''}
+    LEFT JOIN profiles orig_assessor
+      ON orig_assessor.id = a.assessor_user_id
+    LEFT JOIN roles r_orig
+      ON r_orig.id = orig_assessor.role_id
+    LEFT JOIN staff_station_postings ssp
+      ON ssp.profile_id = assessed.id AND ssp.is_current = true
+    LEFT JOIN staff_station_postings ssp_orig
+      ON ssp_orig.profile_id = orig_assessor.id AND ssp_orig.is_current = true
+    JOIN profiles me
+      ON me.id = $1
+    JOIN roles r_me
+      ON r_me.id = me.role_id
+    LEFT JOIN staff_station_postings ssp_me
+      ON ssp_me.profile_id = me.id AND ssp_me.is_current = true
+    WHERE a.status = 'mcq_submitted'
+      AND assessed.status = 'active'
+      ${userId === '75524970-3891-4321-9e96-2c0002d601a3' ? "AND a.assessed_role_code NOT IN ('TM', 'Train Manager')" : ''}
+      AND (
+        a.assessor_user_id = $1
+        OR (
+          me.status = 'active'
+          AND a.assessed_user_id != $1
+          AND (
+            orig_assessor.id IS NULL
+            OR orig_assessor.status != 'active'
+            OR (
+              r_orig.name IN ('SM', 'Station Master', 'STATION MASTER', 'SS', 'Station Master Incharge', 'STATION MASTER INCHARGE', 'Cabin Master', 'CABIN MASTER', 'SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR')
+              AND ssp.station_id IS NOT NULL
+              AND ssp_orig.station_id IS DISTINCT FROM ssp.station_id
+            )
+            OR (
+              r_orig.name = 'TI'
+              AND ssp.station_id IS NOT NULL
+              AND NOT EXISTS (
+                SELECT 1 FROM station_assignments sa_orig
+                WHERE sa_orig.profile_id = orig_assessor.id
+                  AND sa_orig.station_id = ssp.station_id
+                  AND sa_orig.assignment_type = 'TI_AREA'
+                  AND sa_orig.assigned_to IS NULL
+              )
+            )
+          )
+          AND (
+            r_me.name = 'SUPER_ADMIN'
+            OR (
+              r_me.name = 'AOM'
+              AND a.assessed_role_code IN ('TM', 'Train Manager', 'SM', 'Station Master', 'TI', 'Traffic Inspector', 'SS', 'Station Master Incharge', 'SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'Cabin Master', 'CABIN MASTER')
+            )
+            OR (
+              r_me.name IN ('SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR')
+              AND ssp.station_id = ssp_me.station_id
+              AND a.assessed_role_code IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'SM', 'Station Master', 'SS', 'Cabin Master', 'CABIN MASTER', 'TM', 'Train Manager')
+            )
+            OR (
+              r_me.name IN ('SS', 'Station Master Incharge', 'STATION MASTER INCHARGE', 'Cabin Master', 'CABIN MASTER')
+              AND ssp.station_id = ssp_me.station_id
+              AND a.assessed_role_code IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM')
+              AND NOT EXISTS (
+                SELECT 1 FROM staff_station_postings ssp_sms
+                JOIN profiles p_sms ON p_sms.id = ssp_sms.profile_id
+                JOIN roles r_sms ON r_sms.id = p_sms.role_id
+                WHERE ssp_sms.station_id = ssp.station_id
+                  AND ssp_sms.is_current = true
+                  AND p_sms.status = 'active'
+                  AND r_sms.name IN ('Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Station Master Supervisior', 'Station Master Supervisio')
+              )
+            )
+            OR (
+              r_me.name = 'TI'
+              AND a.assessed_role_code NOT IN ('TM', 'Train Manager')
+              AND EXISTS (
+                SELECT 1 FROM station_assignments sa_me
+                WHERE sa_me.profile_id = me.id
+                  AND sa_me.station_id = ssp.station_id
+                  AND sa_me.assignment_type = 'TI_AREA'
+                  AND sa_me.assigned_to IS NULL
+              )
+              AND (
+                a.assessed_role_code IN ('SM', 'Station Master', 'SS', 'Station Master Incharge', 'Cabin Master', 'CABIN MASTER')
+                OR NOT EXISTS (
+                  SELECT 1 FROM staff_station_postings ssp_sms
+                  JOIN profiles p_sms ON p_sms.id = ssp_sms.profile_id
+                  JOIN roles r_sms ON r_sms.id = p_sms.role_id
+                  WHERE ssp_sms.station_id = ssp.station_id
+                    AND ssp_sms.is_current = true
+                    AND p_sms.status = 'active'
+                    AND r_sms.name IN ('Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Station Master Supervisior', 'Station Master Supervisio')
+                )
+              )
+            )
+          )
+        )
+      )
     ORDER BY a.submitted_at DESC;
   `;
 
@@ -913,7 +1005,6 @@ async function getRoleStatsForAssessor(assessorId, assessorRole, roleCode) {
     scopeCondition = '';
   }
 
-  // 1. Total staff
   const staffQuery = `
     SELECT COUNT(DISTINCT p.id)::int as total
     FROM profiles p
@@ -921,8 +1012,6 @@ async function getRoleStatsForAssessor(assessorId, assessorRole, roleCode) {
     ${scopeJoin}
     WHERE r.name = $1 AND p.status = 'active' ${scopeCondition}
   `;
-  const staffRes = await pool.query(staffQuery, values);
-  const totalStaff = staffRes.rows[0].total;
 
   // 2. Assessment stats (aggregating the latest active/non-expired assessment per profile)
   const assessmentStatsQuery = `
@@ -953,8 +1042,6 @@ async function getRoleStatsForAssessor(assessorId, assessorRole, roleCode) {
     ) latest_assessment ON true
     WHERE r.name = $1 AND p.status = 'active' ${scopeCondition}
   `;
-  const assessRes = await pool.query(assessmentStatsQuery, values);
-  const stats = assessRes.rows[0] || { active_exams: 0, pending_evaluations: 0, completed_assessments: 0, avg_score: 0 };
 
   // 3. Status breakdown stats (dynamic based on latest active/non-expired assessment)
   const statusBreakdownQuery = `
@@ -985,7 +1072,16 @@ async function getRoleStatsForAssessor(assessorId, assessorRole, roleCode) {
     ) latest_assessment ON true
     WHERE r.name = $1 AND p.status = 'active' ${scopeCondition}
   `;
-  const breakdownRes = await pool.query(statusBreakdownQuery, values);
+
+  const queryValues = assessorRole === 'SUPER_ADMIN' ? [roleCode] : values;
+  const [staffRes, assessRes, breakdownRes] = await Promise.all([
+    pool.query(staffQuery, queryValues),
+    pool.query(assessmentStatsQuery, queryValues),
+    pool.query(statusBreakdownQuery, queryValues),
+  ]);
+
+  const totalStaff = staffRes.rows[0].total;
+  const stats = assessRes.rows[0] || { active_exams: 0, pending_evaluations: 0, completed_assessments: 0, avg_score: 0 };
   const breakdown = breakdownRes.rows[0] || { completed: 0, pending: 0, in_progress: 0, not_started: 0 };
 
   return {
@@ -1026,14 +1122,12 @@ async function getAssessorRoleStats(assessorId, assessorRole) {
     targetRoles = targetRoles.filter(r => r !== 'TM');
   }
 
-  const results = [];
-  for (const roleCode of targetRoles) {
-    const stats = await getRoleStatsForAssessor(assessorId, assessorRole, roleCode);
-    if (stats && (stats.totalStaff > 0 || (stats.activeExams || 0) > 0 || (stats.pendingEvaluations || 0) > 0)) {
-      results.push(stats);
-    }
-  }
-  return results;
+  const allStats = await Promise.all(
+    targetRoles.map((roleCode) => getRoleStatsForAssessor(assessorId, assessorRole, roleCode))
+  );
+  return allStats.filter(
+    (stats) => stats && (stats.totalStaff > 0 || (stats.activeExams || 0) > 0 || (stats.pendingEvaluations || 0) > 0)
+  );
 }
 
 async function getEligibleStaff(assessorId, assessorRole, roleCode, filters = {}) {
@@ -1301,11 +1395,12 @@ async function getEligibleStaff(assessorId, assessorRole, roleCode, filters = {}
     WHERE ${conditions.join(' AND ')}
   `;
 
-  const countResult = await pool.query(countQuery, values);
+  const queryValues = [...values, Number(limit), offset];
+  const [countResult, result] = await Promise.all([
+    pool.query(countQuery, values),
+    pool.query(query, queryValues),
+  ]);
   const total = countResult.rows[0].total;
-
-  values.push(Number(limit), offset);
-  const result = await pool.query(query, values);
 
   return {
     rows: result.rows,
@@ -1387,162 +1482,6 @@ async function deleteAssessmentRecord(assessmentId) {
   }
 }
 
-async function getBulkEligibleStaff(assessorId, assessorRole, roleCode) {
-  const values = [roleCode];
-  const conditions = ['r.name = $1', "p.status = 'active'"];
-
-  // Scope filter based on assessorRole
-  if (['Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS'].includes(assessorRole)) {
-    values.push(assessorId);
-    conditions.push(`
-      ssp.station_id = (
-        SELECT station_id
-        FROM staff_station_postings
-        WHERE profile_id = $${values.length}
-          AND is_current = true
-        LIMIT 1
-      )
-    `);
-    conditions.push(`
-      (
-        r.name IN ('SM', 'SS', 'Cabin Master', 'CABIN MASTER', 'PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'TM')
-      )
-    `);
-  } else if (assessorRole === 'SS' || ['Cabin Master', 'CABIN MASTER'].includes(assessorRole)) {
-    if (roleCode === 'SM') {
-      conditions.push('1 = 0');
-    } else {
-      values.push(assessorId);
-      conditions.push(`
-        ssp.station_id = (
-          SELECT station_id
-          FROM staff_station_postings
-          WHERE profile_id = $${values.length}
-            AND is_current = true
-          LIMIT 1
-        )
-      `);
-
-      conditions.push(`
-        (
-          (r.name IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM') AND p.reporting_officer_id IS NULL)
-          OR
-          (p.reporting_officer_id = $${values.length})
-        )
-      `);
-    }
-  } else if (assessorId === '439a8db6-2546-4858-abbc-3752f4acb536') {
-    if (roleCode !== 'TM') {
-      conditions.push('1 = 0');
-    } else {
-      values.push(assessorId);
-      conditions.push(`
-        (
-          p.reporting_officer_id = $${values.length}
-          OR (r.name = 'TM' AND (s.station_code = 'NGP' OR s.id = '7a4f242d-79e6-4eb8-bef8-61eef42136dc'))
-        )
-      `);
-    }
-  } else if (assessorRole === 'SM') {
-    conditions.push('1 = 0');
-  } else if (assessorRole === 'TI') {
-    values.push(assessorId);
-    conditions.push(`
-      ssp.station_id IN (
-        SELECT station_id
-        FROM station_assignments
-        WHERE profile_id = $${values.length}
-          AND assignment_type = 'TI_AREA'
-          AND assigned_to IS NULL
-      )
-      AND r.name != 'TM'
-    `);
-  } else if (assessorRole === 'AOM') {
-    values.push(assessorId);
-    conditions.push(`
-      (
-        s.division_id = (
-          SELECT division_id
-          FROM division_assignments
-          WHERE profile_id = $${values.length}
-            AND is_current = true
-          LIMIT 1
-        )
-        OR
-        p.id IN (
-          SELECT sa.profile_id
-          FROM station_assignments sa
-          JOIN stations st ON st.id = sa.station_id
-          WHERE sa.assignment_type = 'TI_AREA' AND sa.assigned_to IS NULL
-            AND st.division_id = (
-              SELECT division_id
-              FROM division_assignments
-              WHERE profile_id = $${values.length}
-                AND is_current = true
-              LIMIT 1
-            )
-        )
-        OR
-        p.id IN (
-          SELECT da.profile_id
-          FROM division_assignments da
-          WHERE da.is_current = true
-            AND da.division_id = (
-              SELECT division_id
-              FROM division_assignments
-              WHERE profile_id = $${values.length}
-                AND is_current = true
-              LIMIT 1
-            )
-        )
-      )
-    `);
-  }
-
-  // Ensure Nagpur Train Managers are ONLY visible to Anant Kakirwar (and division admins AOM/SUPER_ADMIN)
-  if (!['AOM', 'SUPER_ADMIN'].includes(assessorRole) && assessorId !== '439a8db6-2546-4858-abbc-3752f4acb536') {
-    conditions.push(`
-      NOT (r.name = 'TM' AND (s.station_code = 'NGP' OR s.id = '7a4f242d-79e6-4eb8-bef8-61eef42136dc' OR p.reporting_officer_id = '439a8db6-2546-4858-abbc-3752f4acb536'))
-    `);
-  }
-
-  // Strictly exclude Train Managers for P D Raut
-  if (assessorId === '75524970-3891-4321-9e96-2c0002d601a3') {
-    conditions.push("r.name != 'TM'");
-    if (roleCode === 'TM') {
-      conditions.push('1 = 0');
-    }
-  }
-
-  // Enforce no active assessment cycle
-  conditions.push(`
-    NOT EXISTS (
-      SELECT 1 FROM assessments a
-      WHERE a.assessed_user_id = p.id
-        AND a.status NOT IN ('completed', 'approved', 'cancelled')
-    )
-  `);
-
-  const query = `
-    SELECT
-      p.id,
-      p.full_name,
-      p.hrms_id,
-      p.designation,
-      s.station_code,
-      s.station_name
-    FROM profiles p
-    JOIN roles r ON r.id = p.role_id
-    LEFT JOIN staff_station_postings ssp ON ssp.profile_id = p.id AND ssp.is_current = true
-    LEFT JOIN stations s ON s.id = ssp.station_id
-    WHERE ${conditions.join(' AND ')}
-    ORDER BY p.full_name;
-  `;
-
-  const result = await pool.query(query, values);
-  return result.rows;
-}
-
 async function getPmeRefStatusRepository(userId) {
   const recordsQuery = `
     SELECT 
@@ -1586,6 +1525,7 @@ async function hasStationSupervisor(profileId) {
     JOIN profiles p_sms ON p_sms.id = ssp_sms.profile_id
     JOIN roles r_sms ON r_sms.id = p_sms.role_id
     WHERE ssp.profile_id = $1 AND ssp.is_current = true
+      AND p_sms.status = 'active'
       AND r_sms.name IN ('Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Station Master Supervisior', 'Station Master Supervisio')
     LIMIT 1;
   `;
@@ -1621,7 +1561,6 @@ module.exports = {
   hasActiveAssessment,
   cancelAssessmentRecord,
   getEmployeeAssessmentHistory,
-  getBulkEligibleStaff,
   getPmeRefStatusRepository,
   hasStationSupervisor,
 };

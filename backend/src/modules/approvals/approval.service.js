@@ -33,43 +33,77 @@ async function validateApprovalHierarchy(
     throw new Error("Assessment not found");
   }
 
-  // Fetch candidate's reporting officer
+  if (approverRole === "SUPER_ADMIN") {
+    return assessment;
+  }
+
   const pool = require("../../config/database");
-  const checkReportingRes = await pool.query(
-    "SELECT reporting_officer_id FROM profiles WHERE id = $1",
-    [assessment.assessed_user_id]
-  );
-  const reportingOfficerId = checkReportingRes.rows[0]?.reporting_officer_id;
+  const assessedRole = assessment.assessed_role_code;
+  const isPmOrShm = ["PM", "Shunting Master", "SHUNTING MASTER", "SHM"].includes(assessedRole);
+  const isSmsRole = [
+    "SMS",
+    "STATION MASTER SUPERVISOR",
+    "Station Master Supervisor",
+    "Station Master Supervisior",
+    "Station Master Supervisio",
+  ].includes(approverRole);
+  const aomApprovableRoles = [
+    "SM", "Station Master",
+    "TM", "Train Manager",
+    "TI", "Traffic Inspector",
+    "SS", "Station Master Incharge",
+    "Station Master Supervisor", "SMS", "STATION MASTER SUPERVISOR",
+    "Cabin Master", "CABIN MASTER",
+  ];
 
-  const assessedRole =
-    assessment.assessed_role_code;
-
-  // Train Managers must ALWAYS be approved by AOM (or SUPER_ADMIN), not by their reporting officer
-  if (assessedRole === "TM") {
-    if (approverRole !== "AOM" && approverRole !== "SUPER_ADMIN") {
+  // Train Managers must ALWAYS be approved by AOM (or SUPER_ADMIN)
+  if (["TM", "Train Manager"].includes(assessedRole)) {
+    if (approverRole !== "AOM") {
       throw new Error("Only an Assistant Operations Manager (AOM) is authorized to approve Train Manager assessments.");
     }
     return assessment;
   }
 
-  // If a reporting officer is assigned, ONLY allow that specific officer to approve
-  if (reportingOfficerId) {
-    if (reportingOfficerId !== approverId && approverRole !== "SUPER_ADMIN") {
-      throw new Error("Only the assigned reporting officer is authorized to approve this crew member's assessments.");
+  // AOM approves SM, TM, TI, SS, SMS, Cabin Master regardless of prior transfer reporting_officer_id
+  if (approverRole === "AOM") {
+    if (!aomApprovableRoles.includes(assessedRole)) {
+      throw new Error(
+        "AOM can approve only SM/TM/TI/SS/Station Master Supervisor/Cabin Master assessments"
+      );
     }
-    return assessment; // Bypass all other hierarchy rules
+    return assessment;
   }
 
-  if (
-    (approverRole === "TI" || ["SMS", "STATION MASTER SUPERVISOR", "Station Master Supervisor"].includes(approverRole)) &&
-    !["PM", "Shunting Master", "SHUNTING MASTER", "SHM"].includes(assessedRole)
-  ) {
-    throw new Error(
-      `${approverRole} can approve only PM/Shunting Master assessments`
+  // Station Master Supervisor approves PM/Shunting Master posted at their current station
+  if (isSmsRole) {
+    if (!isPmOrShm) {
+      throw new Error(`${approverRole} can approve only PM/Shunting Master assessments`);
+    }
+    const stationMatchRes = await pool.query(
+      `SELECT 1
+       FROM staff_station_postings ssp_cand
+       JOIN staff_station_postings ssp_approver
+         ON ssp_approver.station_id = ssp_cand.station_id
+       WHERE ssp_cand.profile_id = $1
+         AND ssp_cand.is_current = true
+         AND ssp_approver.profile_id = $2
+         AND ssp_approver.is_current = true
+       LIMIT 1`,
+      [assessment.assessed_user_id, approverId]
     );
+    if (stationMatchRes.rowCount === 0) {
+      throw new Error(
+        "You are not authorized to approve assessments for staff outside your assigned station."
+      );
+    }
+    return assessment;
   }
 
+  // TI approves PM/Shunting Master within their TI_AREA when no active SMS is assigned to that station
   if (approverRole === "TI") {
+    if (!isPmOrShm) {
+      throw new Error(`${approverRole} can approve only PM/Shunting Master assessments`);
+    }
     const hasSms = await hasStationSupervisor(assessment.assessed_user_id);
     if (hasSms) {
       throw new Error(
@@ -92,30 +126,20 @@ async function validateApprovalHierarchy(
         "You are not authorized to approve assessments for staff outside your assigned jurisdiction/stations."
       );
     }
+    return assessment;
   }
 
-  if (
-    approverRole === "AOM" &&
-    !["SM", "TM", "TI", "SS", "Station Master Supervisor", "SMS", "STATION MASTER SUPERVISOR", "Cabin Master", "CABIN MASTER"].includes(
-      assessedRole
-    )
-  ) {
-    throw new Error(
-      "AOM can approve only SM/TM/TI/SS/Station Master Supervisor/Cabin Master assessments"
-    );
+  // Fallback for explicit reporting officer when no active station SMS supersedes them
+  const checkReportingRes = await pool.query(
+    "SELECT reporting_officer_id FROM profiles WHERE id = $1",
+    [assessment.assessed_user_id]
+  );
+  const reportingOfficerId = checkReportingRes.rows[0]?.reporting_officer_id;
+  if (reportingOfficerId && reportingOfficerId === approverId && !(isPmOrShm && (await hasStationSupervisor(assessment.assessed_user_id)))) {
+    return assessment;
   }
 
-  if (
-    !["TI", "AOM", "Station Master Supervisor", "SMS", "STATION MASTER SUPERVISOR"].includes(
-      approverRole
-    )
-  ) {
-    throw new Error(
-      "You are not authorized to approve assessments"
-    );
-  }
-
-  return assessment;
+  throw new Error("You are not authorized to approve assessments");
 }
 
 async function approveAssessmentService(

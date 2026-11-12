@@ -25,12 +25,6 @@ const roleNameMap = {
   SMS: 'Station Master Supervisors'
 };
 
-const getDefaultDueDate = () => {
-  const d = new Date();
-  d.setDate(d.getDate() + 7);
-  return d.toISOString().split('T')[0];
-};
-
 const AssessmentRoleListPage = () => {
   const { roleCode } = useParams();
   const { user } = useAuth();
@@ -54,8 +48,6 @@ const AssessmentRoleListPage = () => {
     fetchEligibleStaff,
     handleActivateExam,
     handleDeactivateExam,
-    handleGetBulkEligibleStaff,
-    handleCreateBulkAssessments,
   } = useAssessments(roleCode);
 
   const [filters, setFilters] = useState({
@@ -67,72 +59,26 @@ const AssessmentRoleListPage = () => {
     dateFrom: '',
     dateTo: ''
   });
+  const [debouncedFilters, setDebouncedFilters] = useState(filters);
   const [page, setPage] = useState(1);
   const [feedback, setFeedback] = useState(null);
 
-  // Bulk Scheduling states
-  const [showBulkModal, setShowBulkModal] = useState(false);
-  const [bulkEligibleStaff, setBulkEligibleStaff] = useState([]);
-  const [bulkLoading, setBulkLoading] = useState(false);
-  const [bulkCycle, setBulkCycle] = useState('Monthly Assessment');
-  const [bulkType, setBulkType] = useState('Periodic Assessment');
-  const [bulkScheduledDate, setBulkScheduledDate] = useState(() => new Date().toISOString().split('T')[0]);
-  const [bulkDueDate, setBulkDueDate] = useState(() => getDefaultDueDate());
-  const [bulkRemarks, setBulkRemarks] = useState('');
-  const [bulkError, setBulkError] = useState('');
-  const [bulkSubmitting, setBulkSubmitting] = useState(false);
+  useEffect(() => {
+    const hasTextChanged =
+      filters.search !== debouncedFilters.search ||
+      filters.stationSearch !== debouncedFilters.stationSearch;
 
-  const handleOpenBulkModal = async () => {
-    setShowBulkModal(true);
-    setBulkLoading(true);
-    setBulkError('');
-    setBulkRemarks('');
-    setBulkCycle('Monthly Assessment');
-    setBulkType('Periodic Assessment');
-    setBulkScheduledDate(() => new Date().toISOString().split('T')[0]);
-    setBulkDueDate(() => getDefaultDueDate());
-
-    const res = await handleGetBulkEligibleStaff();
-    if (res.success) {
-      setBulkEligibleStaff(res.data);
-    } else {
-      setBulkError(res.message || 'Failed to load eligible employees for bulk scheduling.');
-    }
-    setBulkLoading(false);
-  };
-
-  const handleBulkSubmit = async (e) => {
-    e.preventDefault();
-    setBulkError('');
-
-    if (new Date(bulkDueDate) < new Date(bulkScheduledDate)) {
-      setBulkError('Due Date must be on or after Scheduled Date.');
+    if (!hasTextChanged) {
+      setDebouncedFilters(filters);
       return;
     }
 
-    setBulkSubmitting(true);
-    const res = await handleCreateBulkAssessments({
-      assessmentCycle: bulkCycle,
-      assessmentType: bulkType,
-      scheduledDate: bulkScheduledDate,
-      dueDate: bulkDueDate,
-      instructionsRemarks: bulkRemarks
-    });
+    const timer = setTimeout(() => {
+      setDebouncedFilters(filters);
+    }, 350);
 
-    setBulkSubmitting(false);
-
-    if (res.success) {
-      setFeedback({
-        type: 'success',
-        message: `Successfully scheduled safety assessments for ${res.data.count} employees at once.`
-      });
-      setShowBulkModal(false);
-      fetchEligibleStaff(filters, page, 10);
-      fetchStats();
-    } else {
-      setBulkError(res.message || 'Failed to schedule bulk assessments.');
-    }
-  };
+    return () => clearTimeout(timer);
+  }, [filters, debouncedFilters.search, debouncedFilters.stationSearch]);
 
   useEffect(() => {
     if (user) {
@@ -142,9 +88,9 @@ const AssessmentRoleListPage = () => {
 
   useEffect(() => {
     if (user && roleCode) {
-      fetchEligibleStaff(filters, page, 10);
+      fetchEligibleStaff(debouncedFilters, page, 10);
     }
-  }, [user, roleCode, filters, page, fetchEligibleStaff]);
+  }, [user, roleCode, debouncedFilters, page, fetchEligibleStaff]);
 
   const handleExportExcel = async () => {
     try {
@@ -325,13 +271,6 @@ const AssessmentRoleListPage = () => {
               <Download size={16} />
               <span>Export Excel</span>
             </button>
-            <button
-              type="button"
-              onClick={handleOpenBulkModal}
-              className="role-action-btn schedule-btn"
-            >
-              <span>Schedule for All {friendlyName}</span>
-            </button>
           </div>
         </div>
 
@@ -415,229 +354,6 @@ const AssessmentRoleListPage = () => {
         )}
 
       </div>
-
-      {/* BULK SCHEDULE ASSESSMENT MODAL */}
-      {showBulkModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(11, 35, 65, 0.5)',
-          backdropFilter: 'blur(4px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 9999
-        }}>
-          <div style={{
-            backgroundColor: '#FFFFFF',
-            borderRadius: '8px',
-            boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)',
-            width: '90%',
-            maxWidth: '650px',
-            overflow: 'hidden',
-            fontFamily: 'var(--font-family)'
-          }}>
-            {/* Modal Header */}
-            <div style={{
-              backgroundColor: '#0B2341',
-              padding: '16px 24px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              color: '#FFFFFF'
-            }}>
-              <h2 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>Bulk Schedule Assessments — {friendlyName}</h2>
-              <button onClick={() => setShowBulkModal(false)} style={{ background: 'none', border: 'none', color: '#FFFFFF', cursor: 'pointer' }}>
-                <X size={20} />
-              </button>
-            </div>
-
-            {/* Modal Body */}
-            <form onSubmit={handleBulkSubmit}>
-              <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px', maxHeight: '70vh', overflowY: 'auto' }}>
-
-                {bulkLoading ? (
-                  <div style={{ padding: '32px', textAlign: 'center', color: '#64748B', fontSize: '15px' }}>
-                    Loading eligible employees list...
-                  </div>
-                ) : bulkEligibleStaff.length === 0 ? (
-                  <div style={{
-                    backgroundColor: '#FEF2F2',
-                    border: '1px solid #FCA5A5',
-                    borderRadius: '8px',
-                    padding: '16px',
-                    color: '#991B1B',
-                    fontSize: '14px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px'
-                  }}>
-                    <AlertCircle size={20} />
-                    <span>All {friendlyName} under your jurisdiction already have active assessment cycles. No new assessments can be scheduled at this time.</span>
-                  </div>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#334155' }}>
-                      Assessing {bulkEligibleStaff.length} Eligible {friendlyName}:
-                    </label>
-                    <div style={{
-                      backgroundColor: '#F8FAFC',
-                      border: '1px solid #E2E8F0',
-                      borderRadius: '8px',
-                      padding: '12px',
-                      maxHeight: '120px',
-                      overflowY: 'auto',
-                      display: 'flex',
-                      flexWrap: 'wrap',
-                      gap: '6px'
-                    }}>
-                      {bulkEligibleStaff.map((emp) => (
-                        <span
-                          key={emp.id}
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            backgroundColor: '#EFF6FF',
-                            color: '#1E40AF',
-                            border: '1px solid #BFDBFE',
-                            borderRadius: '6px',
-                            padding: '4px 10px',
-                            fontSize: '12.5px',
-                            fontWeight: '600'
-                          }}
-                        >
-                          {emp.full_name} ({emp.station_code})
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {bulkError && (
-                  <div style={{ padding: '12px', backgroundColor: '#FEE2E2', border: '1px solid #FCA5A5', color: '#991B1B', fontSize: '13px', borderRadius: '6px' }}>
-                    {bulkError}
-                  </div>
-                )}
-
-                {/* Editable Section */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  <div className="modal-inputs-grid">
-                    <div>
-                      <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>Assessment Cycle *</label>
-                      <select
-                        value={bulkCycle}
-                        onChange={(e) => setBulkCycle(e.target.value)}
-                        style={{ width: '100%', height: '40px', padding: '0 12px', border: '1px solid #CBD5E1', borderRadius: '8px', fontSize: '14px' }}
-                      >
-                        <option value="Monthly Assessment">Monthly Assessment</option>
-                        <option value="Quarterly Assessment">Quarterly Assessment</option>
-                        <option value="Half Yearly Assessment">Half Yearly Assessment</option>
-                        <option value="Special Safety Review">Special Safety Review</option>
-                        <option value="Post Transfer Assessment">Post Transfer Assessment</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>Assessment Type *</label>
-                      <select
-                        value={bulkType}
-                        onChange={(e) => setBulkType(e.target.value)}
-                        style={{ width: '100%', height: '40px', padding: '0 12px', border: '1px solid #CBD5E1', borderRadius: '8px', fontSize: '14px' }}
-                      >
-                        <option value="Periodic Assessment">Periodic Assessment</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="modal-inputs-grid">
-                    <div>
-                      <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>Scheduled Date *</label>
-                      <input
-                        type="date"
-                        value={bulkScheduledDate}
-                        onChange={(e) => setBulkScheduledDate(e.target.value)}
-                        style={{ width: '100%', height: '40px', padding: '0 12px', border: '1px solid #CBD5E1', borderRadius: '8px', fontSize: '14px' }}
-                      />
-                    </div>
-
-                    <div>
-                      <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>Due Date *</label>
-                      <input
-                        type="date"
-                        value={bulkDueDate}
-                        onChange={(e) => setBulkDueDate(e.target.value)}
-                        style={{ width: '100%', height: '40px', padding: '0 12px', border: '1px solid #CBD5E1', borderRadius: '8px', fontSize: '14px' }}
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>Instructions / Remarks</label>
-                    <textarea
-                      rows="3"
-                      value={bulkRemarks}
-                      onChange={(e) => setBulkRemarks(e.target.value)}
-                      placeholder="Add instructions for all employees..."
-                      style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '8px', fontSize: '14px', resize: 'vertical' }}
-                    ></textarea>
-                  </div>
-                </div>
-
-              </div>
-
-              {/* Modal Footer */}
-              <div style={{
-                backgroundColor: '#F8FAFC',
-                padding: '16px 24px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'flex-end',
-                gap: '12px',
-                borderTop: '1px solid #E2E8F0'
-              }}>
-                <button
-                  type="button"
-                  onClick={() => setShowBulkModal(false)}
-                  style={{
-                    padding: '0 16px',
-                    height: '40px',
-                    borderRadius: '8px',
-                    border: '1px solid #CBD5E1',
-                    backgroundColor: '#FFFFFF',
-                    color: '#475569',
-                    fontSize: '13px',
-                    fontWeight: 600,
-                    cursor: 'pointer'
-                  }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={bulkEligibleStaff.length === 0 || bulkSubmitting || bulkLoading}
-                  style={{
-                    padding: '0 20px',
-                    height: '40px',
-                    borderRadius: '8px',
-                    border: 'none',
-                    backgroundColor: (bulkEligibleStaff.length === 0 || bulkSubmitting || bulkLoading) ? '#94A3B8' : '#2B5CE6',
-                    color: '#FFFFFF',
-                    fontSize: '13px',
-                    fontWeight: 700,
-                    cursor: (bulkEligibleStaff.length === 0 || bulkSubmitting || bulkLoading) ? 'not-allowed' : 'pointer',
-                    transition: 'all 0.2s'
-                  }}
-                >
-                  {bulkSubmitting ? 'Scheduling...' : `Schedule for ${bulkEligibleStaff.length} Employees`}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </DashboardLayout>
   );
 };

@@ -340,7 +340,7 @@ const SuperAdminDashboard = () => {
             value={summary.totalEmployees}
             icon={<Users size={20} />}
             type="normal"
-            trend="Total active safety crew"
+            trend="Total active safety staff"
           />
           <StatCard
             title="Overdue Staff"

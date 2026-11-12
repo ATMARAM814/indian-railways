@@ -511,22 +511,18 @@ async function getTiSummary(stationIds, profileId) {
           AND a.approval_status = 'pending_approval'
           AND assessed.status = 'active'
           AND (
-            (a.assessed_role_code != 'TM' AND assessed.reporting_officer_id = $2)
-            OR
-            (assessed.reporting_officer_id IS NULL AND (
-              a.assessed_role_code IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM')
-              AND ssp.station_id = ANY($1::uuid[])
-              AND NOT EXISTS (
-                SELECT 1 
-                FROM staff_station_postings ssp_sms
-                JOIN profiles p_sms ON p_sms.id = ssp_sms.profile_id
-                JOIN roles r_sms ON r_sms.id = p_sms.role_id
-                WHERE ssp_sms.station_id = ssp.station_id 
-                  AND ssp_sms.is_current = true 
-                  AND p_sms.status = 'active'
-                  AND r_sms.name IN ('Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Station Master Supervisior', 'Station Master Supervisio')
-              )
-            ))
+            a.assessed_role_code IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM')
+            AND ssp.station_id = ANY($1::uuid[])
+            AND NOT EXISTS (
+              SELECT 1 
+              FROM staff_station_postings ssp_sms
+              JOIN profiles p_sms ON p_sms.id = ssp_sms.profile_id
+              JOIN roles r_sms ON r_sms.id = p_sms.role_id
+              WHERE ssp_sms.station_id = ssp.station_id 
+                AND ssp_sms.is_current = true 
+                AND p_sms.status = 'active'
+                AND r_sms.name IN ('Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Station Master Supervisior', 'Station Master Supervisio')
+            )
           )
       ) as pending_approvals,
       (
@@ -1708,12 +1704,11 @@ async function getSmSupervisorSummary(stationId, profileId) {
           AND a.approval_status = 'pending_approval'
           AND assessed.status = 'active'
           AND (
-            (a.assessed_role_code != 'TM' AND assessed.reporting_officer_id = $2::uuid)
-            OR
-            (assessed.reporting_officer_id IS NULL AND (
+            (
               a.assessed_role_code IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM')
               AND ssp.station_id = $1::uuid
-            ))
+            )
+            OR (a.assessed_role_code NOT IN ('TM', 'Train Manager') AND assessed.reporting_officer_id = $2::uuid)
           )
       ) as pending_approvals,
       (

@@ -167,6 +167,7 @@ function App() {
     if (import.meta.env.DEV) return;
 
     const checkVersion = async () => {
+      if (document.visibilityState === 'hidden') return;
       try {
         const response = await fetch('/index.html?t=' + Date.now(), { cache: 'no-store' });
         if (!response.ok) return;
@@ -191,8 +192,8 @@ function App() {
       }
     };
 
-    // Check for a new deployment every 30 seconds
-    const interval = setInterval(checkVersion, 30000);
+    // Check for a new deployment every 5 minutes when tab is visible
+    const interval = setInterval(checkVersion, 300000);
     return () => clearInterval(interval);
   }, []);
 

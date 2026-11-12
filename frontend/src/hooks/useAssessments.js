@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   getAssessmentRoleSummary,
   getAssessmentList,
@@ -12,8 +12,6 @@ import {
   deactivateMCQExam,
   cancelAssessment,
   getEmployeeHistory,
-  getBulkEligibleStaff,
-  createBulkAssessments,
 } from '../services/assessment.service';
 import { getStationsList } from '../services/workforce.service';
 
@@ -29,6 +27,9 @@ export const useAssessments = (roleCode) => {
 
   const [stations, setStations] = useState([]);
   const [stationsLoading, setStationsLoading] = useState(false);
+
+  const staffAbortRef = useRef(null);
+  const latestStaffReqIdRef = useRef(0);
 
   // Load stations dropdown
   useEffect(() => {
@@ -67,10 +68,18 @@ export const useAssessments = (roleCode) => {
 
   const fetchEligibleStaff = useCallback(async (filters = {}, page = 1, limit = 10) => {
     if (!roleCode) return;
+    if (staffAbortRef.current) {
+      staffAbortRef.current.abort();
+    }
+    const controller = new AbortController();
+    staffAbortRef.current = controller;
+    const reqId = ++latestStaffReqIdRef.current;
+
     setStaffLoading(true);
     setStaffError(null);
     try {
-      const res = await getAssessmentList(roleCode, { ...filters, page, limit });
+      const res = await getAssessmentList(roleCode, { ...filters, page, limit }, controller.signal);
+      if (reqId !== latestStaffReqIdRef.current) return;
       if (res.success) {
         setEligibleStaff(res.data);
         setTotalStaff(res.total || 0);
@@ -78,9 +87,15 @@ export const useAssessments = (roleCode) => {
         setStaffError(res.message || 'Failed to fetch eligible staff');
       }
     } catch (err) {
+      if (err.name === 'CanceledError' || err.name === 'AbortError' || err.code === 'ERR_CANCELED') {
+        return;
+      }
+      if (reqId !== latestStaffReqIdRef.current) return;
       setStaffError(err.response?.data?.message || err.message || 'Error fetching staff');
     } finally {
-      setStaffLoading(false);
+      if (reqId === latestStaffReqIdRef.current) {
+        setStaffLoading(false);
+      }
     }
   }, [roleCode]);
 
@@ -183,24 +198,6 @@ export const useAssessments = (roleCode) => {
     }
   };
 
-  const handleGetBulkEligibleStaff = useCallback(async () => {
-    try {
-      const res = await getBulkEligibleStaff(roleCode);
-      return { success: true, data: res.data };
-    } catch (err) {
-      return { success: false, message: err.response?.data?.message || err.message || 'Failed to fetch bulk eligible staff' };
-    }
-  }, [roleCode]);
-
-  const handleCreateBulkAssessments = async (payload) => {
-    try {
-      const res = await createBulkAssessments({ ...payload, roleCode });
-      return { success: true, data: res.data };
-    } catch (err) {
-      return { success: false, message: err.response?.data?.message || err.message || 'Failed to schedule bulk assessments' };
-    }
-  };
-
   return {
     stats,
     statsLoading,
@@ -224,7 +221,5 @@ export const useAssessments = (roleCode) => {
     handleGetDraft,
     handleGetYesNoQuestions,
     handleGetAnswers,
-    handleGetBulkEligibleStaff,
-    handleCreateBulkAssessments,
   };
 };
