@@ -50,24 +50,25 @@ async function getPendingApprovalsForUser(userId, role) {
           'SM', 'Station Master',
           'TI', 'Traffic Inspector',
           'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS',
-          'Cabin Master', 'CABIN MASTER'
+          'Cabin Master', 'CABIN MASTER',
+          'SS', 'Station Master Incharge', 'STATION MASTER INCHARGE', 'Station Superintendent'
         ))
         OR
-        -- Active Station Master Supervisor sees PM, Shunting Master, and SM Incharge (SS) posted at their current station regardless of prior reporting_officer_id
+        -- Active Station Master Supervisor sees PM and Shunting Master posted at their current station regardless of prior reporting_officer_id
         ($1 IN ('Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Station Master Supervisior', 'Station Master Supervisio')
-         AND a.assessed_role_code IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'SS', 'Station Master Incharge', 'STATION MASTER INCHARGE')
+         AND a.assessed_role_code IN ('PM', 'Pointsman', 'Shunting Master', 'SHUNTING MASTER', 'SHM')
          AND ssp.station_id = (SELECT station_id FROM staff_station_postings WHERE profile_id = $2 AND is_current = true LIMIT 1)
         )
         OR
-        -- TI sees PM, Shunting Master, and SM Incharge (SS) in their TI_AREA when no active Station Master Supervisor exists at that station
+        -- TI sees PM and Shunting Master in their TI_AREA when no active Station Master Supervisor exists at that station
         ($1 = 'TI'
-         AND a.assessed_role_code IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'SS', 'Station Master Incharge', 'STATION MASTER INCHARGE')
+         AND a.assessed_role_code IN ('PM', 'Pointsman', 'Shunting Master', 'SHUNTING MASTER', 'SHM')
          AND ssp.station_id IN (
            SELECT sa.station_id
            FROM station_assignments sa
            WHERE sa.profile_id = $2
              AND sa.assignment_type = 'TI_AREA'
-             AND sa.assigned_to IS NULL
+             AND (sa.assigned_to IS NULL OR sa.assigned_to >= CURRENT_DATE)
          )
          AND NOT EXISTS (
            SELECT 1
@@ -82,7 +83,7 @@ async function getPendingApprovalsForUser(userId, role) {
         )
         OR
         -- Fallback for explicit reporting officer on non-supervisory staff when no active SMS oversees the station
-        (a.assessed_role_code NOT IN ('TM', 'Train Manager')
+        (a.assessed_role_code IN ('PM', 'Pointsman', 'Shunting Master', 'SHUNTING MASTER', 'SHM')
          AND assessed.reporting_officer_id = $2
          AND $1 NOT IN ('TI', 'AOM', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Station Master Supervisior', 'Station Master Supervisio')
          AND NOT EXISTS (

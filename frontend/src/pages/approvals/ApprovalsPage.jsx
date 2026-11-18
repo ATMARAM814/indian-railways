@@ -264,14 +264,14 @@ const ApprovalsPage = () => {
     } else if (user.role === 'TI' || ['SMS', 'STATION MASTER SUPERVISOR', 'Station Master Supervisor', 'Station Master Supervisior', 'Station Master Supervisio'].includes(user.role)) {
       return [
         { code: 'PM', name: 'Pointsman' },
-        { code: 'Shunting Master', name: 'Shunting Master' },
-        { code: 'SS', name: 'SM Incharge' }
+        { code: 'Shunting Master', name: 'Shunting Master' }
       ];
     } else if (user.role === 'AOM') {
       return [
         { code: 'SM', name: 'Station Master' },
         { code: 'TM', name: 'Train Manager' },
         { code: 'SMS', name: 'Station Master Supervisor' },
+        { code: 'SS', name: 'SM Incharge' },
         { code: 'Cabin Master', name: 'Cabin Master' },
         { code: 'TI', name: 'Traffic Inspector' }
       ];

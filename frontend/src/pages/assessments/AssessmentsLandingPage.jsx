@@ -8,6 +8,8 @@ import { AssessmentRoleCard } from '../../components/assessments/AssessmentRoleC
 import { CardSkeleton } from '../../components/assessments/AssessmentSkeletons';
 import { TableSkeleton } from '../../components/reports/ReportSkeletons';
 import { AssessmentStatusBadge } from '../../components/assessments/AssessmentStatusBadge';
+import ActiveAssessmentBanner from '../../components/my-assessment/ActiveAssessmentBanner';
+import { getActiveAssessment } from '../../services/myAssessment.service';
 import apiClient from '../../api/apiClient';
 import { ClipboardList, Calendar, Award, ChevronRight, Eye, Info, Clock } from 'lucide-react';
 import '../../styles/assessments.css';
@@ -18,10 +20,27 @@ const AssessmentsLandingPage = () => {
   const { stats, statsLoading, statsError, fetchStats } = useAssessments();
   const [myResults, setMyResults] = useState([]);
   const [myResultsLoading, setMyResultsLoading] = useState(false);
+  const [activeAssessment, setActiveAssessment] = useState(null);
   const [lastSyncTime, setLastSyncTime] = useState('');
 
   const isKakirwar = user?.hrmsId === 'BKFOEQ' || user?.hrms_id === 'BKFOEQ' || user?.id === '439a8db6-2546-4858-abbc-3752f4acb536';
   const isExaminee = !isKakirwar && ['PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'SM'].includes(user?.role);
+
+  useEffect(() => {
+    const fetchActive = async () => {
+      try {
+        const res = await getActiveAssessment();
+        if (res && res.data) {
+          setActiveAssessment(res.data);
+        }
+      } catch (e) {
+        console.warn('Could not fetch personal active assessment', e);
+      }
+    };
+    if (user) {
+      fetchActive();
+    }
+  }, [user]);
 
   useEffect(() => {
     if (user && !isExaminee) {
@@ -70,6 +89,11 @@ const AssessmentsLandingPage = () => {
   return (
     <DashboardLayout>
       <div className="dashboard-page-container">
+        {activeAssessment && (
+          <div style={{ marginBottom: '16px' }}>
+            <ActiveAssessmentBanner assessment={activeAssessment} />
+          </div>
+        )}
         
         {/* Page Header for Examinees */}
         {isExaminee && (

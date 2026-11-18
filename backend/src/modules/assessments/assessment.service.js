@@ -362,12 +362,21 @@ async function assertCanEvaluateAssessment(assessment, userId, actionLabel = "su
          AND (
            r_user.name IN ('AOM', 'SUPER_ADMIN')
            OR (
+             -- Designated reporting officer of the candidate
+             EXISTS (
+               SELECT 1 FROM profiles sub
+               WHERE sub.id = $1 AND sub.reporting_officer_id = $2
+             )
+           )
+           OR (
              r_user.name = 'TI'
              AND NOT $4::boolean
              AND EXISTS (
                SELECT 1
                FROM staff_station_postings ssp
-               JOIN station_assignments sa ON sa.station_id = ssp.station_id AND sa.assignment_type = 'TI_AREA' AND sa.assigned_to IS NULL
+               JOIN station_assignments sa ON sa.station_id = ssp.station_id 
+                 AND sa.assignment_type = 'TI_AREA' 
+                 AND (sa.assigned_to IS NULL OR sa.assigned_to >= CURRENT_DATE)
                WHERE ssp.profile_id = $1 AND ssp.is_current = true AND sa.profile_id = $2
              )
            )
@@ -377,14 +386,27 @@ async function assertCanEvaluateAssessment(assessment, userId, actionLabel = "su
                OR
                (NOT $3::boolean AND r_user.name IN ('Cabin Master', 'CABIN MASTER', 'SS', 'Station Master Incharge', 'STATION MASTER INCHARGE', 'SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR'))
              )
-             AND EXISTS (
-               SELECT 1 
-               FROM staff_station_postings ssp1
-               JOIN staff_station_postings ssp2 ON ssp1.station_id = ssp2.station_id
-               WHERE ssp1.profile_id = $1 
-                 AND ssp2.profile_id = $2 
-                 AND ssp1.is_current = true 
-                 AND ssp2.is_current = true
+             AND (
+               -- Active supervisor at candidate's current station
+               EXISTS (
+                 SELECT 1 
+                 FROM staff_station_postings ssp1
+                 JOIN staff_station_postings ssp2 ON ssp1.station_id = ssp2.station_id
+                 WHERE ssp1.profile_id = $1 
+                   AND ssp2.profile_id = $2 
+                   AND ssp1.is_current = true 
+                   AND ssp2.is_current = true
+               )
+               OR
+               -- Succession: active replacement supervisor at the station of the original assessor (e.g. after retirement/transfer)
+               EXISTS (
+                 SELECT 1
+                 FROM staff_station_postings ssp_orig
+                 JOIN staff_station_postings ssp_new ON ssp_orig.station_id = ssp_new.station_id
+                 WHERE ssp_orig.profile_id = $5
+                   AND ssp_new.profile_id = $2
+                   AND ssp_new.is_current = true
+               )
              )
            )
            OR (
@@ -403,7 +425,7 @@ async function assertCanEvaluateAssessment(assessment, userId, actionLabel = "su
      FROM profiles p_user
      JOIN roles r_user ON r_user.id = p_user.role_id
      WHERE p_user.id = $2`,
-    [assessment.assessed_user_id, userId, isAssessedSm, isAssessedTm]
+    [assessment.assessed_user_id, userId, isAssessedSm, isAssessedTm, assessment.assessor_user_id]
   );
 
   const isStationAuthority = checkAuthRes.rows[0]?.isStationAuthority || false;
@@ -698,7 +720,7 @@ async function deactivateAssessment(assessmentId, userId, userRole) {
     throw new Error("Only the assessor who activated the MCQ can deactivate it");
   }
 
-  if (assessment.status !== "created") {
+  if (!['created', 'mcq_access_sent', 'mcq_pending'].includes(assessment.status)) {
     throw new Error("MCQ exam has already been attempted/submitted and cannot be deactivated");
   }
 

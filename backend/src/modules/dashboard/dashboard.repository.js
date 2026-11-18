@@ -511,7 +511,7 @@ async function getTiSummary(stationIds, profileId) {
           AND a.approval_status = 'pending_approval'
           AND assessed.status = 'active'
           AND (
-            a.assessed_role_code IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'SS', 'Station Master Incharge', 'STATION MASTER INCHARGE')
+            a.assessed_role_code IN ('PM', 'Pointsman', 'Shunting Master', 'SHUNTING MASTER', 'SHM')
             AND ssp.station_id = ANY($1::uuid[])
             AND NOT EXISTS (
               SELECT 1 
@@ -713,7 +713,7 @@ async function getAomSummary(divisionId) {
         WHERE (a.status = 'completed' OR a.status = 'evaluated')
           AND a.approval_status = 'pending_approval'
           AND p_sub.status = 'active'
-          AND a.assessed_role_code IN ('SM', 'TM', 'TI', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Cabin Master', 'CABIN MASTER')
+          AND a.assessed_role_code IN ('SM', 'TM', 'TI', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Cabin Master', 'CABIN MASTER', 'SS', 'Station Master Incharge', 'STATION MASTER INCHARGE', 'Station Superintendent')
           AND (
             a.assessed_role_code = 'TM'
             OR a.assessed_user_id IN (
@@ -1636,7 +1636,7 @@ async function getSuperAdminTiAssessmentStats() {
       COUNT(DISTINCT CASE WHEN r_staff.id IS NOT NULL THEN p_staff.id END)::int as "totalEmployees",
       COUNT(DISTINCT CASE WHEN r_staff.id IS NOT NULL THEN p_staff.id END) FILTER (WHERE latest_a.status = 'completed' AND (latest_a.approval_status = 'approved' OR latest_a.approval_status = 'rejected'))::int as "completedAssessments",
       COUNT(DISTINCT CASE WHEN r_staff.id IS NOT NULL THEN p_staff.id END) FILTER (WHERE latest_a.status IN ('created', 'mcq_pending', 'mcq_submitted', 'evaluation_pending', 'evaluation_submitted', 'scheduled', 'mcq_access_sent'))::int as "pendingAssessments",
-      COUNT(DISTINCT CASE WHEN r_staff.id IS NOT NULL THEN p_staff.id END) FILTER (WHERE (latest_a.status = 'completed' OR latest_a.status = 'evaluated') AND (latest_a.approval_status = 'pending_approval' OR latest_a.approval_status IS NULL))::int as "approvalPending"
+      COUNT(DISTINCT CASE WHEN r_staff.id IS NOT NULL AND r_staff.name IN ('PM', 'Pointsman', 'Shunting Master', 'SHUNTING MASTER', 'SHM') THEN p_staff.id END) FILTER (WHERE (latest_a.status = 'completed' OR latest_a.status = 'evaluated') AND (latest_a.approval_status = 'pending_approval' OR latest_a.approval_status IS NULL))::int as "approvalPending"
     FROM station_assignments sa
     JOIN profiles p ON p.id = sa.profile_id
     LEFT JOIN staff_station_postings ssp ON ssp.station_id = sa.station_id AND ssp.is_current = true
@@ -1705,7 +1705,7 @@ async function getSmSupervisorSummary(stationId, profileId) {
           AND assessed.status = 'active'
           AND (
             (
-              a.assessed_role_code IN ('PM', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'SS', 'Station Master Incharge', 'STATION MASTER INCHARGE')
+              a.assessed_role_code IN ('PM', 'Pointsman', 'Shunting Master', 'SHUNTING MASTER', 'SHM')
               AND ssp.station_id = $1::uuid
             )
             OR (a.assessed_role_code NOT IN ('TM', 'Train Manager') AND assessed.reporting_officer_id = $2::uuid)

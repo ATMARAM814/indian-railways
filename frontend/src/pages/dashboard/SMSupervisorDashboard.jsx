@@ -17,6 +17,8 @@ import LineChartCard from '../../components/charts/LineChartCard';
 import BarChartCard from '../../components/charts/BarChartCard';
 import DonutChartCard from '../../components/charts/DonutChartCard';
 import StaffProfileModal from '../../components/dashboard/StaffProfileModal';
+import ActiveAssessmentBanner from '../../components/my-assessment/ActiveAssessmentBanner';
+import { getActiveAssessment } from '../../services/myAssessment.service';
 import { getWorkforceDetails } from '../../services/workforce.service';
 import { 
   Users, 
@@ -38,6 +40,7 @@ const SMSupervisorDashboard = () => {
   const { user, logout } = useAuth();
   const isPdRaut = user?.hrmsId === 'QASJDT' || user?.hrms_id === 'QASJDT' || user?.id === '75524970-3891-4321-9e96-2c0002d601a3';
   const [data, setData] = useState(null);
+  const [activeAssessment, setActiveAssessment] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
@@ -86,6 +89,17 @@ const SMSupervisorDashboard = () => {
 
   useEffect(() => {
     fetchDashboardData();
+    const fetchActive = async () => {
+      try {
+        const res = await getActiveAssessment();
+        if (res && res.data) {
+          setActiveAssessment(res.data);
+        }
+      } catch (err) {
+        console.warn('Failed to load active assessment for supervisor:', err);
+      }
+    };
+    fetchActive();
   }, []);
 
   if (loading) {
@@ -237,6 +251,11 @@ const SMSupervisorDashboard = () => {
   return (
     <DashboardLayout>
       <div className="dashboard-content">
+        {activeAssessment && (
+          <div style={{ marginBottom: '16px' }}>
+            <ActiveAssessmentBanner assessment={activeAssessment} />
+          </div>
+        )}
         {station && (
           <div className="station-banner-card" style={{ marginBottom: '8px' }}>
             <div className="station-banner-info">

@@ -655,7 +655,7 @@ async function getPendingAssessmentsForUser(userId) {
     JOIN profiles assessor
       ON assessor.id = a.assessor_user_id
     WHERE a.assessed_user_id = $1
-      AND a.status = 'created'
+      AND a.status IN ('created', 'mcq_access_sent', 'mcq_pending')
     ORDER BY a.created_at DESC;
   `;
 
@@ -1016,7 +1016,7 @@ async function getRoleStatsForAssessor(assessorId, assessorRole, roleCode) {
   // 2. Assessment stats (aggregating the latest active/non-expired assessment per profile)
   const assessmentStatsQuery = `
     SELECT
-      COUNT(DISTINCT latest_assessment.id) FILTER (WHERE latest_assessment.status = 'created')::int as active_exams,
+      COUNT(DISTINCT latest_assessment.id) FILTER (WHERE latest_assessment.status IN ('created', 'mcq_access_sent', 'mcq_pending'))::int as active_exams,
       COUNT(DISTINCT latest_assessment.id) FILTER (WHERE latest_assessment.status = 'mcq_submitted')::int as pending_evaluations,
       COUNT(DISTINCT latest_assessment.id) FILTER (WHERE latest_assessment.status = 'completed')::int as completed_assessments,
       COALESCE(AVG(latest_assessment.percentage) FILTER (WHERE latest_assessment.status = 'completed'), 0)::numeric as avg_score
@@ -1047,7 +1047,7 @@ async function getRoleStatsForAssessor(assessorId, assessorRole, roleCode) {
   const statusBreakdownQuery = `
     SELECT
       COUNT(p.id) FILTER (WHERE latest_assessment.id IS NULL OR latest_assessment.status = 'cancelled')::int as not_started,
-      COUNT(p.id) FILTER (WHERE latest_assessment.status = 'created')::int as in_progress,
+      COUNT(p.id) FILTER (WHERE latest_assessment.status IN ('created', 'mcq_access_sent', 'mcq_pending'))::int as in_progress,
       COUNT(p.id) FILTER (WHERE latest_assessment.status = 'mcq_submitted')::int as pending,
       COUNT(p.id) FILTER (WHERE latest_assessment.status = 'completed')::int as completed
     FROM profiles p
@@ -1290,6 +1290,8 @@ async function getEligibleStaff(assessorId, assessorRole, roleCode, filters = {}
     } else if (['pending_approval', 'approved', 'rejected'].includes(status)) {
       values.push(status);
       conditions.push(`latest_assessment.approval_status = $${values.length}`);
+    } else if (['created', 'scheduled', 'mcq_access_sent', 'mcq_pending', 'active_exams'].includes(status)) {
+      conditions.push(`latest_assessment.status IN ('created', 'mcq_access_sent', 'mcq_pending')`);
     } else {
       values.push(status);
       conditions.push(`latest_assessment.status = $${values.length}`);

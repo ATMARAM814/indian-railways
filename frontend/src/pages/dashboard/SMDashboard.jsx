@@ -19,6 +19,8 @@ import LineChartCard from '../../components/charts/LineChartCard';
 import BarChartCard from '../../components/charts/BarChartCard';
 import DonutChartCard from '../../components/charts/DonutChartCard';
 import StaffProfileModal from '../../components/dashboard/StaffProfileModal';
+import ActiveAssessmentBanner from '../../components/my-assessment/ActiveAssessmentBanner';
+import { getActiveAssessment } from '../../services/myAssessment.service';
 import { 
   Building2, 
   ShieldCheck, 
@@ -35,6 +37,7 @@ const SMDashboard = () => {
   const navigate = useNavigate();
   const isKakirwar = user?.hrmsId === 'BKFOEQ' || user?.hrms_id === 'BKFOEQ' || user?.id === '439a8db6-2546-4858-abbc-3752f4acb536';
   const [data, setData] = useState(null);
+  const [activeAssessment, setActiveAssessment] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
@@ -93,6 +96,17 @@ const SMDashboard = () => {
 
   useEffect(() => {
     fetchDashboardData();
+    const fetchActive = async () => {
+      try {
+        const res = await getActiveAssessment();
+        if (res && res.data) {
+          setActiveAssessment(res.data);
+        }
+      } catch (err) {
+        console.warn('Failed to load active assessment for SM:', err);
+      }
+    };
+    fetchActive();
   }, []);
 
   if (loading) {
@@ -266,6 +280,11 @@ const SMDashboard = () => {
   return (
     <DashboardLayout>
       <div className="dashboard-content">
+        {activeAssessment && (
+          <div style={{ marginBottom: '16px' }}>
+            <ActiveAssessmentBanner assessment={activeAssessment} />
+          </div>
+        )}
         {station && (
           <div className="station-banner-card" style={{ marginBottom: '8px' }}>
             <div className="station-banner-info">
