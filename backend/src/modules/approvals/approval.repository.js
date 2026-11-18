@@ -43,24 +43,36 @@ async function getPendingApprovalsForUser(userId, role) {
       AND a.approval_status = 'pending_approval'
       AND (
         -- Train Managers and supervisory/station roles ALWAYS route to AOM for approval (even after transfers)
-        ($1 = 'AOM' AND a.assessed_role_code IN (
-          'TM', 'Train Manager',
-          'SM', 'Station Master',
-          'TI', 'Traffic Inspector',
-          'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS',
-          'Cabin Master', 'CABIN MASTER',
-          'SS', 'Station Master Incharge', 'STATION MASTER INCHARGE', 'Station Superintendent'
+        ($1 = 'AOM' AND (
+          a.assessed_role_code IN (
+            'TM', 'Train Manager',
+            'SM', 'Station Master',
+            'TI', 'Traffic Inspector',
+            'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS',
+            'Cabin Master', 'CABIN MASTER',
+            'SS', 'Station Master Incharge', 'STATION MASTER INCHARGE', 'Station Superintendent'
+          )
+          OR EXISTS (
+            SELECT 1 FROM profiles p_cand
+            JOIN roles r_cand ON r_cand.id = p_cand.role_id
+            WHERE p_cand.id = a.assessed_user_id
+              AND (
+                r_cand.name IN ('TM', 'Train Manager', 'SM', 'Station Master', 'TI', 'Traffic Inspector', 'SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SS', 'Station Master Incharge', 'STATION MASTER INCHARGE', 'Cabin Master', 'CABIN MASTER')
+                OR p_cand.role_id IN (SELECT id FROM roles WHERE name IN ('TM', 'SM', 'TI', 'SMS', 'SS', 'Cabin Master'))
+              )
+          )
+          OR a.assessor_user_id = $2
         ))
         OR
-        -- Active Station Master Supervisor sees PM and Shunting Master posted at their current station regardless of prior reporting_officer_id
+        -- Active Station Master Supervisor sees PM, Shunting Master, and SM Incharge (SS) posted at their current station
         ($1 IN ('Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'SMS', 'Station Master Supervisior', 'Station Master Supervisio')
-         AND a.assessed_role_code IN ('PM', 'Pointsman', 'Shunting Master', 'SHUNTING MASTER', 'SHM')
+         AND a.assessed_role_code IN ('PM', 'Pointsman', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'SS', 'Station Master Incharge', 'STATION MASTER INCHARGE', 'Station Superintendent')
          AND ssp.station_id = (SELECT station_id FROM staff_station_postings WHERE profile_id = $2 AND is_current = true LIMIT 1)
         )
         OR
-        -- TI sees PM and Shunting Master in their TI_AREA when no active Station Master Supervisor exists at that station
+        -- TI sees PM, Shunting Master, and SM Incharge (SS) in their TI_AREA when no active Station Master Supervisor exists at that station
         ($1 = 'TI'
-         AND a.assessed_role_code IN ('PM', 'Pointsman', 'Shunting Master', 'SHUNTING MASTER', 'SHM')
+         AND a.assessed_role_code IN ('PM', 'Pointsman', 'Shunting Master', 'SHUNTING MASTER', 'SHM', 'SS', 'Station Master Incharge', 'STATION MASTER INCHARGE', 'Station Superintendent')
          AND ssp.station_id IN (
            SELECT sa.station_id
            FROM station_assignments sa

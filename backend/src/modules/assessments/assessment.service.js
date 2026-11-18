@@ -65,7 +65,12 @@ async function createAssessment({
   let finalAssessorUserId = assessorUserId;
   let finalAssessorRoleCode = assessorRoleCode;
 
-  if (reportingOfficerId && (assessmentType === 'Retest' || ['TI', 'AOM', 'SUPER_ADMIN'].includes(assessorRoleCode))) {
+  // AOM and SUPER_ADMIN are division authorities scheduling assessments.
+  // Their creator identity must NEVER be replaced by the candidate's subordinate reporting officer.
+  if (['AOM', 'SUPER_ADMIN'].includes(assessorRoleCode)) {
+    finalAssessorUserId = assessorUserId;
+    finalAssessorRoleCode = assessorRoleCode;
+  } else if (reportingOfficerId && (assessmentType === 'Retest' || assessorRoleCode === 'TI')) {
     // If the assessed employee is an SM, ensure the assessor is NOT an SS / Cabin Master / SM
     if (assessedRoleCode === 'SM' && ['SS', 'Station Master Incharge', 'STATION MASTER INCHARGE', 'Cabin Master', 'CABIN MASTER', 'SM', 'Station Master', 'STATION MASTER'].includes(reportingOfficerRole)) {
       if (assessorRoleCode === 'TI') {
@@ -117,7 +122,9 @@ async function createAssessment({
     throw new Error("P D Raut cannot create or conduct assessments for Train Managers.");
   }
 
-  if (reportingOfficerId !== finalAssessorUserId && assessmentType !== 'Retest' && assessmentCycle !== 'Retest after Counseling') {
+  if (['AOM', 'SUPER_ADMIN'].includes(assessorRoleCode)) {
+    // AOM and Super Admin have division-wide authority to schedule assessments for all operational roles
+  } else if (reportingOfficerId !== finalAssessorUserId && assessmentType !== 'Retest' && assessmentCycle !== 'Retest after Counseling') {
     validateAssessmentHierarchy(
       finalAssessorRoleCode,
       assessedRoleCode,
@@ -125,7 +132,12 @@ async function createAssessment({
     );
   }
 
-  if (assessmentType !== 'Retest' && assessmentCycle !== 'Retest after Counseling' && finalAssessorRoleCode === "TI") {
+  if (
+    assessmentType !== 'Retest' &&
+    assessmentCycle !== 'Retest after Counseling' &&
+    assessorRoleCode === "TI" &&
+    finalAssessorRoleCode === "TI"
+  ) {
     if (assessedRoleCode === "TM" || assessedRoleCode === "Train Manager") {
       throw new Error("TI cannot conduct assessments for Train Managers. Train Managers are assessed by Station Supervisors.");
     }
@@ -351,6 +363,11 @@ async function assertCanEvaluateAssessment(assessment, userId, actionLabel = "su
     throw new Error(`You cannot ${actionLabel} for your own assessment.`);
   }
 
+  // AOM and SUPER_ADMIN have division-level authority to evaluate any assessment
+  if (['AOM', 'SUPER_ADMIN'].includes(userRoleName)) {
+    return;
+  }
+
   if (assessment.assessor_user_id === userId) {
     return;
   }
@@ -408,6 +425,11 @@ async function assertCanEvaluateAssessment(assessment, userId, actionLabel = "su
                    AND ssp_new.is_current = true
                )
              )
+           )
+           OR (
+             -- Active Station Master Supervisor can evaluate Train Managers (who do not have fixed station postings)
+             $4::boolean
+             AND r_user.name IN ('SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR')
            )
            OR (
              $2 = '439a8db6-2546-4858-abbc-3752f4acb536'

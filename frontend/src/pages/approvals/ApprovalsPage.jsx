@@ -22,7 +22,11 @@ const roleNameMap = {
   SS: 'SM Incharge',
   TI: 'Traffic Inspector',
   'Shunting Master': 'Shunting Master',
-  SMS: 'Station Master Supervisor'
+  SMS: 'Station Master Supervisor',
+  'Station Master Supervisor': 'Station Master Supervisor',
+  'Station Master Incharge': 'SM Incharge',
+  'Station Superintendent': 'SM Incharge',
+  'Cabin Master': 'Cabin Master'
 };
 
 const ApprovalsPage = () => {
@@ -216,8 +220,18 @@ const ApprovalsPage = () => {
         if (stationObj && item.station_code !== stationObj.station_code) return false;
       }
       // Role filter
-      if (filters.role && item.assessed_role_code !== filters.role) {
-        return false;
+      if (filters.role) {
+        const itemRole = (item.assessed_role_code || '').toUpperCase();
+        const filterRole = filters.role.toUpperCase();
+        const isMatch = itemRole === filterRole ||
+          (filterRole === 'SMS' && ['STATION MASTER SUPERVISOR', 'SMS'].includes(itemRole)) ||
+          (filterRole === 'SS' && ['STATION MASTER INCHARGE', 'SS', 'STATION SUPERINTENDENT'].includes(itemRole)) ||
+          (filterRole === 'SM' && ['STATION MASTER', 'SM'].includes(itemRole)) ||
+          (filterRole === 'TM' && ['TRAIN MANAGER', 'TM'].includes(itemRole)) ||
+          (filterRole === 'TI' && ['TRAFFIC INSPECTOR', 'TI'].includes(itemRole)) ||
+          (filterRole === 'PM' && ['POINTSMAN', 'PM'].includes(itemRole)) ||
+          (filterRole === 'SHUNTING MASTER' && ['SHUNTING MASTER', 'SHM'].includes(itemRole));
+        if (!isMatch) return false;
       }
       // Date range filter
       if (filters.fromDate && item.evaluated_at) {
@@ -264,7 +278,8 @@ const ApprovalsPage = () => {
     } else if (user.role === 'TI' || ['SMS', 'STATION MASTER SUPERVISOR', 'Station Master Supervisor', 'Station Master Supervisior', 'Station Master Supervisio'].includes(user.role)) {
       return [
         { code: 'PM', name: 'Pointsman' },
-        { code: 'Shunting Master', name: 'Shunting Master' }
+        { code: 'Shunting Master', name: 'Shunting Master' },
+        { code: 'SS', name: 'SM Incharge' }
       ];
     } else if (user.role === 'AOM') {
       return [

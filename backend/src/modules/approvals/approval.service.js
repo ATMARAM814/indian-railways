@@ -42,6 +42,7 @@ async function validateApprovalHierarchy(
   const isSmsOrTiApprovable = [
     "PM", "Pointsman",
     "Shunting Master", "SHUNTING MASTER", "SHM",
+    "SS", "Station Master Incharge", "STATION MASTER INCHARGE", "Station Superintendent",
   ].includes(assessedRole);
   const isSmsRole = [
     "SMS",
@@ -69,10 +70,18 @@ async function validateApprovalHierarchy(
 
   // AOM approves SM, TM, TI, SMS, SS, Cabin Master regardless of prior transfer reporting_officer_id
   if (approverRole === "AOM") {
-    if (!aomApprovableRoles.includes(assessedRole)) {
-      throw new Error(
-        "AOM can approve only SM/TM/TI/Station Master Supervisor/SM Incharge/Cabin Master assessments"
+    const isCandSupervisory = aomApprovableRoles.includes(assessedRole) || assessment.assessor_user_id === approverId;
+    if (!isCandSupervisory) {
+      const candRoleRes = await pool.query(
+        "SELECT r.name FROM profiles p JOIN roles r ON r.id = p.role_id WHERE p.id = $1",
+        [assessment.assessed_user_id]
       );
+      const candRole = candRoleRes.rows[0]?.name;
+      if (!aomApprovableRoles.includes(candRole)) {
+        throw new Error(
+          "AOM can approve only SM/TM/TI/Station Master Supervisor/SM Incharge/Cabin Master assessments"
+        );
+      }
     }
     return assessment;
   }
