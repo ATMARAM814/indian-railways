@@ -113,7 +113,7 @@ const Login = () => {
       return r === 'TI';
     }
     if (path.startsWith('/approvals')) {
-      return ['SM', 'SS', 'TI', 'AOM', 'SUPER_ADMIN', 'SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'Station Master Supervisior', 'Station Master Supervisio', 'Cabin Master', 'CABIN MASTER'].map(x => x.toUpperCase()).includes(r);
+      return ['SM', 'SS', 'TI', 'AOM', 'SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'Station Master Supervisior', 'Station Master Supervisio', 'Cabin Master', 'CABIN MASTER'].map(x => x.toUpperCase()).includes(r);
     }
     if (path.startsWith('/audit-logs')) {
       return r === 'SUPER_ADMIN';

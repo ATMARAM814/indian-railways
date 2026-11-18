@@ -34,7 +34,7 @@ async function validateApprovalHierarchy(
   }
 
   if (approverRole === "SUPER_ADMIN") {
-    return assessment;
+    throw new Error("Super Admin does not have authority to approve assessments. Approvals must be processed by designated operating authorities (AOM, SMS, or TI).");
   }
 
   const pool = require("../../config/database");

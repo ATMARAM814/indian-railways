@@ -30,7 +30,7 @@ const ApprovalsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const tabParam = searchParams.get('tab');
   const initialTab = (tabParam === 'completed' || tabParam === 'history') ? 'history' : 'pending';
-  const isApprover = user && ['SM', 'SS', 'TI', 'AOM', 'SUPER_ADMIN', 'SMS', 'STATION MASTER SUPERVISOR', 'Station Master Supervisor', 'Station Master Supervisior', 'Station Master Supervisio', 'Cabin Master', 'CABIN MASTER'].includes(user.role);
+  const isApprover = user && ['SM', 'SS', 'TI', 'AOM', 'SMS', 'STATION MASTER SUPERVISOR', 'Station Master Supervisor', 'Station Master Supervisior', 'Station Master Supervisio', 'Cabin Master', 'CABIN MASTER'].includes(user.role);
 
   const [activeTab, setActiveTab] = useState(initialTab); // 'pending' or 'history'
   
@@ -275,19 +275,8 @@ const ApprovalsPage = () => {
         { code: 'Cabin Master', name: 'Cabin Master' },
         { code: 'TI', name: 'Traffic Inspector' }
       ];
-    } else {
-      // SUPER_ADMIN
-      return [
-        { code: 'PM', name: 'Pointsman' },
-        { code: 'SM', name: 'Station Master' },
-        { code: 'TM', name: 'Train Manager' },
-        { code: 'SS', name: 'SM Incharge' },
-        { code: 'SMS', name: 'Station Master Supervisor' },
-        { code: 'Cabin Master', name: 'Cabin Master' },
-        { code: 'TI', name: 'Traffic Inspector' },
-        { code: 'Shunting Master', name: 'Shunting Master' }
-      ];
     }
+    return [];
   };
 
   const roleOptions = getRoleOptions();

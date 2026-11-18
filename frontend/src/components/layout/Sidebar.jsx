@@ -199,7 +199,6 @@ const Sidebar = ({ isOpen, onClose }) => {
     } else if (role === 'SUPER_ADMIN') {
       main.push({ name: 'Division', path: '/division', icon: <Building size={18} /> });
       main.push({ name: 'Counselling', path: '/counseling', icon: <GraduationCap size={18} /> });
-      main.push({ name: 'Approvals', path: '/approvals', icon: <CheckSquare size={18} /> });
       main.push({ name: 'Reports', path: '/reports', icon: <FileText size={18} /> });
       main.push({ name: 'Audit Logs', path: '/audit-logs', icon: <History size={18} /> });
       main.push({ name: 'Question Bank', path: '/question-bank', icon: <BookOpen size={18} /> });

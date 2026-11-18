@@ -565,7 +565,7 @@ function App() {
               path="/approvals"
               element={
                 <ProtectedRoute>
-                  <RoleRoute allowedRoles={['SM', 'SS', 'TI', 'AOM', 'SUPER_ADMIN', 'SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'Station Master Supervisior', 'Station Master Supervisio', 'Cabin Master', 'CABIN MASTER']}>
+                  <RoleRoute allowedRoles={['SM', 'SS', 'TI', 'AOM', 'SMS', 'Station Master Supervisor', 'STATION MASTER SUPERVISOR', 'Station Master Supervisior', 'Station Master Supervisio', 'Cabin Master', 'CABIN MASTER']}>
                     <ApprovalsPage />
                   </RoleRoute>
                 </ProtectedRoute>

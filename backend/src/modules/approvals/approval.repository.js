@@ -42,8 +42,6 @@ async function getPendingApprovalsForUser(userId, role) {
     WHERE a.status = 'completed'
       AND a.approval_status = 'pending_approval'
       AND (
-        ($1 = 'SUPER_ADMIN')
-        OR
         -- Train Managers and supervisory/station roles ALWAYS route to AOM for approval (even after transfers)
         ($1 = 'AOM' AND a.assessed_role_code IN (
           'TM', 'Train Manager',
